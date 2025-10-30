@@ -1,0 +1,15 @@
+{
+  "name": "simple-wallet",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "check-code": "npx hardhat run scripts/check-code.ts",
+    "deploy:holesky": "pnpm hardhat ignition deploy --network holesky ignition/modules/SimpleWallet.ts --verify --reset"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "forge-std": "github:foundry-rs/forge-std#v1.11.0",
+    "hardhat": "^3.0.7"
+  }
+}
