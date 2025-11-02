@@ -2,3 +2,4 @@ packages:
   - 'default-erc-20'
   - 'default-erc-721'
   - 'simple-wallet'
+  - 'thirty-one-game'

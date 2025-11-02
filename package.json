@@ -4,7 +4,8 @@
   "workspaces": [
     "default-erc-20",
     "default-erc-721",
-    "simple-wallet"
+    "simple-wallet",
+    "thirty-one-game"
   ],
   "version": "1.0.0",
   "description": "",
