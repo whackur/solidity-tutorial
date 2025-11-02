@@ -61,11 +61,11 @@ contract ThirtyOneGame is IThirtyOneGame {
 
             emit GameEnd(_round, msg.sender, round.currentIndex, totalPrize);
 
-            distributePrizes(_round);
+            _distributePrizes(_round);
         }
     }
 
-    function distributePrizes(uint256 _round) internal {
+    function _distributePrizes(uint256 _round) internal {
         Round storage round = rounds[_round];
         address winner = winners[_round];
         uint256 totalPrize = round.prizePool;
