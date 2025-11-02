@@ -4,7 +4,7 @@
   "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
-    "deployMyERC20:holesky": "pnpm hardhat ignition deploy --network holesky ignition/modules/MyERC20.ts --verify --reset"
+    "deployThirdOneGame:holesky": "pnpm hardhat ignition deploy --network holesky ignition/modules/ThirdOneGame.ts --verify --reset"
   },
   "keywords": [],
   "devDependencies": {

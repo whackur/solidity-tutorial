@@ -22,9 +22,9 @@ const config: HardhatUserConfig = {
     },
   },
   networks: {
-    holesky: {
+    sepolia: {
       type: 'http',
-      url: process.env.HOLESKY_RPC_URL || '',
+      url: process.env.SEPOLIA_RPC_URL || '',
       accounts: {
         mnemonic: process.env.DEPLOYER_MNEMONIC || '',
       },
@@ -32,7 +32,7 @@ const config: HardhatUserConfig = {
   },
   verify: {
     etherscan: {
-      apiKey: process.env.HOLESKY_API_KEY || '',
+      apiKey: process.env.SEPOLIA_API_KEY || '',
     },
   },
 };
