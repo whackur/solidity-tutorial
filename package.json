@@ -12,8 +12,9 @@
   "scripts": {
     "test": "pnpm hardhat test",
     "lint": "eslint .",
+    "lint:sol": "pnpm -r lint:sol",
     "format": "prettier --write .",
-    "lint:all": "pnpm format && pnpm lint"
+    "lint:all": "pnpm format && pnpm lint && pnpm lint:sol"
   },
   "license": "MIT",
   "packageManager": "pnpm@10.17.1",
@@ -42,6 +43,7 @@
     "globals": "^16.4.0",
     "mocha": "^11.7.4",
     "prettier": "^3.6.2",
+    "solhint": "^6.0.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.1"
   }

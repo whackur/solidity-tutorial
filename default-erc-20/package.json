@@ -4,11 +4,13 @@
   "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
-    "deployMyERC20:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/MyERC20.ts --verify --reset"
+    "deployMyERC20:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/MyERC20.ts --verify --reset",
+    "lint:sol": "solhint contracts/**/*.sol"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^5.4.0",
     "forge-std": "github:foundry-rs/forge-std#v1.11.0",
-    "hardhat": "^3.0.10"
+    "hardhat": "^3.0.10",
+    "viem": "^2.38.6"
   }
 }

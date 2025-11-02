@@ -5,11 +5,13 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "check-code": "npx hardhat run scripts/check-code.ts",
-    "deploy:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/SimpleWallet.ts --verify --reset"
+    "deploy:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/SimpleWallet.ts --verify --reset",
+    "lint:sol": "solhint contracts/**/*.sol"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^5.4.0",
     "forge-std": "github:foundry-rs/forge-std#v1.11.0",
-    "hardhat": "^3.0.10"
+    "hardhat": "^3.0.10",
+    "viem": "^2.38.6"
   }
 }

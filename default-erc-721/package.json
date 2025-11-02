@@ -2,5 +2,8 @@
   "name": "default-erc-721",
   "version": "1.0.0",
   "type": "module",
+  "scripts": {
+    "lint:sol": "solhint contracts/**/*.sol"
+  },
   "devDependencies": {}
 }

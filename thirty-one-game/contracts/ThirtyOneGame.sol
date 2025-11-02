@@ -2,86 +2,131 @@
 pragma solidity ^0.8.30;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {IThirtyOneGame} from "./interfaces/IThirtyOneGame.sol";
 
 /**
  * @title ThirtyOneGame
- * @dev A simple Baskin-Robbins 31 game where players contribute ERC20 tokens to participate.
- * The player who makes the index reach 31 or more wins the entire prize pool.
+ * @dev A simple Baskin-Robbins 31 game with rounds and stake-based prize distribution.
  */
-contract ThirtyOneGame {
-    // The ERC20 token used for betting
-    IERC20 public immutable token;
+contract ThirtyOneGame is IThirtyOneGame {
+    IERC20 public override immutable token;
 
-    // 현재 게임의 숫자를 저장하는 변수 (0부터 시작)
-    uint256 public currentIndex;
+    mapping(uint256 => Round) public override rounds;
+    uint256 public override currentRound;
+    mapping(uint256 => address) public override winners;
+    uint256 public override winnerPercentage;
 
-    // 게임의 승자 주소를 저장하는 변수
-    address public winner;
+    address public owner;
 
-    // 게임이 종료되었는지 여부를 나타내는 변수
-    bool public gameOver;
-
-    // 게임 참가를 위해 지불해야 하는 토큰 금액 (10 tokens)
-    uint256 public constant TICKET_PRICE = 10 * 10**18;
-
-    // 플레이어가 숫자를 성공적으로 제출했을 때 발생하는 이벤트
-    event NumberSubmitted(address indexed player, uint256 number, uint256 newIndex);
-
-    // 게임이 종료되고 승자가 결정되었을 때 발생하는 이벤트
-    event GameEnd(address indexed winner, uint256 finalIndex, uint256 prizeAmount);
-
-    /**
-     * @dev 컨트랙트 배포 시 ERC20 토큰 주소를 설정합니다.
-     * @param _token The address of the ERC20 token contract.
-     */
-    constructor(address _token) {
-        token = IERC20(_token);
-        currentIndex = 0;
-        gameOver = false;
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Only owner can call this function.");
+        _;
     }
 
-    /**
-     * @dev 사용자가 1~3 사이의 숫자를 제출하여 게임에 참여하는 함수입니다.
-     * @param _number 제출할 숫자 (1, 2, 또는 3).
-     */
-    function submit(uint256 _number) public {
-        // 1. 게임이 이미 종료되었는지 확인
-        require(!gameOver, "Game is already over.");
+    constructor(address _token, uint256 _initialWinnerPercentage) {
+        require(_initialWinnerPercentage > 0 && _initialWinnerPercentage <= 100, "Percentage must be between 1 and 100.");
+        token = IERC20(_token);
+        owner = msg.sender;
+        currentRound = 1;
+        winnerPercentage = _initialWinnerPercentage;
+        rounds[currentRound].gameOver = false;
+        rounds[currentRound].winnerPercentage = _initialWinnerPercentage;
+    }
 
-        // 2. 제출하는 숫자가 1, 2, 3 중 하나인지 확인
+    function submit(uint256 _round, uint256 _number, uint256 _amount) public override {
+        require(_round == currentRound, "This round is not active.");
+        Round storage round = rounds[_round];
+        require(!round.gameOver, "Game is already over.");
         require(_number >= 1 && _number <= 3, "You can only submit numbers 1, 2, or 3.");
+        require(_amount >= 10 * 10**18 && _amount <= 50 * 10**18, "Amount must be between 10 and 50 tokens.");
 
-        // 3. 토큰 전송
         uint256 allowance = token.allowance(msg.sender, address(this));
-        require(allowance >= TICKET_PRICE, "Check the token allowance");
-        token.transferFrom(msg.sender, address(this), TICKET_PRICE);
+        require(allowance >= _amount, "Check the token allowance");
+        token.transferFrom(msg.sender, address(this), _amount);
 
-        // 현재 인덱스에 제출된 숫자를 더함
-        currentIndex += _number;
+        if (round.playerStakes[msg.sender] == 0) {
+            round.players.push(Player(msg.sender, 0)); // amount will be updated below
+        }
+        
+        round.playerStakes[msg.sender] += _amount;
+        round.prizePool += _amount;
+        round.currentIndex += _number;
 
-        // NumberSubmitted 이벤트 발생
-        emit NumberSubmitted(msg.sender, _number, currentIndex);
+        emit NumberSubmitted(_round, msg.sender, _number, round.currentIndex);
 
-        // 4. 인덱스가 31 이상이 되었는지 확인하여 승리 조건 체크
-        if (currentIndex >= 31) {
-            // 게임 상태 업데이트
-            winner = msg.sender;
-            gameOver = true;
-            uint256 prizeAmount = token.balanceOf(address(this));
+        if (round.currentIndex >= 31) {
+            round.gameOver = true;
+            winners[_round] = msg.sender;
+            uint256 totalPrize = round.prizePool;
 
-            // GameEnd 이벤트 발생
-            emit GameEnd(winner, currentIndex, prizeAmount);
+            emit GameEnd(_round, msg.sender, round.currentIndex, totalPrize);
 
-            // 컨트랙트의 모든 잔액을 승자에게 전송
-            token.transfer(winner, prizeAmount);
+            distributePrizes(_round);
         }
     }
 
-    /**
-     * @dev 컨트랙트의 현재 잔액을 확인하는 함수입니다.
-     * @return 컨트랙트가 보유한 토큰의 총량.
-     */
-    function getContractBalance() public view returns (uint256) {
+    function distributePrizes(uint256 _round) internal {
+        Round storage round = rounds[_round];
+        address winner = winners[_round];
+        uint256 totalPrize = round.prizePool;
+
+        uint256 winnerPrize = (totalPrize * round.winnerPercentage) / 100;
+        if (winnerPrize > 0) {
+            token.transfer(winner, winnerPrize);
+        }
+
+        uint256 remainingPrize = totalPrize - winnerPrize;
+        
+        if (remainingPrize > 0 && round.players.length > 1) {
+            uint256 totalStakeOfLosers = totalPrize - round.playerStakes[winner];
+
+            if (totalStakeOfLosers > 0) {
+                for (uint i = 0; i < round.players.length; i++) {
+                    address playerAddress = round.players[i].playerAddress;
+                    if(playerAddress != winner) {
+                        uint256 playerStake = round.playerStakes[playerAddress];
+                        uint256 share = (remainingPrize * playerStake) / totalStakeOfLosers;
+                        if (share > 0) {
+                            token.transfer(playerAddress, share);
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    function startNewRound() public override {
+        require(rounds[currentRound].gameOver, "Current round is not over yet.");
+        currentRound++;
+        Round storage newRound = rounds[currentRound];
+        newRound.gameOver = false;
+        newRound.winnerPercentage = winnerPercentage;
+        newRound.currentIndex = 0;
+        newRound.prizePool = 0;
+    }
+
+    function setWinnerPercentage(uint256 _newPercentage) public override onlyOwner {
+        require(_newPercentage > 0 && _newPercentage <= 100, "Percentage must be between 1 and 100.");
+        winnerPercentage = _newPercentage;
+        emit WinnerPercentageUpdated(_newPercentage);
+    }
+
+    function getRoundInfo(uint256 _round) public view override returns (uint256, uint256, bool, uint256) {
+        Round storage round = rounds[_round];
+        return (round.currentIndex, round.prizePool, round.gameOver, round.winnerPercentage);
+    }
+
+    function getRoundPlayers(uint256 _round) public view override returns (Player[] memory) {
+        Round storage round = rounds[_round];
+        Player[] memory playersWithStakes = new Player[](round.players.length);
+        for(uint i = 0; i < round.players.length; i++){
+            playersWithStakes[i].playerAddress = round.players[i].playerAddress;
+            playersWithStakes[i].amount = round.playerStakes[round.players[i].playerAddress];
+        }
+        return playersWithStakes;
+    }
+
+    function getContractBalance() public view override returns (uint256) {
         return token.balanceOf(address(this));
     }
 }
