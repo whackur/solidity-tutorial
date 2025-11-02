@@ -4,12 +4,12 @@
   "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
-    "deployThirdOneGame:holesky": "pnpm hardhat ignition deploy --network holesky ignition/modules/ThirdOneGame.ts --verify --reset"
+    "deploy:tog:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/ThirtyOneGame.ts --verify --reset"
   },
   "keywords": [],
   "devDependencies": {
     "@openzeppelin/contracts": "^5.4.0",
     "forge-std": "github:foundry-rs/forge-std#v1.11.0",
-    "hardhat": "^3.0.7"
+    "hardhat": "^3.0.10"
   }
 }

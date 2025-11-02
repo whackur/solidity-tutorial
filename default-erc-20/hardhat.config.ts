@@ -1,5 +1,6 @@
 import type {HardhatUserConfig} from 'hardhat/config';
 import hardhatToolboxViem from '@nomicfoundation/hardhat-toolbox-viem';
+// import hardhatVerify from "@nomicfoundation/hardhat-verify";
 import 'dotenv/config';
 import * as dotenv from 'dotenv';
 import path from 'path';
@@ -11,7 +12,10 @@ const __dirname = path.dirname(__filename);
 dotenv.config({path: path.resolve(__dirname, '../.env')});
 
 const config: HardhatUserConfig = {
-  plugins: [hardhatToolboxViem],
+  plugins: [
+    // hardhatVerify,
+    hardhatToolboxViem,
+  ],
   solidity: {
     version: '0.8.30',
     settings: {

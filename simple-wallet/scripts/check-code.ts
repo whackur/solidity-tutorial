@@ -1,7 +1,7 @@
 import {network} from 'hardhat';
 
 async function main() {
-  const {viem} = await network.connect({network: 'holesky', chainType: 'l1'});
+  const {viem} = await network.connect({network: 'sepolia', chainType: 'l1'});
   const publicClient = await viem.getPublicClient();
 
   // 확인할 컨트랙트 주소
