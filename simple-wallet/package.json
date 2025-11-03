@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "check-code": "npx hardhat run scripts/check-code.ts",
     "deploy:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/SimpleWallet.ts --verify --reset",

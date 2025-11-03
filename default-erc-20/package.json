@@ -5,7 +5,8 @@
   "scripts": {
     "compile": "npx hardhat compile",
     "deployMyERC20:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/MyERC20.ts --verify --reset",
-    "lint:sol": "solhint contracts/**/*.sol"
+    "lint:sol": "solhint contracts/**/*.sol",
+    "test": "npx hardhat test"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^5.4.0",

@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "npx hardhat test",
     "compile": "npx hardhat compile",
     "deploy:tog:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/ThirtyOneGame.ts --verify --reset",
     "lint:sol": "solhint contracts/**/*.sol"
