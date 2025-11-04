@@ -5,7 +5,8 @@
     "default-erc-20",
     "default-erc-721",
     "simple-wallet",
-    "thirty-one-game"
+    "thirty-one-game",
+    "eip-712-voucher"
   ],
   "version": "1.0.0",
   "description": "",
@@ -27,6 +28,7 @@
     "@nomicfoundation/hardhat-network-helpers": "^3.0.1",
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.0",
+    "@nomicfoundation/hardhat-viem": "^3.0.1",
     "@types/chai": "^5.2.3",
     "@types/chai-as-promised": "^8.0.2",
     "@types/mocha": "^10.0.10",

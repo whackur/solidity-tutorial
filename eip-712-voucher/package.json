@@ -1,16 +1,15 @@
 {
-  "name": "default-erc-721",
+  "name": "eip-712-voucher",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
-    "deployMyERC721:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/MyERC721.ts --verify --reset",
+    "deployVoucher:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/Voucher.ts --verify --reset",
     "lint:sol": "solhint contracts/**/*.sol",
     "test": "npx hardhat test"
   },
   "devDependencies": {
     "@openzeppelin/contracts": "^5.4.0",
-    "hardhat": "^3.0.11",
-    "viem": "^2.38.6"
+    "hardhat": "^3.0.11"
   }
 }

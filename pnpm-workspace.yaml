@@ -3,3 +3,4 @@ packages:
   - 'default-erc-721'
   - 'simple-wallet'
   - 'thirty-one-game'
+  - 'eip-712-voucher'
