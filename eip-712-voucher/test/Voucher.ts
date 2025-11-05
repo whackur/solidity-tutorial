@@ -1,24 +1,25 @@
 import {describe, it} from 'node:test';
 import assert from 'node:assert/strict';
 import {network} from 'hardhat';
-import type {GetContractReturnType} from 'viem';
 import {createSignature} from './lib/utils.js';
-import voucherJSON from '../artifacts/contracts/Voucher.sol/Voucher.json' with {type: 'json'};
-const voucherABI = voucherJSON.abi;
 
 describe('Voucher', function () {
-  type VoucherContract = GetContractReturnType<typeof voucherABI>;
-
   async function deployVoucherFixture() {
     const {viem} = await network.connect();
     const [signer, redeemer, otherAccount] = await viem.getWalletClients();
 
+    const tokenContract = await viem.deployContract('MyERC20', [
+      'My Test Token',
+      'MTT',
+      1000000n,
+    ]);
     const voucherContract = await viem.deployContract('Voucher');
     const publicClient = await viem.getPublicClient();
 
     return {
       viem,
       voucherContract,
+      tokenContract,
       signer,
       redeemer,
       otherAccount,
@@ -43,14 +44,20 @@ describe('Voucher', function () {
     const amount = 100n;
 
     it('Should redeem a valid voucher', async function () {
-      const {voucherContract, signer, redeemer, publicClient} =
+      const {voucherContract, tokenContract, signer, redeemer, publicClient} =
         await deployVoucherFixture();
-      const redeemerAddress = redeemer.account?.address;
-      const signerAddress = signer.account?.address;
+      const redeemerAddress = redeemer.account.address;
+      const signerAddress = signer.account.address;
       const voucherContractAddress = voucherContract.address;
+      const tokenContractAddress = tokenContract.address;
+
+      await tokenContract.write.approve([voucherContractAddress, amount], {
+        account: signer.account,
+      });
 
       const signature = await createSignature(
         signer,
+        tokenContractAddress,
         redeemerAddress,
         voucherId,
         amount,
@@ -58,21 +65,28 @@ describe('Voucher', function () {
       );
 
       const voucher: {
+        token: `0x${string}`;
         signer: `0x${string}`;
         redeemer: `0x${string}`;
         voucherId: bigint;
         amount: bigint;
         signature: `0x${string}`;
       } = {
-        signer: signerAddress!,
-        redeemer: redeemerAddress!,
+        token: tokenContractAddress,
+        signer: signerAddress,
+        redeemer: redeemerAddress,
         voucherId,
         amount,
         signature,
       };
 
+      const initialRedeemerBalance = await tokenContract.read.balanceOf([
+        redeemerAddress,
+      ]);
+
       const hash = await voucherContract.write.redeemVoucher(
         [
+          voucher.token,
           voucher.signer,
           voucher.redeemer,
           voucher.voucherId,
@@ -80,7 +94,7 @@ describe('Voucher', function () {
           voucher.signature,
         ],
         {
-          account: redeemer.account,
+          account: redeemer.account!,
         },
       );
 
@@ -89,17 +103,28 @@ describe('Voucher', function () {
 
       const used = await voucherContract.read.usedVouchers([voucherId]);
       assert.strictEqual(used, true, 'Voucher should be marked as used');
+
+      const finalRedeemerBalance = await tokenContract.read.balanceOf([
+        redeemerAddress,
+      ]);
+      assert.strictEqual(
+        finalRedeemerBalance,
+        initialRedeemerBalance + amount,
+        'Redeemer balance should be increased by the voucher amount',
+      );
     });
 
     it('Should fail if the signature is invalid', async function () {
-      const {voucherContract, signer, redeemer, otherAccount} =
+      const {voucherContract, tokenContract, signer, redeemer, otherAccount} =
         await deployVoucherFixture();
       const redeemerAddress = redeemer.account?.address;
       const signerAddress = signer.account?.address;
       const voucherContractAddress = voucherContract.address;
+      const tokenContractAddress = tokenContract.address;
 
       const signature = await createSignature(
         otherAccount, // Invalid signer
+        tokenContractAddress,
         redeemerAddress,
         voucherId,
         amount,
@@ -107,12 +132,14 @@ describe('Voucher', function () {
       );
 
       const voucher: {
+        token: `0x${string}`;
         signer: `0x${string}`;
         redeemer: `0x${string}`;
         voucherId: bigint;
         amount: bigint;
         signature: `0x${string}`;
       } = {
+        token: tokenContractAddress,
         signer: signerAddress!,
         redeemer: redeemerAddress!,
         voucherId,
@@ -123,6 +150,7 @@ describe('Voucher', function () {
       try {
         await voucherContract.write.redeemVoucher(
           [
+            voucher.token,
             voucher.signer,
             voucher.redeemer,
             voucher.voucherId,
@@ -130,7 +158,7 @@ describe('Voucher', function () {
             voucher.signature,
           ],
           {
-            account: redeemer.account,
+            account: redeemer.account!,
           },
         );
         assert.fail('Transaction should have failed');
@@ -143,13 +171,20 @@ describe('Voucher', function () {
     });
 
     it('Should fail if the voucher is already redeemed', async function () {
-      const {voucherContract, signer, redeemer} = await deployVoucherFixture();
+      const {voucherContract, tokenContract, signer, redeemer} =
+        await deployVoucherFixture();
       const redeemerAddress = redeemer.account?.address;
       const signerAddress = signer.account?.address;
       const voucherContractAddress = voucherContract.address;
+      const tokenContractAddress = tokenContract.address;
+
+      await tokenContract.write.approve([voucherContractAddress, amount], {
+        account: signer.account,
+      });
 
       const signature = await createSignature(
         signer,
+        tokenContractAddress,
         redeemerAddress,
         voucherId,
         amount,
@@ -157,12 +192,14 @@ describe('Voucher', function () {
       );
 
       const voucher: {
+        token: `0x${string}`;
         signer: `0x${string}`;
         redeemer: `0x${string}`;
         voucherId: bigint;
         amount: bigint;
         signature: `0x${string}`;
       } = {
+        token: tokenContractAddress,
         signer: signerAddress!,
         redeemer: redeemerAddress!,
         voucherId,
@@ -172,6 +209,7 @@ describe('Voucher', function () {
 
       await voucherContract.write.redeemVoucher(
         [
+          voucher.token,
           voucher.signer,
           voucher.redeemer,
           voucher.voucherId,
@@ -179,13 +217,14 @@ describe('Voucher', function () {
           voucher.signature,
         ],
         {
-          account: redeemer.account,
+          account: redeemer.account!,
         },
       );
 
       try {
         await voucherContract.write.redeemVoucher(
           [
+            voucher.token,
             voucher.signer,
             voucher.redeemer,
             voucher.voucherId,
@@ -193,7 +232,7 @@ describe('Voucher', function () {
             voucher.signature,
           ],
           {
-            account: redeemer.account,
+            account: redeemer.account!,
           },
         );
         assert.fail('Transaction should have failed');
@@ -206,14 +245,16 @@ describe('Voucher', function () {
     });
 
     it('Should fail if the redeemer is not the one specified in the signature', async function () {
-      const {voucherContract, signer, redeemer, otherAccount} =
+      const {voucherContract, tokenContract, signer, redeemer, otherAccount} =
         await deployVoucherFixture();
       const redeemerAddress = redeemer.account?.address;
       const signerAddress = signer.account?.address;
       const voucherContractAddress = voucherContract.address;
+      const tokenContractAddress = tokenContract.address;
 
       const signature = await createSignature(
         signer,
+        tokenContractAddress,
         redeemerAddress,
         voucherId,
         amount,
@@ -221,12 +262,14 @@ describe('Voucher', function () {
       );
 
       const voucher: {
+        token: `0x${string}`;
         signer: `0x${string}`;
         redeemer: `0x${string}`;
         voucherId: bigint;
         amount: bigint;
         signature: `0x${string}`;
       } = {
+        token: tokenContractAddress,
         signer: signerAddress!,
         redeemer: redeemerAddress!,
         voucherId,
@@ -237,6 +280,7 @@ describe('Voucher', function () {
       try {
         await voucherContract.write.redeemVoucher(
           [
+            voucher.token,
             voucher.signer,
             voucher.redeemer,
             voucher.voucherId,
@@ -244,7 +288,7 @@ describe('Voucher', function () {
             voucher.signature,
           ],
           {
-            account: otherAccount.account, // Invalid redeemer
+            account: otherAccount.account!, // Invalid redeemer
           },
         );
         assert.fail('Transaction should have failed');

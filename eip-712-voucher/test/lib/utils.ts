@@ -3,6 +3,7 @@ import type {WalletClient} from 'viem';
 
 export async function createSignature(
   signer: WalletClient,
+  token: `0x${string}`,
   redeemerAddress: `0x${string}` | undefined,
   voucherId: bigint,
   amount: bigint,
@@ -27,6 +28,8 @@ export async function createSignature(
 
   const types = {
     Voucher: [
+      {name: 'token', type: 'address'},
+      {name: 'signer', type: 'address'},
       {name: 'redeemer', type: 'address'},
       {name: 'voucherId', type: 'uint256'},
       {name: 'amount', type: 'uint256'},
@@ -34,6 +37,8 @@ export async function createSignature(
   };
 
   const value = {
+    token,
+    signer: signer.account.address,
     redeemer: redeemerAddress,
     voucherId,
     amount,
