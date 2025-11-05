@@ -13,9 +13,9 @@
   "scripts": {
     "test": "pnpm -r test",
     "lint": "eslint .",
-    "lint:sol": "pnpm -r lint:sol",
+    "fmt": "forge fmt",
     "format": "prettier --write .",
-    "lint:all": "pnpm format && pnpm lint && pnpm lint:sol"
+    "lint:all": "pnpm format && pnpm lint"
   },
   "license": "MIT",
   "packageManager": "pnpm@10.17.1",

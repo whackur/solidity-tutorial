@@ -215,3 +215,4 @@ $RECYCLE.BIN/
 # dotenv environment variables file
 .env
 .GEMINI.md
+.kilocode
