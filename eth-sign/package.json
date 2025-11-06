@@ -1,10 +1,10 @@
 {
-  "name": "default-erc-20",
+  "name": "eth-sign",
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "compile": "npx hardhat compile",
-    "deployMyERC20:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/MyERC20.ts --verify --reset",
+    "deployEthSign:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/EthSign.ts --verify --reset",
     "lint:sol": "solhint contracts/**/*.sol",
     "test": "npx hardhat test"
   },

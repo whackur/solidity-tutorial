@@ -4,3 +4,4 @@ packages:
   - 'simple-wallet'
   - 'thirty-one-game'
   - 'eip-712-voucher'
+  - 'eth-sign'
