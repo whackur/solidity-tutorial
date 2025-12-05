@@ -18,7 +18,7 @@ contract SimpleWallet {
     function withdrawEth(uint256 amount) public {
         require(_ethBalances[msg.sender] >= amount, "Insufficient ETH balance");
         _ethBalances[msg.sender] -= amount;
-        (bool success, ) = msg.sender.call{value: amount}("");
+        (bool success,) = msg.sender.call{value: amount}("");
         require(success, "Failed to send Ether");
     }
 

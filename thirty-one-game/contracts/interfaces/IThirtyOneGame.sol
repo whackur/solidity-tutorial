@@ -24,7 +24,10 @@ interface IThirtyOneGame {
 
     function token() external view returns (IERC20);
 
-    function rounds(uint256 _round) external view returns (uint256 currentIndex, uint256 prizePool, bool gameOver, uint256 winnerPercentage);
+    function rounds(uint256 _round)
+        external
+        view
+        returns (uint256 currentIndex, uint256 prizePool, bool gameOver, uint256 winnerPercentage);
 
     function currentRound() external view returns (uint256);
 

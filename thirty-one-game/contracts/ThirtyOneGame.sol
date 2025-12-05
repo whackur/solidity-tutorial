@@ -9,7 +9,7 @@ import {IThirtyOneGame} from "./interfaces/IThirtyOneGame.sol";
  * @dev A simple Baskin-Robbins 31 game with rounds and stake-based prize distribution.
  */
 contract ThirtyOneGame is IThirtyOneGame {
-    IERC20 public override immutable token;
+    IERC20 public immutable override token;
 
     mapping(uint256 => Round) public override rounds;
     uint256 public override currentRound;
@@ -24,7 +24,9 @@ contract ThirtyOneGame is IThirtyOneGame {
     }
 
     constructor(address _token, uint256 _initialWinnerPercentage) {
-        require(_initialWinnerPercentage > 0 && _initialWinnerPercentage <= 100, "Percentage must be between 1 and 100.");
+        require(
+            _initialWinnerPercentage > 0 && _initialWinnerPercentage <= 100, "Percentage must be between 1 and 100."
+        );
         token = IERC20(_token);
         owner = msg.sender;
         currentRound = 1;
@@ -38,7 +40,7 @@ contract ThirtyOneGame is IThirtyOneGame {
         Round storage round = rounds[_round];
         require(!round.gameOver, "Game is already over.");
         require(_number >= 1 && _number <= 3, "You can only submit numbers 1, 2, or 3.");
-        require(_amount >= 10 * 10**18 && _amount <= 50 * 10**18, "Amount must be between 10 and 50 tokens.");
+        require(_amount >= 10 * 10 ** 18 && _amount <= 50 * 10 ** 18, "Amount must be between 10 and 50 tokens.");
 
         uint256 allowance = token.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Check the token allowance");
@@ -47,7 +49,7 @@ contract ThirtyOneGame is IThirtyOneGame {
         if (round.playerStakes[msg.sender] == 0) {
             round.players.push(Player(msg.sender, 0)); // amount will be updated below
         }
-        
+
         round.playerStakes[msg.sender] += _amount;
         round.prizePool += _amount;
         round.currentIndex += _number;
@@ -76,14 +78,14 @@ contract ThirtyOneGame is IThirtyOneGame {
         }
 
         uint256 remainingPrize = totalPrize - winnerPrize;
-        
+
         if (remainingPrize > 0 && round.players.length > 1) {
             uint256 totalStakeOfLosers = totalPrize - round.playerStakes[winner];
 
             if (totalStakeOfLosers > 0) {
-                for (uint i = 0; i < round.players.length; i++) {
+                for (uint256 i = 0; i < round.players.length; i++) {
                     address playerAddress = round.players[i].playerAddress;
-                    if(playerAddress != winner) {
+                    if (playerAddress != winner) {
                         uint256 playerStake = round.playerStakes[playerAddress];
                         uint256 share = (remainingPrize * playerStake) / totalStakeOfLosers;
                         if (share > 0) {
@@ -119,7 +121,7 @@ contract ThirtyOneGame is IThirtyOneGame {
     function getRoundPlayers(uint256 _round) public view override returns (Player[] memory) {
         Round storage round = rounds[_round];
         Player[] memory playersWithStakes = new Player[](round.players.length);
-        for(uint i = 0; i < round.players.length; i++){
+        for (uint256 i = 0; i < round.players.length; i++) {
             playersWithStakes[i].playerAddress = round.players[i].playerAddress;
             playersWithStakes[i].amount = round.playerStakes[round.players[i].playerAddress];
         }

@@ -1,0 +1,23 @@
+[profile.default]
+src = "contracts"
+out = "artifacts"
+libs = ["node_modules"]
+test = "test"
+cache_path = "cache"
+
+[fmt]
+line_length = 100
+tab_width = 4
+bracket_spacing = true
+int_types = "long"
+multiline_func_header = "all"
+quote_style = "double"
+number_underscore = "thousands"
+single_line_statement_blocks = "preserve"
+override_spacing = false
+wrap_comments = false
+ignore = [
+    "node_modules/**",
+    "artifacts/**",
+    "cache/**"
+]
