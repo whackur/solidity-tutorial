@@ -1,0 +1,16 @@
+{
+  "name": "eth-sign",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "compile": "npx hardhat compile",
+    "deploySignatureVerifier:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/SignatureVerifier.ts --verify --reset",
+    "lint:sol": "solhint contracts/**/*.sol",
+    "test": "npx hardhat test"
+  },
+  "devDependencies": {
+    "@openzeppelin/contracts": "^5.4.0",
+    "hardhat": "^3.0.11",
+    "viem": "^2.38.6"
+  }
+}
