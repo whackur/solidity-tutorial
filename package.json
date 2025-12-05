@@ -1,13 +1,6 @@
 {
   "name": "solidity-tutorial",
   "private": true,
-  "workspaces": [
-    "default-erc-20",
-    "default-erc-721",
-    "simple-wallet",
-    "thirty-one-game",
-    "eip-712-voucher"
-  ],
   "version": "1.0.0",
   "description": "",
   "scripts": {
