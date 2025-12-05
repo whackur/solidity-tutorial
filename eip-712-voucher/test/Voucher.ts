@@ -94,7 +94,7 @@ describe('Voucher', function () {
           voucher.signature,
         ],
         {
-          account: redeemer.account!,
+          account: redeemer.account,
         },
       );
 
@@ -117,8 +117,8 @@ describe('Voucher', function () {
     it('Should fail if the signature is invalid', async function () {
       const {voucherContract, tokenContract, signer, redeemer, otherAccount} =
         await deployVoucherFixture();
-      const redeemerAddress = redeemer.account?.address;
-      const signerAddress = signer.account?.address;
+      const redeemerAddress = redeemer.account.address;
+      const signerAddress = signer.account.address;
       const voucherContractAddress = voucherContract.address;
       const tokenContractAddress = tokenContract.address;
 
@@ -140,8 +140,8 @@ describe('Voucher', function () {
         signature: `0x${string}`;
       } = {
         token: tokenContractAddress,
-        signer: signerAddress!,
-        redeemer: redeemerAddress!,
+        signer: signerAddress,
+        redeemer: redeemerAddress,
         voucherId,
         amount,
         signature,
@@ -158,14 +158,16 @@ describe('Voucher', function () {
             voucher.signature,
           ],
           {
-            account: redeemer.account!,
+            account: redeemer.account,
           },
         );
         assert.fail('Transaction should have failed');
-      } catch (error: any) {
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         assert.ok(
-          error.message.includes('Invalid signature'),
-          `Expected "Invalid signature" error, but got: ${error.message}`,
+          errorMessage.includes('Invalid signature'),
+          `Expected "Invalid signature" error, but got: ${errorMessage}`,
         );
       }
     });
@@ -173,8 +175,8 @@ describe('Voucher', function () {
     it('Should fail if the voucher is already redeemed', async function () {
       const {voucherContract, tokenContract, signer, redeemer} =
         await deployVoucherFixture();
-      const redeemerAddress = redeemer.account?.address;
-      const signerAddress = signer.account?.address;
+      const redeemerAddress = redeemer.account.address;
+      const signerAddress = signer.account.address;
       const voucherContractAddress = voucherContract.address;
       const tokenContractAddress = tokenContract.address;
 
@@ -200,8 +202,8 @@ describe('Voucher', function () {
         signature: `0x${string}`;
       } = {
         token: tokenContractAddress,
-        signer: signerAddress!,
-        redeemer: redeemerAddress!,
+        signer: signerAddress,
+        redeemer: redeemerAddress,
         voucherId,
         amount,
         signature,
@@ -217,7 +219,7 @@ describe('Voucher', function () {
           voucher.signature,
         ],
         {
-          account: redeemer.account!,
+          account: redeemer.account,
         },
       );
 
@@ -232,14 +234,16 @@ describe('Voucher', function () {
             voucher.signature,
           ],
           {
-            account: redeemer.account!,
+            account: redeemer.account,
           },
         );
         assert.fail('Transaction should have failed');
-      } catch (error: any) {
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         assert.ok(
-          error.message.includes('Voucher already redeemed'),
-          `Expected "Voucher already redeemed" error, but got: ${error.message}`,
+          errorMessage.includes('Voucher already redeemed'),
+          `Expected "Voucher already redeemed" error, but got: ${errorMessage}`,
         );
       }
     });
@@ -247,8 +251,8 @@ describe('Voucher', function () {
     it('Should fail if the redeemer is not the one specified in the signature', async function () {
       const {voucherContract, tokenContract, signer, redeemer, otherAccount} =
         await deployVoucherFixture();
-      const redeemerAddress = redeemer.account?.address;
-      const signerAddress = signer.account?.address;
+      const redeemerAddress = redeemer.account.address;
+      const signerAddress = signer.account.address;
       const voucherContractAddress = voucherContract.address;
       const tokenContractAddress = tokenContract.address;
 
@@ -270,8 +274,8 @@ describe('Voucher', function () {
         signature: `0x${string}`;
       } = {
         token: tokenContractAddress,
-        signer: signerAddress!,
-        redeemer: redeemerAddress!,
+        signer: signerAddress,
+        redeemer: redeemerAddress,
         voucherId,
         amount,
         signature,
@@ -288,14 +292,16 @@ describe('Voucher', function () {
             voucher.signature,
           ],
           {
-            account: otherAccount.account!, // Invalid redeemer
+            account: otherAccount.account, // Invalid redeemer
           },
         );
         assert.fail('Transaction should have failed');
-      } catch (error: any) {
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : String(error);
         assert.ok(
-          error.message.includes('Only the specified redeemer can call this'),
-          `Expected "Only the specified redeemer can call this" error, but got: ${error.message}`,
+          errorMessage.includes('Only the specified redeemer can call this'),
+          `Expected "Only the specified redeemer can call this" error, but got: ${errorMessage}`,
         );
       }
     });

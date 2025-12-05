@@ -1,7 +1,8 @@
 import {describe, it} from 'node:test';
 import {expect} from 'chai';
 import {network} from 'hardhat';
-import {keccak256, toBytes, toHex} from 'viem';
+import {bytesToHex, keccak256, toBytes} from 'viem';
+import type {Hex} from 'viem';
 
 describe('Signature Verifier', function () {
   async function deploySignatureVerifierFixture() {
@@ -31,7 +32,7 @@ describe('Signature Verifier', function () {
   });
 
   describe('eth_sign Verification', function () {
-    it('Should verify eth_sign signature correctly', async function () {
+    it('Should recover eth_sign signer correctly', async function () {
       const {signatureVerifier, signer} =
         await deploySignatureVerifierFixture();
 
@@ -42,9 +43,11 @@ describe('Signature Verifier', function () {
         message: {raw: messageHash},
       });
 
-      const recoveredSigner = await (
-        signatureVerifier.read as any
-      ).verifyEthSign([messageHash, signature]);
+      const recoveredSigner =
+        (await signatureVerifier.read.recoverEthSignSigner([
+          messageHash,
+          signature,
+        ])) as Hex;
 
       expect(recoveredSigner.toLowerCase()).to.equal(
         signer.account.address.toLowerCase(),
@@ -62,11 +65,13 @@ describe('Signature Verifier', function () {
         message: {raw: messageHash},
       });
 
-      const isValid = await (signatureVerifier.read as any).verifyEthSignSigner(
-        [messageHash, signature, signer.account.address],
-      );
+      const isValid = await signatureVerifier.read.verifyEthSign([
+        messageHash,
+        signature,
+        signer.account.address,
+      ]);
 
-      expect(isValid).to.be.true;
+      expect(isValid).to.equal(true);
     });
 
     it('Should fail verification with wrong signer', async function () {
@@ -80,11 +85,13 @@ describe('Signature Verifier', function () {
         message: {raw: messageHash},
       });
 
-      const isValid = await (signatureVerifier.read as any).verifyEthSignSigner(
-        [messageHash, signature, otherAccount.account.address],
-      );
+      const isValid = await signatureVerifier.read.verifyEthSign([
+        messageHash,
+        signature,
+        otherAccount.account.address,
+      ]);
 
-      expect(isValid).to.be.false;
+      expect(isValid).to.equal(false);
     });
 
     it('Should recover eth_sign signer using pure function', async function () {
@@ -97,9 +104,11 @@ describe('Signature Verifier', function () {
         message: {raw: messageHash},
       });
 
-      const recoveredSigner = await (
-        signatureVerifier.read as any
-      ).recoverEthSignSigner([messageHash, signature]);
+      const recoveredSigner =
+        (await signatureVerifier.read.recoverEthSignSigner([
+          messageHash,
+          signature,
+        ])) as Hex;
 
       expect(recoveredSigner.toLowerCase()).to.equal(
         signer.account.address.toLowerCase(),
@@ -108,7 +117,7 @@ describe('Signature Verifier', function () {
   });
 
   describe('personal_sign Verification', function () {
-    it('Should verify personal_sign signature correctly', async function () {
+    it('Should recover personal_sign signer correctly', async function () {
       const {signatureVerifier, signer} =
         await deploySignatureVerifierFixture();
 
@@ -118,11 +127,13 @@ describe('Signature Verifier', function () {
         message: message,
       });
 
-      const messageHex = toHex(toBytes(message));
+      const messageBytes = bytesToHex(toBytes(message));
 
-      const recoveredSigner = await (
-        signatureVerifier.read as any
-      ).verifyPersonalSign([messageHex, signature]);
+      const recoveredSigner =
+        (await signatureVerifier.read.recoverPersonalSignSigner([
+          messageBytes,
+          signature,
+        ])) as Hex;
 
       expect(recoveredSigner.toLowerCase()).to.equal(
         signer.account.address.toLowerCase(),
@@ -139,17 +150,15 @@ describe('Signature Verifier', function () {
         message: message,
       });
 
-      const messageHex = toHex(toBytes(message));
+      const messageBytes = bytesToHex(toBytes(message));
 
-      const isValid = await (
-        signatureVerifier.read as any
-      ).verifyPersonalSignSigner([
-        messageHex,
+      const isValid = await signatureVerifier.read.verifyPersonalSign([
+        messageBytes,
         signature,
         signer.account.address,
       ]);
 
-      expect(isValid).to.be.true;
+      expect(isValid).to.equal(true);
     });
 
     it('Should fail verification with wrong signer', async function () {
@@ -162,17 +171,15 @@ describe('Signature Verifier', function () {
         message: message,
       });
 
-      const messageHex = toHex(toBytes(message));
+      const messageBytes = bytesToHex(toBytes(message));
 
-      const isValid = await (
-        signatureVerifier.read as any
-      ).verifyPersonalSignSigner([
-        messageHex,
+      const isValid = await signatureVerifier.read.verifyPersonalSign([
+        messageBytes,
         signature,
         otherAccount.account.address,
       ]);
 
-      expect(isValid).to.be.false;
+      expect(isValid).to.equal(false);
     });
 
     it('Should recover personal_sign signer using pure function', async function () {
@@ -185,11 +192,13 @@ describe('Signature Verifier', function () {
         message: message,
       });
 
-      const messageHex = toHex(toBytes(message));
+      const messageBytes = bytesToHex(toBytes(message));
 
-      const recoveredSigner = await (
-        signatureVerifier.read as any
-      ).recoverPersonalSignSigner([messageHex, signature]);
+      const recoveredSigner =
+        (await signatureVerifier.read.recoverPersonalSignSigner([
+          messageBytes,
+          signature,
+        ])) as Hex;
 
       expect(recoveredSigner.toLowerCase()).to.equal(
         signer.account.address.toLowerCase(),
@@ -206,54 +215,17 @@ describe('Signature Verifier', function () {
         message: message,
       });
 
-      const messageHex = toHex(toBytes(message));
+      const messageBytes = bytesToHex(toBytes(message));
 
-      const recoveredSigner = await (
-        signatureVerifier.read as any
-      ).verifyPersonalSign([messageHex, signature]);
+      const recoveredSigner =
+        (await signatureVerifier.read.recoverPersonalSignSigner([
+          messageBytes,
+          signature,
+        ])) as Hex;
 
       expect(recoveredSigner.toLowerCase()).to.equal(
         signer.account.address.toLowerCase(),
       );
-    });
-  });
-
-  describe('Event Emission', function () {
-    it('Should emit SignatureVerified event for eth_sign', async function () {
-      const {signatureVerifier, signer, publicClient, owner} =
-        await deploySignatureVerifierFixture();
-
-      const messageHash = keccak256(toBytes('Event test'));
-      const signature = await signer.signMessage({
-        message: {raw: messageHash},
-      });
-
-      const hash = await (signatureVerifier.write as any).verifyEthSign(
-        [messageHash, signature],
-        {account: owner.account},
-      );
-
-      const receipt = await publicClient.waitForTransactionReceipt({hash});
-
-      expect(receipt.logs.length).to.be.greaterThan(0);
-    });
-
-    it('Should emit SignatureVerified event for personal_sign', async function () {
-      const {signatureVerifier, signer, publicClient, owner} =
-        await deploySignatureVerifierFixture();
-
-      const message = 'Event test personal';
-      const messageHex = toHex(toBytes(message));
-      const signature = await signer.signMessage({message});
-
-      const hash = await (signatureVerifier.write as any).verifyPersonalSign(
-        [messageHex, signature],
-        {account: owner.account},
-      );
-
-      const receipt = await publicClient.waitForTransactionReceipt({hash});
-
-      expect(receipt.logs.length).to.be.greaterThan(0);
     });
   });
 });
