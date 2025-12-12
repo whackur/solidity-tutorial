@@ -25,7 +25,8 @@ contract ThirtyOneGame is IThirtyOneGame {
 
     constructor(address _token, uint256 _initialWinnerPercentage) {
         require(
-            _initialWinnerPercentage > 0 && _initialWinnerPercentage <= 100, "Percentage must be between 1 and 100."
+            _initialWinnerPercentage > 0 && _initialWinnerPercentage <= 100,
+            "Percentage must be between 1 and 100."
         );
         token = IERC20(_token);
         owner = msg.sender;
@@ -40,7 +41,10 @@ contract ThirtyOneGame is IThirtyOneGame {
         Round storage round = rounds[_round];
         require(!round.gameOver, "Game is already over.");
         require(_number >= 1 && _number <= 3, "You can only submit numbers 1, 2, or 3.");
-        require(_amount >= 10 * 10 ** 18 && _amount <= 50 * 10 ** 18, "Amount must be between 10 and 50 tokens.");
+        require(
+            _amount >= 10 * 10 ** 18 && _amount <= 50 * 10 ** 18,
+            "Amount must be between 10 and 50 tokens."
+        );
 
         uint256 allowance = token.allowance(msg.sender, address(this));
         require(allowance >= _amount, "Check the token allowance");
@@ -108,12 +112,19 @@ contract ThirtyOneGame is IThirtyOneGame {
     }
 
     function setWinnerPercentage(uint256 _newPercentage) public override onlyOwner {
-        require(_newPercentage > 0 && _newPercentage <= 100, "Percentage must be between 1 and 100.");
+        require(
+            _newPercentage > 0 && _newPercentage <= 100, "Percentage must be between 1 and 100."
+        );
         winnerPercentage = _newPercentage;
         emit WinnerPercentageUpdated(_newPercentage);
     }
 
-    function getRoundInfo(uint256 _round) public view override returns (uint256, uint256, bool, uint256) {
+    function getRoundInfo(uint256 _round)
+        public
+        view
+        override
+        returns (uint256, uint256, bool, uint256)
+    {
         Round storage round = rounds[_round];
         return (round.currentIndex, round.prizePool, round.gameOver, round.winnerPercentage);
     }

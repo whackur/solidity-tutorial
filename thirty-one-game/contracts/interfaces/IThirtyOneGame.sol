@@ -18,8 +18,12 @@ interface IThirtyOneGame {
         uint256 winnerPercentage; // Winner's percentage for this round
     }
 
-    event NumberSubmitted(uint256 indexed round, address indexed player, uint256 number, uint256 newIndex);
-    event GameEnd(uint256 indexed round, address indexed winner, uint256 finalIndex, uint256 prizeAmount);
+    event NumberSubmitted(
+        uint256 indexed round, address indexed player, uint256 number, uint256 newIndex
+    );
+    event GameEnd(
+        uint256 indexed round, address indexed winner, uint256 finalIndex, uint256 prizeAmount
+    );
     event WinnerPercentageUpdated(uint256 newPercentage);
 
     function token() external view returns (IERC20);

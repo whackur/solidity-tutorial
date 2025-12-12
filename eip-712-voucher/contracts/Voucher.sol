@@ -6,13 +6,18 @@ import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 contract Voucher is EIP712 {
-    bytes32 private immutable _VOUCHER_TYPEHASH =
-        keccak256("Voucher(address token,address signer,address redeemer,uint256 voucherId,uint256 amount)");
+    bytes32 private immutable _VOUCHER_TYPEHASH = keccak256(
+        "Voucher(address token,address signer,address redeemer,uint256 voucherId,uint256 amount)"
+    );
 
     mapping(uint256 => bool) public usedVouchers;
 
     event VoucherRedeemed(
-        address indexed token, address indexed signer, address indexed redeemer, uint256 voucherId, uint256 amount
+        address indexed token,
+        address indexed signer,
+        address indexed redeemer,
+        uint256 voucherId,
+        uint256 amount
     );
 
     constructor() EIP712("MyEIP712App", "1") {}
@@ -36,7 +41,8 @@ contract Voucher is EIP712 {
         require(!usedVouchers[voucherId], "Voucher already redeemed");
         require(msg.sender == redeemer, "Only the specified redeemer can call this");
 
-        bytes32 structHash = keccak256(abi.encode(_VOUCHER_TYPEHASH, token, signer, redeemer, voucherId, amount));
+        bytes32 structHash =
+            keccak256(abi.encode(_VOUCHER_TYPEHASH, token, signer, redeemer, voucherId, amount));
 
         bytes32 digest = _hashTypedDataV4(structHash);
         address recoveredSigner = ECDSA.recover(digest, signature);

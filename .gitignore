@@ -210,7 +210,8 @@ $RECYCLE.BIN/
 **/coverage
 **/ignition/deployments
 **/*-lock.yaml
-
+foundry.lock
+**/lib/*
 
 # dotenv environment variables file
 .env
