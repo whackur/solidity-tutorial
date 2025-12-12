@@ -16,6 +16,8 @@ export default defineConfig(
       '**/types/**',
       '**/ignition/deployments/**',
       '**/bundle/**',
+      '**/lib/**',
+      '**/dependencies/**',
     ],
   },
   eslint.configs.recommended,

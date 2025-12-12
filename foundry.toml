@@ -1,9 +1,16 @@
 [profile.default]
 src = "contracts"
 out = "artifacts"
-libs = ["node_modules"]
+libs = ["node_modules", "lib", "dependencies"]
 test = "test"
 cache_path = "cache"
+
+[soldeer]
+remappings_generate = true
+remappings_regenerate = false
+remappings_version = false
+remappings_location = "txt"
+recursive_deps = true
 
 [fmt]
 line_length = 100
@@ -20,5 +27,12 @@ ignore = [
     "*/node_modules/**",
     "*/artifacts/**",
     "*/cache/**",
-    "*/lib/**"
+    "*/lib/**",
+    "*/dependencies/**"
 ]
+
+[dependencies]
+forge-std = "1.12.0"
+"@openzeppelin-contracts" = "5.5.0"
+"@openzeppelin-contracts-upgradeable" = "5.5.0"
+openzeppelin-foundry-upgrades = "0.4.0"

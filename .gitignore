@@ -211,7 +211,9 @@ $RECYCLE.BIN/
 **/ignition/deployments
 **/*-lock.yaml
 foundry.lock
+soldeer.lock
 **/lib/*
+dependencies/
 
 # dotenv environment variables file
 .env
