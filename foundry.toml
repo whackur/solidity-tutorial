@@ -36,3 +36,6 @@ forge-std = "1.12.0"
 "@openzeppelin-contracts" = "5.5.0"
 "@openzeppelin-contracts-upgradeable" = "5.5.0"
 openzeppelin-foundry-upgrades = "0.4.0"
+
+[rpc_endpoints]
+sepolia = "${SEPOLIA_RPC_URL}"

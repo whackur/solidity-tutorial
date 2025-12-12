@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.31;
 
-import "@openzeppelin/contracts/proxy/Clones.sol";
+import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import "./Implementation.sol";
 
 contract Factory {
