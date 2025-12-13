@@ -2,7 +2,7 @@
 pragma solidity ^0.8.31;
 
 import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import "./Implementation.sol";
+import {Implementation} from "./Implementation.sol";
 
 contract Factory {
     address public implementation;

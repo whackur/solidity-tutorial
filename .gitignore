@@ -214,6 +214,7 @@ foundry.lock
 soldeer.lock
 **/lib/*
 dependencies/
+broadcast/
 
 # dotenv environment variables file
 .env

@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
-import "forge-std/Test.sol";
-import "../src/Factory.sol";
-import "../src/Implementation.sol";
+import {Test} from "forge-std/Test.sol";
+import {Factory} from "../src/Factory.sol";
+import {Implementation} from "../src/Implementation.sol";
 
 contract ClonesTest is Test {
     Factory public factory;
