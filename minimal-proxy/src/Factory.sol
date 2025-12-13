@@ -5,6 +5,7 @@ import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
 import {Implementation} from "./Implementation.sol";
 
 contract Factory {
+    string public version = "0.0.1";
     address public implementation;
 
     event CloneCreated(address indexed clone, uint256 value);
