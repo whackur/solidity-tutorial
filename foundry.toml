@@ -1,11 +1,3 @@
-[profile.default]
-src = "src"
-out = "out"
-libs = ["node_modules", "lib", "dependencies"]
-solc_version = "0.8.31"
-ignored_error_codes = [2424]
-auto_detect_remappings = false
-
 [soldeer]
 remappings_generate = true
 remappings_regenerate = false
@@ -37,6 +29,3 @@ forge-std = "1.12.0"
 "@openzeppelin-contracts" = "5.5.0"
 "@openzeppelin-contracts-upgradeable" = "5.5.0"
 openzeppelin-foundry-upgrades = "0.4.0"
-
-[rpc_endpoints]
-sepolia = "${SEPOLIA_RPC_URL}"
