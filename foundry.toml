@@ -25,11 +25,11 @@ single_line_statement_blocks = "preserve"
 override_spacing = false
 wrap_comments = false
 ignore = [
-    "*/node_modules/**",
-    "*/artifacts/**",
-    "*/cache/**",
-    "*/lib/**",
-    "*/dependencies/**"
+    "node_modules",
+    "artifacts",
+    "cache",
+    "lib",
+    "dependencies"
 ]
 
 [dependencies]
