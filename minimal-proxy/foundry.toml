@@ -4,7 +4,6 @@ out = "out"
 libs = ["../lib", "../dependencies"]
 solc_version = "0.8.31"
 ignored_error_codes = [2424]
-auto_detect_remappings = false
 remappings = [
     "@openzeppelin/contracts-upgradeable/=../lib/openzeppelin-contracts-upgradeable/contracts/",
     "@openzeppelin/contracts/=../lib/openzeppelin-contracts/contracts/",
