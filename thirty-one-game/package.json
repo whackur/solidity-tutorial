@@ -1,17 +1,17 @@
 {
-  "name": "thirty-one-game",
-  "version": "1.0.0",
-  "type": "module",
+  "name": "@tutorial/thirty-one-game",
+  "version": "0.1.0",
+  "description": "Baskin-Robbins 31 game tutorial with stake-based prize distribution",
+  "private": true,
   "scripts": {
-    "test": "npx hardhat test",
-    "compile": "npx hardhat compile",
-    "deploy:tog:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/ThirtyOneGame.ts --verify --reset",
-    "lint:sol": "solhint contracts/**/*.sol"
+    "clean": "forge clean",
+    "build": "forge build",
+    "test": "forge test",
+    "test:gas": "forge test --gas-report",
+    "test:coverage": "forge coverage",
+    "lint": "forge fmt --check",
+    "format": "forge fmt",
+    "snapshot": "forge snapshot"
   },
-  "keywords": [],
-  "devDependencies": {
-    "@openzeppelin/contracts": "^5.5.0",
-    "hardhat": "^3.0.11",
-    "viem": "^2.38.6"
-  }
+  "license": "MIT"
 }
