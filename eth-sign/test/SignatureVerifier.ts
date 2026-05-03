@@ -4,7 +4,7 @@ import {network} from 'hardhat';
 import {bytesToHex, keccak256, toBytes} from 'viem';
 import type {Hex} from 'viem';
 
-describe('Signature Verifier', function () {
+describe('Signature Verifier', function () {/
   async function deploySignatureVerifierFixture() {
     const {viem} = await network.connect();
     const [owner, signer, otherAccount] = await viem.getWalletClients();
