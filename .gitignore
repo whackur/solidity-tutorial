@@ -218,5 +218,9 @@ broadcast/
 
 # dotenv environment variables file
 .env
-.GEMINI.md
+
+# Agents
+.agent
 .kilocode
+GEMINI.md
+.omc
