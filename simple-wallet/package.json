@@ -1,17 +1,17 @@
 {
-  "name": "simple-wallet",
-  "version": "1.0.0",
-  "type": "module",
+  "name": "@tutorial/simple-wallet",
+  "version": "0.1.0",
+  "description": "Minimal ETH/ERC20 deposit wallet tutorial",
+  "private": true,
   "scripts": {
-    "test": "npx hardhat test",
-    "compile": "npx hardhat compile",
-    "check-code": "npx hardhat run scripts/check-code.ts",
-    "deploy:sepolia": "pnpm hardhat ignition deploy --network sepolia ignition/modules/SimpleWallet.ts --verify --reset",
-    "lint:sol": "solhint contracts/**/*.sol"
+    "clean": "forge clean",
+    "build": "forge build",
+    "test": "forge test",
+    "test:gas": "forge test --gas-report",
+    "test:coverage": "forge coverage",
+    "lint": "forge fmt --check",
+    "format": "forge fmt",
+    "snapshot": "forge snapshot"
   },
-  "devDependencies": {
-    "@openzeppelin/contracts": "^5.5.0",
-    "hardhat": "^3.0.11",
-    "viem": "^2.38.6"
-  }
+  "license": "MIT"
 }
