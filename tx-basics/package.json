@@ -1,0 +1,17 @@
+{
+  "name": "@tutorial/tx-basics",
+  "version": "0.1.0",
+  "description": "ETH transfer mechanics: transfer/send/call/sendValue, internal calls, contract-to-contract, receive/fallback",
+  "private": true,
+  "scripts": {
+    "clean": "forge clean",
+    "build": "forge build",
+    "test": "forge test",
+    "test:gas": "forge test --gas-report",
+    "test:coverage": "forge coverage",
+    "lint": "forge fmt --check",
+    "format": "forge fmt",
+    "snapshot": "forge snapshot"
+  },
+  "license": "MIT"
+}
