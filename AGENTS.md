@@ -1,92 +1,82 @@
-# AGENTS.MD
+# solidity-tutorial
 
-Telegraph style. Root rules only. Read scoped `AGENTS.md` before subtree work.
+Foundry-based monorepo of self-contained Solidity tutorials, managed with pnpm workspaces and Soldeer dependencies.
 
-## Start
+## Structure
 
-- Repo: `https://github.com/whackur/solidity-tutorial`
-- Replies: repo-root refs only: `eip-712-voucher/src/Voucher.sol:42`. No absolute paths, no `~/`.
-- Purpose: Solidity learning examples. Each subtree is a self-contained tutorial; do not cross-pollinate examples without reason.
-- High-confidence answers only when fixing/triaging: verify source, tests, and dependency contracts (OpenZeppelin, forge-std) before deciding.
-- Dependency-backed behavior: read upstream OZ/forge-std source/types in `dependencies/` first. Do not assume APIs, defaults, errors, or runtime behavior.
-- Missing deps: `forge soldeer install`, retry once, then report first actionable error.
-- Language: replies in Korean; code comments and identifiers in English.
-- New `AGENTS.md` in any subtree: add sibling `CLAUDE.md` symlink so OpenCode and Claude Code share context.
+```
+├── default-erc-20/       — Basic ERC20 token
+├── default-erc-721/      — Basic ERC721 NFT
+├── eip-712-voucher/      — EIP-712 typed-data signed vouchers
+├── eth-sign/             — eth_sign vs personal_sign signature recovery
+├── minimal-proxy/        — EIP-1167 minimal proxy / Clones
+├── simple-transparent/   — Transparent upgradeable proxy
+├── simple-uups/          — UUPS upgradeable proxy
+├── simple-wallet/        — Minimal ETH/ERC20 deposit wallet
+├── thirty-one-game/      — Baskin-Robbins 31 game with stake-based prizes
+├── dependencies/         — Soldeer-managed dependencies (do not edit manually)
+├── config/foundry/       — Centralized package config (packages.json)
+└── scripts/              — Shared Node.js helpers (generate-foundry-config, forge-fmt)
+```
 
-## Map
+Each tutorial has its own `foundry.toml`, `src/`, `test/`, and `script/` directories and is independently buildable.
 
-- Root: `foundry.toml`, `remappings.txt`, `package.json`, `pnpm-workspace.yaml` (each subdir is a workspace package).
-- Tutorials (each one self-contained, own `foundry.toml` may exist):
-  - `default-erc-20/` — basic ERC20.
-  - `default-erc-721/` — basic ERC721.
-  - `eip-712-voucher/` — EIP-712 typed-data vouchers.
-  - `eth-sign/` — ECDSA signing examples.
-  - `minimal-proxy/` — EIP-1167 minimal proxy.
-  - `simple-uups/` — UUPS upgradeable proxy.
-  - `simple-transparent/` — transparent upgradeable proxy.
-  - `simple-wallet/` — minimal wallet.
-  - `thirty-one-game/` — small game contract.
-- Deps: `dependencies/` (Soldeer), `lib/` (forge submodules if any), `node_modules/` (pnpm).
+## Working Directory
 
-## Architecture
+**Always `cd` into a package directory before running Forge commands.**
 
-- Each tutorial is independent. Do not introduce shared root-level Solidity code; copy patterns rather than abstract them.
-- Imports use Soldeer remappings from root `remappings.txt` (`@openzeppelin-contracts/`, `@openzeppelin-contracts-upgradeable/`, `forge-std/`, `openzeppelin-foundry-upgrades/`).
-- Upgradeable patterns (`simple-uups`, `simple-transparent`) use `openzeppelin-foundry-upgrades`; do not hand-roll proxy storage layouts unless the tutorial is about that.
-- EIP-712 / signature flows: keep domain separator constants explicit; do not hide them in helper libs.
-- Test contracts live next to source under each tutorial's `test/`.
+Root-level `foundry.toml` holds shared settings (Soldeer deps, RPC endpoints, Etherscan keys, formatter config), but build/test/deploy must run from within the target package:
 
-## Commands
+```bash
+cd default-erc-20 && forge build
+cd simple-uups && forge test -vvv
+```
 
-- Toolchain: Foundry (forge, cast, anvil) + pnpm 10 + Hardhat 3 (in some packages).
-- Install Soldeer deps: `forge soldeer install` (generates `dependencies/` + remappings).
-- Install Node deps: `pnpm install`.
-- Build all: per-tutorial `forge build`; root `pnpm -r test` runs per-package `test` script.
-- Test single tutorial: `cd <tutorial>; forge test -vvv`.
-- Format Solidity: `pnpm fmt` (`forge fmt .`); JS/TS: `pnpm format` (`prettier --write .`).
-- Lint: `pnpm lint` (eslint), Solhint via package-local config when present.
-- Combined: `pnpm lint:all` = format + lint.
-- Hardhat tutorials: run `pnpm hardhat test` / `pnpm hardhat ignition deploy` from inside that package.
-- Anvil local node: `anvil` from any tutorial dir; deploy via `forge script` or `hardhat ignition`.
+## Foundry config ownership
 
-## Code
+- Shared Foundry defaults are defined at the repository root.
+- Package `foundry.toml` files are generated from `config/foundry/packages.json`.
+- Regenerate and verify them with `pnpm generate:foundry-config` and `pnpm check:foundry-config`.
+- Edit the shared source or package override data, then regenerate; do not hand-maintain package `foundry.toml` drift.
 
-- Solidity ^0.8.x, license `MIT` or `UNLICENSED` per file.
-- `forge fmt` rules (root `foundry.toml [fmt]`): line length 100, tab width 4, double quotes, `bracket_spacing = false`, `int_types = "long"`, `multiline_func_header = "attributes_first"`, `quote_style = "double"`, `number_underscore = "thousands"`.
-- Naming: contracts `PascalCase`, functions/vars `camelCase`, constants `UPPER_SNAKE_CASE`, errors `PascalCase`.
-- Errors: prefer custom errors over `require(..., string)` for gas; tutorials may keep `require` strings for clarity — match the tutorial's existing style.
-- Storage: explicit `private`/`internal`/`public`; do not flip visibility unless the tutorial is about it.
-- Upgradeable: use `__Init_unchained` patterns; never add state variables above the storage gap; verify with `openzeppelin-foundry-upgrades` validator.
-- Comments: NatSpec on external/public; brief inline only for non-obvious logic. American English.
+## Dependencies
+
+- Managed by Soldeer (configured in root `foundry.toml` `[dependencies]` section).
+- Resolved to `dependencies/` at the repo root; packages reference them via `../dependencies/` in their `libs` and `remappings`.
+- Run `forge soldeer install` from the repo root to sync.
+
+## Formatting
+
+- The official Solidity formatting commands are `pnpm fmt` and `pnpm fmt:check` from the repository root.
+- These root commands run `forge fmt --root .` against the explicit package targets defined in `scripts/forge-fmt.mjs`.
+- Keep formatter rules centralized in the root `foundry.toml` `[fmt]` section.
+
+## Key Conventions
+
+- Solidity ^0.8.x, `solc = "0.8.34"`, `evm_version = "osaka"`.
+- Each package defines its own `remappings` in its `foundry.toml` (no root `remappings.txt`).
+- Tutorials are independent: do not introduce shared root-level Solidity code; copy patterns rather than abstract them.
+- Comments and identifiers in English; user-facing replies may be in Korean.
+- Errors: prefer custom errors for production, but tutorials may keep `require` strings for clarity — match the tutorial's existing style.
 
 ## Tests
 
-- Forge: `*.t.sol` under `test/`; use `Test` from `forge-std/Test.sol`. Prefer `assertEq`/`expectRevert` with custom-error selectors over string match.
-- Fuzz: tutorials may use bounded fuzz (`vm.assume`, `bound`); keep iterations reasonable.
-- Fork tests: gate behind `vm.envOr` and an env flag; do not assume RPC env in CI.
-- Hardhat: `test/*.ts` with mocha + viem/ethers; mirror Forge assertions where the tutorial demonstrates both.
-- Cheatcodes: prefer `vm.prank`/`vm.startPrank` over signing ECDSA in tests unless the tutorial is about signatures.
+- Forge: `*.t.sol` under each package's `test/`; use `Test` from `forge-std/Test.sol`.
+- Prefer `assertEq`/`expectRevert` with custom-error selectors over string match where applicable.
+- Cheatcodes: prefer `vm.prank`/`vm.startPrank`/`vm.sign`/`vm.signTypedData` over manual ECDSA in tests unless the tutorial is about signatures.
 
-## Git
+## Commands
 
-- Branch: `main`. Direct commits OK for tutorial fixes; PR only when restructuring multiple tutorials.
-- Commits: conventional-ish (`feat:`, `fix:`, `chore:`, `docs:`); one tutorial per commit when feasible.
-- Do not commit `dependencies/`, `lib/`, `node_modules/`, `cache/`, `out/`, `artifacts/`, `broadcast/`, `*.lock` (already in `.gitignore`).
-- Do not commit `.env` or any RPC keys / private keys.
-- `AGENTS.md` and `CLAUDE.md` are tracked; per-subtree variants are also tracked so OpenCode/Claude Code agents share context.
-
-## Security
-
-- Tutorials may demonstrate insecure patterns; mark them clearly with NatSpec `@dev WARNING:` or a section in the tutorial's README.
-- Never hardcode real private keys or mnemonics; use `vm.envUint("PRIVATE_KEY")` patterns and a sample `.env.example` if needed.
-- `simple-wallet` and signature-based examples: redact any real signer addresses before committing.
-- Soldeer deps pinned exact (`forge-std = "1.12.0"`, `@openzeppelin-contracts = "5.5.0"`); do not bump silently.
+- Install Soldeer deps: `forge soldeer install` (root).
+- Install Node deps: `pnpm install` (root).
+- Generate package configs: `pnpm generate:foundry-config`.
+- Build all: `pnpm -r build`.
+- Test all: `pnpm -r test`.
+- Test one tutorial: `cd <tutorial> && forge test -vvv`.
+- Format Solidity: `pnpm fmt`.
 
 ## Footguns
 
-- `remappings.txt` is generated by Soldeer. If imports break, run `forge soldeer install` rather than hand-editing.
-- Each subtree may carry its own `foundry.toml` overriding root; check before assuming root config applies.
-- `pnpm-workspace.yaml` globs `*` — every top-level dir is a package, including non-tutorial ones. Be precise with `pnpm -F <pkg>`.
-- Hardhat 3 is ESM-first; `hardhat.config.ts` uses `defineConfig` and TS imports must be `.js` extension at runtime.
-- Windows: forge symlinks for proxy artifacts may not resolve; prefer relative imports in scripts.
-- `forge fmt` rewrites quote style and bracket spacing; review diffs before committing format-only changes.
+- Each subtree carries its own generated `foundry.toml`. Do not hand-edit; modify `config/foundry/packages.json` and regenerate.
+- `dependencies/` is gitignored. Run `forge soldeer install` after a fresh clone.
+- Hardhat/Ignition are no longer used. Any leftover `contracts/`, `ignition/`, `types/`, `artifacts/` directories should be removed.

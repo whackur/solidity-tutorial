@@ -77,6 +77,7 @@ build/Release
 
 # Dependency directories
 node_modules/
+.worktrees/
 jspm_packages/
 
 # Snowpack dependency directory (https://snowpack.dev/)
@@ -130,9 +131,6 @@ dist
 
 # Gatsby files
 .cache/
-# Comment in the public line in if your project uses Gatsby and not Next.js
-# https://nextjs.org/blog/next-9-1#public-directory-support
-# public
 
 # vuepress build output
 .vuepress/dist
@@ -169,8 +167,6 @@ dist
 # Serverless Webpack directories
 .webpack/
 
-# Optional stylelint cache
-
 # SvelteKit build / generate output
 .svelte-kit
 
@@ -202,25 +198,47 @@ $RECYCLE.BIN/
 
 # End of https://www.toptal.com/developers/gitignore/api/node,windows,macos
 
+# Foundry
+**/out/
+**/cache/
+**/broadcast/
+**/lib/
+dependencies/
+**/dependencies/**
+soldeer.lock
+remappings.txt
+foundry.lock
+*.gas-snapshot
+gas-report.txt
+coverage.json
+
 # Custom
 **/bundle
 **/artifacts
-**/cache
 **/types
 **/coverage
 **/ignition/deployments
 **/*-lock.yaml
-foundry.lock
-soldeer.lock
-**/lib/*
-dependencies/
-broadcast/
-
-# dotenv environment variables file
 .env
 
 # Agents
+.idea
+.deps
 .agent
+.agents
 .kilocode
+.GEMINI.md
 GEMINI.md
+.claude
 .omc
+.sisyphus
+nul
+skills-lock.json
+slither-report.json
+**/docs/internal/*
+**/docs/superpowers/*
+.playwright-mcp
+
+# Echidna
+crytic-export/
+**/test/echidna/corpus/

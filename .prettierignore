@@ -1,11 +1,6 @@
-node_modules
-coverage
-dist
-cache
-bundle
-artifacts
-cache
-types
-coverage
-ignition/deployments
-*lock.yaml
+node_modules/
+artifacts/
+cache/
+coverage/
+dist/
+lib/
