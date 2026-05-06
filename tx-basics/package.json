@@ -1,7 +1,7 @@
 {
   "name": "@tutorial/tx-basics",
   "version": "0.1.0",
-  "description": "ETH transfer mechanics: transfer/send/call/sendValue, internal calls, contract-to-contract, receive/fallback",
+  "description": "ETH transfer mechanics: transfer/send/call/sendValue, delegatecall, internal calls, contract-to-contract, receive/fallback",
   "private": true,
   "scripts": {
     "clean": "forge clean",

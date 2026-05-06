@@ -10,3 +10,4 @@
 - **simple-uups**: UUPS Upgradeable contract example.
 - **simple-wallet**: Simple wallet implementation.
 - **thirty-one-game**: A simple game contract.
+- **tx-basics**: ETH transfer and execution examples: transfer/send/call, delegatecall, receive/fallback.

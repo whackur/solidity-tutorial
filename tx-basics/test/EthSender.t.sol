@@ -4,6 +4,7 @@ pragma solidity ^0.8.34;
 import {Test} from "forge-std/Test.sol";
 
 import {EthSender, IEthMailbox} from "../src/EthSender.sol";
+import {DelegateCaller, DelegateLogic} from "../src/DelegatecallDemo.sol";
 import {EthMailbox} from "../src/EthMailbox.sol";
 import {EthSink} from "../src/EthSink.sol";
 import {EthRejector} from "../src/EthRejector.sol";
@@ -127,6 +128,29 @@ contract EthSenderTest is Test {
         assertEq(keccak256(mailbox.lastCalldata()), keccak256(data));
     }
 
+    function test_forwardWithCallFallbackCanDecodePayloadCommand() public {
+        bytes32 tag = bytes32("fallback-tag");
+        bytes memory data = abi.encodeWithSignature("setFallbackTag(bytes32)", tag);
+
+        sender.forwardWithCall(payable(address(mailbox)), 1 ether, data);
+
+        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.Fallback));
+        assertEq(mailbox.lastTag(), tag);
+        assertEq(mailbox.lastValue(), 1 ether);
+        assertEq(keccak256(mailbox.lastCalldata()), keccak256(data));
+    }
+
+    function test_forwardWithCallFallbackCanRouteToCounterCommand() public {
+        bytes memory data = abi.encodeWithSignature("countFallback()");
+
+        sender.forwardWithCall(payable(address(mailbox)), 1 ether, data);
+        sender.forwardWithCall(payable(address(mailbox)), 0, data);
+
+        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.Fallback));
+        assertEq(mailbox.lastValue(), 0);
+        assertEq(mailbox.fallbackHits(), 2);
+    }
+
     function test_forwardWithCallNamedSelectorTriggersThatFunction() public {
         bytes memory data = abi.encodeCall(EthMailbox.receivePayable, (bytes32("named")));
         sender.forwardWithCall(payable(address(mailbox)), 1 ether, data);
@@ -147,5 +171,59 @@ contract EthSenderTest is Test {
 
         assertEq(address(sender).balance, 0);
         assertEq(user.balance, userStart + senderStart);
+    }
+}
+
+contract DelegatecallDemoTest is Test {
+    DelegateLogic internal logic;
+    DelegateCaller internal caller;
+
+    address internal user = makeAddr("user");
+
+    function setUp() public {
+        logic = new DelegateLogic();
+        caller = new DelegateCaller();
+
+        vm.deal(user, 10 ether);
+    }
+
+    function test_callMutatesTargetStorageAndTransfersEth() public {
+        vm.prank(user);
+        (uint256 returnedNumber, address returnedSender, uint256 returnedValue) =
+            caller.setVarsViaCall{value: 1 ether}(logic, 7);
+
+        assertEq(returnedNumber, 7);
+        assertEq(returnedSender, address(caller));
+        assertEq(returnedValue, 1 ether);
+
+        assertEq(logic.number(), 7);
+        assertEq(logic.sender(), address(caller));
+        assertEq(logic.value(), 1 ether);
+        assertEq(address(logic).balance, 1 ether);
+
+        assertEq(caller.number(), 0);
+        assertEq(caller.sender(), address(0));
+        assertEq(caller.value(), 0);
+        assertEq(address(caller).balance, 0);
+    }
+
+    function test_delegatecallMutatesCallerStorageAndKeepsEth() public {
+        vm.prank(user);
+        (uint256 returnedNumber, address returnedSender, uint256 returnedValue) =
+            caller.setVarsViaDelegatecall{value: 1 ether}(address(logic), 42);
+
+        assertEq(returnedNumber, 42);
+        assertEq(returnedSender, user);
+        assertEq(returnedValue, 1 ether);
+
+        assertEq(caller.number(), 42);
+        assertEq(caller.sender(), user);
+        assertEq(caller.value(), 1 ether);
+        assertEq(address(caller).balance, 1 ether);
+
+        assertEq(logic.number(), 0);
+        assertEq(logic.sender(), address(0));
+        assertEq(logic.value(), 0);
+        assertEq(address(logic).balance, 0);
     }
 }

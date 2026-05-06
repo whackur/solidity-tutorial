@@ -9,6 +9,9 @@ pragma solidity ^0.8.34;
 ///      via the 2300-gas stipend (`transfer` / `send`) will run out of gas and
 ///      revert at the SSTORE — see {EthSender} tests for the demonstration.
 contract EthMailbox {
+    bytes4 private constant SET_FALLBACK_TAG_SELECTOR = bytes4(keccak256("setFallbackTag(bytes32)"));
+    bytes4 private constant COUNT_FALLBACK_SELECTOR = bytes4(keccak256("countFallback()"));
+
     enum Trigger {
         None,
         Receive,
@@ -20,6 +23,7 @@ contract EthMailbox {
     bytes32 public lastTag;
     bytes public lastCalldata;
     uint256 public lastValue;
+    uint256 public fallbackHits;
 
     /// @dev Hit by value-bearing calls with empty calldata.
     receive() external payable {
@@ -27,12 +31,20 @@ contract EthMailbox {
         lastValue = msg.value;
     }
 
-    /// @dev Hit by calls whose selector matches no named function (or by
-    ///      non-empty calldata when no `receive` exists).
+    /// @dev Hit by calls whose selector matches no named function. Besides
+    ///      recording raw calldata, this demonstrates how a fallback can route
+    ///      specific unknown selectors to different behavior.
     fallback() external payable {
         lastTrigger = Trigger.Fallback;
         lastValue = msg.value;
         lastCalldata = msg.data;
+
+        if (msg.sig == SET_FALLBACK_TAG_SELECTOR) {
+            require(msg.data.length == 36, "bad fallback payload");
+            lastTag = abi.decode(msg.data[4:], (bytes32));
+        } else if (msg.sig == COUNT_FALLBACK_SELECTOR) {
+            fallbackHits += 1;
+        }
     }
 
     /// @dev Named payable function — wins selector dispatch over
