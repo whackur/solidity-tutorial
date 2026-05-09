@@ -1,0 +1,17 @@
+{
+  "name": "@tutorial/erc1155-multi-token",
+  "version": "0.1.0",
+  "description": "ERC-1155 multi-token (mint, batch, uri) example",
+  "private": true,
+  "scripts": {
+    "clean": "forge clean",
+    "build": "forge build",
+    "test": "forge test",
+    "test:gas": "forge test --gas-report",
+    "test:coverage": "forge coverage",
+    "lint": "forge fmt --check",
+    "format": "forge fmt",
+    "snapshot": "forge snapshot"
+  },
+  "license": "MIT"
+}
