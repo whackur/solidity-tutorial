@@ -102,7 +102,7 @@ contract SignatureVerifierTest is Test {
     }
 
     function test_HandlesUtf8Messages() public view {
-        // UTF-8 encoded bytes for "안녕하세요, 이더리움!"
+        // UTF-8 encoded bytes for "Hello, Ethereum!"
         bytes memory message = hex"ec9588eb8595ed9598ec84b8ec9a942c20ec9db4eb8d94eba6acec9aa421";
         bytes32 digest = _personalSignHash(message);
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerKey, digest);
