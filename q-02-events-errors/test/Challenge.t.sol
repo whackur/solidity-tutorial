@@ -3,33 +3,81 @@ pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
 import {EventsAndErrors} from "../src/Setup.sol";
-import {Solution} from "../src/Solution.sol";
 
 contract Q02EventsErrorsTest is Test {
     EventsAndErrors internal e;
-    Solution internal sol;
+
+    address internal alice = makeAddr("alice");
+    address internal bob = makeAddr("bob");
 
     function setUp() public {
         e = new EventsAndErrors();
-        sol = new Solution();
     }
 
-    function test_KnownSelectors() public view {
-        (bytes4 errSel, bytes4 panicSel, bytes4 customSel) = sol.knownSelectors();
-        assertEq(errSel, bytes4(0x08c379a0), "Error(string) selector");
-        assertEq(panicSel, bytes4(0x4e487b71), "Panic(uint256) selector");
-        assertEq(customSel, EventsAndErrors.InsufficientBalance.selector, "custom selector");
+    function test_RequireRevertsAsErrorString() public {
+        try e.failWithRequire(0) {
+            revert("must have reverted");
+        } catch (bytes memory reason) {
+            bytes4 sel = bytes4(reason);
+            assertEq(sel, bytes4(0x08c379a0), "Error(string) selector");
+        }
     }
 
-    function test_ClassifyError() public {
-        assertEq(sol.classify(e, 0), uint8(0), "require -> Error(string)");
+    function test_AssertRevertsAsPanic() public {
+        try e.failWithAssert(false) {
+            revert("must have reverted");
+        } catch (bytes memory reason) {
+            bytes4 sel = bytes4(reason);
+            assertEq(sel, bytes4(0x4e487b71), "Panic(uint256) selector");
+        }
     }
 
-    function test_ClassifyPanic() public {
-        assertEq(sol.classify(e, 1), uint8(1), "assert -> Panic(uint256)");
+    function test_CustomErrorRevertsWithCustomSelector() public {
+        try e.failWithCustomError(1, 2) {
+            revert("must have reverted");
+        } catch (bytes memory reason) {
+            bytes4 sel = bytes4(reason);
+            assertEq(
+                sel, EventsAndErrors.InsufficientBalance.selector, "InsufficientBalance selector"
+            );
+        }
     }
 
-    function test_ClassifyCustom() public {
-        assertEq(sol.classify(e, 2), uint8(2), "revert MyErr -> custom");
+    function test_AliceSolvesAll() public {
+        vm.startPrank(alice);
+        e.reportErrorSelector(bytes4(0x08c379a0));
+        e.reportPanicSelector(bytes4(0x4e487b71));
+        e.reportCustomSelector(EventsAndErrors.InsufficientBalance.selector);
+        vm.stopPrank();
+
+        assertTrue(e.isSolved(alice), "alice solved");
+    }
+
+    function test_TwoUsersIndependent() public {
+        vm.startPrank(alice);
+        e.reportErrorSelector(bytes4(0x08c379a0));
+        e.reportPanicSelector(bytes4(0x4e487b71));
+        e.reportCustomSelector(EventsAndErrors.InsufficientBalance.selector);
+        vm.stopPrank();
+
+        // Bob has only done two of three.
+        vm.startPrank(bob);
+        e.reportErrorSelector(bytes4(0x08c379a0));
+        e.reportPanicSelector(bytes4(0x4e487b71));
+        vm.stopPrank();
+
+        assertTrue(e.isSolved(alice), "alice solved");
+        assertFalse(e.isSolved(bob), "bob not yet solved");
+
+        // Bob finishes.
+        vm.prank(bob);
+        e.reportCustomSelector(EventsAndErrors.InsufficientBalance.selector);
+        assertTrue(e.isSolved(bob), "bob now solved");
+    }
+
+    function test_WrongSelectorReverts() public {
+        vm.prank(alice);
+        vm.expectRevert();
+        e.reportErrorSelector(bytes4(0xdeadbeef));
     }
 }
