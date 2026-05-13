@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-16-oracle-spot",
+  "version": "0.1.0",
+  "description": "Quiz 16 — Spot-price oracle manipulation drains the lender",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
