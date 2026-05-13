@@ -2,62 +2,104 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
-import {PermitToken} from "../src/Setup.sol";
-import {Solution} from "../src/Solution.sol";
+import {PermitToken, PermitChallenge} from "../src/Setup.sol";
 
 contract Q06PermitTest is Test {
     PermitToken internal token;
-    Solution internal sol;
+    PermitChallenge internal challenge;
 
-    address internal owner;
-    uint256 internal ownerPk;
-    address internal recipient = address(0xBEEF);
+    address internal alice;
+    uint256 internal alicePk;
+    address internal bob;
+    uint256 internal bobPk;
+    address internal recipientA = address(0xA1);
+    address internal recipientB = address(0xB2);
 
     uint256 internal constant VALUE = 100e18;
+
     bytes32 internal constant PERMIT_TYPEHASH = keccak256(
         "Permit(address owner,address spender,uint256 value,uint256 nonce,uint256 deadline)"
     );
 
     function setUp() public {
-        (owner, ownerPk) = makeAddrAndKey("owner");
+        (alice, alicePk) = makeAddrAndKey("alice");
+        (bob, bobPk) = makeAddrAndKey("bob");
+
         token = new PermitToken();
-        sol = new Solution();
-        token.mint(owner, VALUE);
+        challenge = new PermitChallenge(token);
+
+        token.mint(alice, VALUE);
+        token.mint(bob, VALUE);
     }
 
-    function _signPermit(uint256 nonce, uint256 deadline)
+    function _signPermit(uint256 pk, address owner, uint256 value, uint256 deadline)
         internal
         view
         returns (uint8 v, bytes32 r, bytes32 s)
     {
-        bytes32 structHash =
-            keccak256(abi.encode(PERMIT_TYPEHASH, owner, address(sol), VALUE, nonce, deadline));
-        bytes32 digest = keccak256(
-            abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash)
+        bytes32 structHash = keccak256(
+            abi.encode(PERMIT_TYPEHASH, owner, address(challenge), value, token.nonces(owner), deadline)
         );
-        (v, r, s) = vm.sign(ownerPk, digest);
+        bytes32 digest = keccak256(abi.encodePacked("\x19\x01", token.DOMAIN_SEPARATOR(), structHash));
+        (v, r, s) = vm.sign(pk, digest);
     }
 
-    function test_PullWithPermit() public {
+    function test_AliceSpendsWithPermit() public {
         uint256 deadline = block.timestamp + 1 hours;
-        (uint8 v, bytes32 r, bytes32 s) = _signPermit(token.nonces(owner), deadline);
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(alicePk, alice, VALUE, deadline);
 
-        sol.pullWithPermit(IERC20Permit(address(token)), owner, VALUE, deadline, v, r, s, recipient);
+        // Anyone may relay the call; here alice submits it herself.
+        vm.prank(alice);
+        challenge.spendWithPermit(alice, VALUE, deadline, v, r, s, recipientA);
 
-        assertEq(token.balanceOf(recipient), VALUE, "recipient holds tokens");
-        assertEq(token.balanceOf(owner), 0, "owner emptied");
+        assertEq(token.balanceOf(recipientA), VALUE, "tokens moved to recipient");
+        assertEq(token.balanceOf(alice), 0, "alice drained her balance to recipient");
+        assertTrue(challenge.usedPermit(alice));
+        assertEq(token.nonces(alice), 1, "permit consumed nonce 0");
+        assertTrue(challenge.isSolved(alice));
     }
 
-    function test_NonceConsumed() public {
+    function test_TwoUsersIndependent() public {
         uint256 deadline = block.timestamp + 1 hours;
-        (uint8 v, bytes32 r, bytes32 s) = _signPermit(token.nonces(owner), deadline);
 
-        // first consume succeeds
-        sol.pullWithPermit(IERC20Permit(address(token)), owner, VALUE, deadline, v, r, s, recipient);
+        (uint8 va, bytes32 ra, bytes32 sa) = _signPermit(alicePk, alice, VALUE, deadline);
+        (uint8 vb, bytes32 rb, bytes32 sb) = _signPermit(bobPk, bob, VALUE, deadline);
 
-        // re-using the same signature must revert — nonce was consumed
+        // Alice's submission first.
+        vm.prank(alice);
+        challenge.spendWithPermit(alice, VALUE, deadline, va, ra, sa, recipientA);
+        assertTrue(challenge.isSolved(alice));
+        assertFalse(challenge.isSolved(bob));
+
+        // Bob then submits independently.
+        vm.prank(bob);
+        challenge.spendWithPermit(bob, VALUE, deadline, vb, rb, sb, recipientB);
+        assertTrue(challenge.isSolved(bob));
+
+        assertEq(token.balanceOf(recipientA), VALUE);
+        assertEq(token.balanceOf(recipientB), VALUE);
+    }
+
+    function test_ReplayBlockedByNonce() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(alicePk, alice, VALUE, deadline);
+
+        challenge.spendWithPermit(alice, VALUE, deadline, v, r, s, recipientA);
+
         vm.expectRevert();
-        sol.pullWithPermit(IERC20Permit(address(token)), owner, VALUE, deadline, v, r, s, recipient);
+        challenge.spendWithPermit(alice, VALUE, deadline, v, r, s, recipientA);
+    }
+
+    function test_RelayerCanSubmit() public {
+        uint256 deadline = block.timestamp + 1 hours;
+        (uint8 v, bytes32 r, bytes32 s) = _signPermit(alicePk, alice, VALUE, deadline);
+
+        address relayer = makeAddr("relayer");
+        vm.prank(relayer);
+        challenge.spendWithPermit(alice, VALUE, deadline, v, r, s, recipientA);
+
+        // The permit *signer* (alice) gets solve credit, not the relayer.
+        assertTrue(challenge.isSolved(alice));
+        assertFalse(challenge.isSolved(relayer));
     }
 }

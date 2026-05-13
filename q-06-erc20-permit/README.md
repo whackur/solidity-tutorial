@@ -1,40 +1,77 @@
-# Q-06. ERC20Permit — approve + transferFrom in one transaction
+# Q-06. ERC20 Permit — approve + transferFrom in one signed message
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 > **Korean brief**: [`docs/challenges/q-06-erc20-permit.md`](../../solidity-tutorial-lecture/docs/challenges/q-06-erc20-permit.md)
 > **Lecture (Korean)**: [PPT 3-2](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-2-erc20.md), [PPT 3-4](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-4-eip-712-signatures.md)
-> **Reference source**: [`../erc20-extended/src/ExtendedERC20.sol`](../erc20-extended/src/ExtendedERC20.sol)
 
-## Scenario
+A single `PermitToken` (EIP-2612) + `PermitChallenge` is deployed.
+You hold tokens on your EOA, sign an off-chain permit authorising the
+challenge contract as `spender`, then submit the permit + a pull in
+one transaction (yours or a relayer's).
 
-EIP-2612 `permit` turns an off-chain signature into an on-chain allowance. The test prepares an `(owner, ownerPk)` pair with token balance, builds the typed digest, and signs it with `vm.sign`. Your job:
+## Goal
 
-1. `token.permit(owner, address(this), value, deadline, v, r, s)` — verifies the signature and writes the allowance.
-2. `IERC20(address(token)).transferFrom(owner, recipient, value)` — pulls the tokens.
+Make `PermitChallenge.isSolved(yourAddress)` return `true`.
 
-## What to implement
+Conditions:
+- `usedPermit[you] == true` — you've consumed at least one of your permits.
+- `token.nonces(you) > 0` — your EIP-2612 nonce advanced (anti-replay proof).
+
+## Contract surface
 
 ```solidity
-function pullWithPermit(
-    IERC20Permit token,
+// PermitToken (EIP-2612)
+function mint(address to, uint256 amount) external;   // public faucet
+function permit(address owner, address spender, uint256 value, uint256 deadline,
+                uint8 v, bytes32 r, bytes32 s) external;
+function nonces(address owner) external view returns (uint256);
+function DOMAIN_SEPARATOR() external view returns (bytes32);
+
+// PermitChallenge
+function spendWithPermit(
     address owner,
     uint256 value,
     uint256 deadline,
     uint8 v, bytes32 r, bytes32 s,
     address recipient
 ) external;
+function isSolved(address user) external view returns (bool);
 ```
 
-## Hints
+## UI call sequence
 
-- Order matters — call `permit` **before** `transferFrom`.
-- A signature is valid only once; the second consume reverts (`ERC2612InvalidSigner` or similar) because the nonce was bumped.
+1. `token.mint(you, 100e18)` — self-faucet.
+2. Off-chain: sign EIP-712 typed data for the Permit struct. In a web UI
+   this is a single `eth_signTypedData_v4` call. The signed struct is:
+   ```
+   domain: {
+     name: "PermitToken",
+     version: "1",
+     chainId,
+     verifyingContract: tokenAddress
+   }
+   types: { Permit: [owner, spender, value, nonce, deadline] }
+   message: {
+     owner: you,
+     spender: challengeAddress,
+     value: 100e18,
+     nonce: token.nonces(you),
+     deadline: now + 1h
+   }
+   ```
+3. Split the resulting 65-byte signature into `(v, r, s)`.
+4. Submit `challenge.spendWithPermit(you, 100e18, deadline, v, r, s, recipient)`.
+   - The challenge calls `token.permit(...)` then `transferFrom(you → recipient)` atomically.
+5. Read `challenge.isSolved(you)` → `true`.
 
-## Grading
+## Concepts exercised
 
-```bash
-forge test -vv
-```
-
-- `test_PullWithPermit` — recipient holds the tokens, owner is empty.
-- `test_NonceConsumed` — re-using the same signature reverts.
+- **EIP-2612 permit**: replaces a separate `approve` tx with an off-chain
+  signature that the `permit` function consumes on-chain.
+- **EIP-712 typed data**: structured digest = `\x19\x01 || domainSeparator || structHash`.
+  The wallet's signing UI shows the field names instead of an opaque hash.
+- **Nonce-based replay protection**: each successful permit increments
+  `nonces[owner]`, invalidating the previous signature.
+- **Relayer pattern**: the permit holder doesn't have to be the tx sender,
+  enabling gasless / meta-transaction flows (only the recipient is fixed
+  inside the signed payload; the relayer pays gas).
