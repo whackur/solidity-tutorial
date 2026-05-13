@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-18-read-only-reentrancy",
+  "version": "0.1.0",
+  "description": "Quiz 18 — Read-only reentrancy: a view function returning stale state misleads an external consumer",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
