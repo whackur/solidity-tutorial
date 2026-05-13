@@ -4,7 +4,10 @@ pragma solidity ^0.8.35;
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
 
-/// @dev Local copy of ../vulnerabilities/src/signature-replay/VulnerableSigClaim.sol
+/// @notice Intentionally-broken signed claim. The signed payload is just
+///         `keccak256(abi.encode(to, amount))` — no nonce, no deadline,
+///         no chainId, no verifyingContract. Same `(to, amount)` ⇒ same
+///         digest ⇒ same signature works forever.
 contract VulnerableSigClaim {
     address public immutable signer;
 
@@ -25,6 +28,43 @@ contract VulnerableSigClaim {
     receive() external payable {}
 }
 
-interface IVulnerableSigClaim {
-    function claim(address payable to, uint256 amount, bytes calldata signature) external;
+/// @notice Multi-tenant lab. Each user calls `createInstance(signerAddr)`
+///         once to get their own pre-funded `VulnerableSigClaim`. They
+///         then sign `(to, 1 ether)` *once* and replay the same signature
+///         on `claim(...)` until the contract is empty.
+///
+///         The lab itself must hold ≥ `SEED * N` ETH at deploy time —
+///         see the funded `receive()`.
+contract ReplayLab {
+    uint256 public constant SEED = 5 ether;
+
+    mapping(address => VulnerableSigClaim) private _claims;
+
+    event InstanceCreated(address indexed user, address claim, address signer);
+
+    receive() external payable {}
+
+    function createInstance(address signer) external returns (address claim) {
+        require(address(_claims[msg.sender]) == address(0), "already created");
+        require(signer != address(0), "signer = 0");
+        require(address(this).balance >= SEED, "lab underfunded");
+
+        VulnerableSigClaim c = new VulnerableSigClaim(signer);
+        (bool ok,) = address(c).call{value: SEED}("");
+        require(ok, "seed failed");
+
+        _claims[msg.sender] = c;
+        emit InstanceCreated(msg.sender, address(c), signer);
+        return address(c);
+    }
+
+    function claimOf(address user) external view returns (VulnerableSigClaim) {
+        return _claims[user];
+    }
+
+    function isSolved(address user) external view returns (bool) {
+        VulnerableSigClaim c = _claims[user];
+        if (address(c) == address(0)) return false;
+        return address(c).balance == 0;
+    }
 }
