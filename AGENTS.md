@@ -55,7 +55,11 @@ cd simple-uups && forge test -vvv
 ## Key Conventions
 
 - Solidity ^0.8.x, `solc = "0.8.35"`, `evm_version = "osaka"`.
-- Each package defines its own `remappings` in its `foundry.toml` (no root `remappings.txt`).
+- Each package defines its own `remappings` in its `foundry.toml`. A
+  matching per-package `remappings.txt` is allowed (and used in `q-*`)
+  purely so external Solidity language servers (Cursor / VS Code) can
+  resolve imports — `forge` itself reads `foundry.toml`. Keep the two
+  in sync; do not introduce a *root* `remappings.txt`.
 - Tutorials are independent: do not introduce shared root-level Solidity code; copy patterns rather than abstract them.
 - **English only** in this repo. Every README, source-file comment, identifier, test message, and `q-*/README.md` is English. Korean stays in `solidity-tutorial-lecture`.
 - User-facing replies in chat may be in Korean — but committed files must remain English.

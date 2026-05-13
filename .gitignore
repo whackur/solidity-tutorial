@@ -207,6 +207,7 @@ dependencies/
 **/dependencies/**
 soldeer.lock
 remappings.txt
+!q-*/remappings.txt
 foundry.lock
 *.gas-snapshot
 gas-report.txt
