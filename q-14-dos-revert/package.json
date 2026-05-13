@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-14-dos-revert",
+  "version": "0.1.0",
+  "description": "Quiz 14 — Push-payment DoS via a reverting receiver",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
