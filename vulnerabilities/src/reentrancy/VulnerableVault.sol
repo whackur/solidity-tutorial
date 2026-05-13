@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.34;
+pragma solidity ^0.8.35;
 
 /// @title VulnerableVault — *external call before state update* (CEI violation)
 /// @notice withdraw() sends ETH *before* zeroing the balance, so the receiver's `receive()` can re-enter and call withdraw() again.

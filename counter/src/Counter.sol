@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.34;
+pragma solidity ^0.8.35;
 
 /// @title Counter — minimal contract for the Solidity entry-level lecture
 /// @notice The simplest combination of state variable + function visibility + event + custom error

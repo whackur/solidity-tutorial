@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.34;
+pragma solidity ^0.8.35;
 
 /// @notice Storage-recording recipient that distinguishes the three entry paths
 ///         a value-bearing call can take: the unnamed `receive`, the unnamed

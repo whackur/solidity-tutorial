@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.34;
+pragma solidity ^0.8.35;
 
 /// @notice Logic contract used by {DelegateCaller} to compare `call` and
 ///         `delegatecall` side-by-side.

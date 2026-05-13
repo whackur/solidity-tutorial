@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.34;
+pragma solidity ^0.8.35;
 
 /// @title SimpleStorage — single storage slot read/write + event notification
 /// @notice The most basic contract responsibility: store a value and notify the outside on change

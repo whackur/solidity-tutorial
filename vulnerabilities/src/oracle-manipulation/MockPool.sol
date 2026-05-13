@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.34;
+pragma solidity ^0.8.35;
 
 /// @title MockPool — simplified *x*y=k* AMM pool
 /// @notice Within a single transaction, swap → priceOfA() can be called, so the spot price becomes *temporarily distorted*

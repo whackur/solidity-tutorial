@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.34;
+pragma solidity ^0.8.35;
 
 /// @title SafeLending — uses prices pushed by an *external oracle* (abstracted as TWAP / Chainlink, etc.)
 /// @notice Does *not* read the spot price of a single pool directly — a separate trusted source updates over time
