@@ -61,12 +61,53 @@ cd simple-uups && forge test -vvv
 - User-facing replies in chat may be in Korean — but committed files must remain English.
 - Errors: prefer custom errors for production, but tutorials may keep `require` strings for clarity — match the tutorial's existing style.
 
-## Challenge set (`q-*`)
+## Challenge set (`q-*`) — multi-tenant web UI design
 
-- `q-01-counter/` ... `q-10-signature-replay/` host the CTF-style learning exercises. See `q-INDEX.md` for the full catalog and difficulty/lecture mapping.
-- Each challenge has the same layout: `src/Setup.sol` (frozen environment), `src/Solution.sol` (student TODO stub), `test/Challenge.t.sol` (auto-grading), and `reference/Solution.ref.sol` (instructor solution — keep out of student materials).
-- `README.md` in each `q-*/` is in **English** and links to the matching Korean problem brief under `solidity-tutorial-lecture/docs/challenges/q-*.md`.
-- Never inline a working solution in `src/Solution.sol`. The stub must compile but revert with `"... not implemented"` until the student writes it.
+The `q-01-counter/` ... `q-10-signature-replay/` directories host CTF-style
+challenges designed for a **shared, multi-tenant deployment**. A single
+contract instance is deployed once; many users interact with it through
+an external web UI (or any wallet), distinguished only by `msg.sender`.
+
+Students do **not** write Solidity to solve. They send transactions /
+read state through the UI.
+
+### Hard rules
+
+- **Per-user state**: all progress is keyed by `msg.sender` in mappings.
+  Never use a global flag/counter that one user could trip for another.
+- **`isSolved(address user) view returns (bool)`**: every challenge's
+  main contract exposes this canonical check. The UI polls it to grade.
+- **No `src/Solution.sol`**: challenges are solved by transactions, not
+  by student-written contracts.
+- **`vm.prank` multi-user tests**: `test/Challenge.t.sol` must simulate
+  at least two distinct users solving in parallel and verify they do
+  not interfere with each other's `isSolved` state.
+- **Factory pattern for per-user instances** (q-04, q-09, q-10): a
+  single Lab contract exposes `createInstance()` which deploys the
+  user's personal vulnerable / attacker contracts. The Lab tracks
+  `mapping(address user => Instance)`.
+- **`reference/PLAYBOOK.md`**: instructor-only ordered call sequence
+  (English). No `Solution.ref.sol` Solidity solution file.
+- All Setup contracts must be re-entrancy-safe across users — one
+  user's transaction must never read or write another user's slot.
+
+### Layout
+
+```
+q-XX-{slug}/
+├── README.md            ← English brief: scenario + UI call sequence
+├── foundry.toml
+├── package.json
+├── src/
+│   └── Setup.sol        ← challenge environment + isSolved(address)
+├── test/
+│   └── Challenge.t.sol  ← vm.prank multi-user grading
+└── reference/
+    └── PLAYBOOK.md      ← instructor-only ordered call list
+```
+
+The English `README.md` links to the matching Korean brief at
+`solidity-tutorial-lecture/docs/challenges/q-XX-*.md`.
 
 ## Tests
 
