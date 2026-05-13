@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-11-access-control",
+  "version": "0.1.0",
+  "description": "Quiz 11 — Missing onlyOwner modifier on a privileged setter",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
