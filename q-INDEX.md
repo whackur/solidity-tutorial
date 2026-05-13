@@ -73,13 +73,23 @@ isolated.
 | q-06 | erc20-permit | Intermediate ⭐⭐⭐ | 3-2, 3-4 | EIP-2612 permit + transferFrom in one tx |
 | q-07 | eth-sign | Intermediate ⭐⭐⭐ | 3-4 | EIP-191 eth_sign + personal_sign recovery |
 | q-08 | eip712-voucher | Intermediate ⭐⭐⭐ | 3-4 | EIP-712 typed-data signed mint voucher |
-| q-09 | reentrancy | Intermediate ⭐⭐⭐ | 4-1 | per-user vault + attacker — CEI violation drain |
-| q-10 | signature-replay | Intermediate ⭐⭐⭐ | 3-4, 4-1 | per-user claim — replay a nonce-less signature |
+| q-09 | reentrancy | Intermediate ⭐⭐⭐ | 4-1 §2 | per-user vault + attacker — CEI violation drain |
+| q-10 | signature-replay | Intermediate ⭐⭐⭐ | 3-4, 4-1 §5-2 | per-user claim — replay a nonce-less signature |
+| q-11 | access-control | Beginner ⭐⭐ | 4-1 §7 | missing `onlyOwner` setter — self-promote to admin |
+| q-12 | tx-origin | Beginner ⭐⭐ | 4-1 §3, 3-2 | phisher contract drains vault via tx.origin auth |
+| q-13 | unchecked-call | Beginner ⭐⭐ | 4-1 §4 | silent failure: low-level call return ignored |
+| q-14 | dos-revert | Beginner ⭐⭐ | 4-1 §9 | push-payment DoS via reverting receiver |
+| q-15 | front-run | Beginner ⭐⭐ | 4-1 §8 | `private` storage secret is publicly readable |
+| q-16 | oracle-spot | Intermediate ⭐⭐⭐ | 4-1 §6, 6-2 | single-pool spot price manipulation drains lender |
+| q-17 | reentrancy-inflate | Intermediate ⭐⭐⭐ | 4-1 §2, 2-2 | cross-function CEI — same deposit pays out twice |
+| q-18 | read-only-reentrancy | Intermediate ⭐⭐⭐ | 4-1 §2-2 | view returns stale state during withdraw window |
 
 ## Recommended path
 
 - **Track A (entry)**: q-01 → q-02 → q-03 → q-04 → q-05
-- **Track B (intermediate)**: q-06 → q-07 → q-08 → q-09 → q-10
+- **Track B (intermediate — core)**: q-06 → q-07 → q-08 → q-09 → q-10
+- **Track C (vulnerability categories, beginner)**: q-11 → q-12 → q-13 → q-14 → q-15
+- **Track D (vulnerability categories, intermediate)**: q-16 → q-17 → q-18
 
 ## Rules
 

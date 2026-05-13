@@ -14,7 +14,7 @@ Foundry-based monorepo of self-contained Solidity tutorials, managed with pnpm w
 ├── simple-uups/          — UUPS upgradeable proxy
 ├── simple-wallet/        — Minimal ETH/ERC20 deposit wallet
 ├── thirty-one-game/      — Baskin-Robbins 31 game with stake-based prizes
-├── q-01-counter/ ... q-10-signature-replay/ — CTF-style challenge set (see q-INDEX.md)
+├── q-01-counter/ ... q-18-read-only-reentrancy/ — CTF-style challenge set (see q-INDEX.md)
 ├── dependencies/         — Soldeer-managed dependencies (do not edit manually)
 ├── config/foundry/       — Centralized package config (packages.json)
 └── scripts/              — Shared Node.js helpers (generate-foundry-config, forge-fmt)
@@ -86,10 +86,10 @@ read state through the UI.
 - **`vm.prank` multi-user tests**: `test/Challenge.t.sol` must simulate
   at least two distinct users solving in parallel and verify they do
   not interfere with each other's `isSolved` state.
-- **Factory pattern for per-user instances** (q-04, q-09, q-10): a
-  single Lab contract exposes `createInstance()` which deploys the
-  user's personal vulnerable / attacker contracts. The Lab tracks
-  `mapping(address user => Instance)`.
+- **Factory pattern for per-user instances** (q-04, q-09, q-10, q-12,
+  q-14, q-15, q-16, q-17, q-18): a single Lab contract exposes
+  `createInstance()` which deploys the user's personal vulnerable /
+  attacker contracts. The Lab tracks `mapping(address user => Instance)`.
 - **`reference/PLAYBOOK.md`**: instructor-only ordered call sequence
   (English). No `Solution.ref.sol` Solidity solution file.
 - All Setup contracts must be re-entrancy-safe across users — one
