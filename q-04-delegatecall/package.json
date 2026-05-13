@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-04-delegatecall",
+  "version": "0.1.0",
+  "description": "Quiz 04 — call vs delegatecall storage",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

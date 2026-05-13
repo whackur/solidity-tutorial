@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-09-reentrancy",
+  "version": "0.1.0",
+  "description": "Quiz 09 — Reentrancy attack on a CEI-violating vault",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

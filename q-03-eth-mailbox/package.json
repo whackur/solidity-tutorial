@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-03-eth-mailbox",
+  "version": "0.1.0",
+  "description": "Quiz 03 — receive / fallback / payable routing",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

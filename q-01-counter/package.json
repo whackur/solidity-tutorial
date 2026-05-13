@@ -1,0 +1,13 @@
+{
+  "name": "@quiz/q-01-counter",
+  "version": "0.1.0",
+  "description": "Quiz 01 — Counter transactions (state, events, custom error)",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv",
+    "lint": "forge fmt --check",
+    "format": "forge fmt"
+  },
+  "license": "MIT"
+}

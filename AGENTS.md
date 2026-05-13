@@ -14,6 +14,7 @@ Foundry-based monorepo of self-contained Solidity tutorials, managed with pnpm w
 ├── simple-uups/          — UUPS upgradeable proxy
 ├── simple-wallet/        — Minimal ETH/ERC20 deposit wallet
 ├── thirty-one-game/      — Baskin-Robbins 31 game with stake-based prizes
+├── q-01-counter/ ... q-10-signature-replay/ — CTF-style challenge set (see q-INDEX.md)
 ├── dependencies/         — Soldeer-managed dependencies (do not edit manually)
 ├── config/foundry/       — Centralized package config (packages.json)
 └── scripts/              — Shared Node.js helpers (generate-foundry-config, forge-fmt)
@@ -53,11 +54,19 @@ cd simple-uups && forge test -vvv
 
 ## Key Conventions
 
-- Solidity ^0.8.x, `solc = "0.8.34"`, `evm_version = "osaka"`.
+- Solidity ^0.8.x, `solc = "0.8.35"`, `evm_version = "osaka"`.
 - Each package defines its own `remappings` in its `foundry.toml` (no root `remappings.txt`).
 - Tutorials are independent: do not introduce shared root-level Solidity code; copy patterns rather than abstract them.
-- Comments and identifiers in English; user-facing replies may be in Korean.
+- **English only** in this repo. Every README, source-file comment, identifier, test message, and `q-*/README.md` is English. Korean stays in `solidity-tutorial-lecture`.
+- User-facing replies in chat may be in Korean — but committed files must remain English.
 - Errors: prefer custom errors for production, but tutorials may keep `require` strings for clarity — match the tutorial's existing style.
+
+## Challenge set (`q-*`)
+
+- `q-01-counter/` ... `q-10-signature-replay/` host the CTF-style learning exercises. See `q-INDEX.md` for the full catalog and difficulty/lecture mapping.
+- Each challenge has the same layout: `src/Setup.sol` (frozen environment), `src/Solution.sol` (student TODO stub), `test/Challenge.t.sol` (auto-grading), and `reference/Solution.ref.sol` (instructor solution — keep out of student materials).
+- `README.md` in each `q-*/` is in **English** and links to the matching Korean problem brief under `solidity-tutorial-lecture/docs/challenges/q-*.md`.
+- Never inline a working solution in `src/Solution.sol`. The stub must compile but revert with `"... not implemented"` until the student writes it.
 
 ## Tests
 

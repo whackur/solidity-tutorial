@@ -1,0 +1,11 @@
+{
+  "name": "@quiz/q-02-events-errors",
+  "version": "0.1.0",
+  "description": "Quiz 02 — selectors & try/catch dispatch",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv"
+  },
+  "license": "MIT"
+}

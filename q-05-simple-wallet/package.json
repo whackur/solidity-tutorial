@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-05-simple-wallet",
+  "version": "0.1.0",
+  "description": "Quiz 05 — SimpleWallet ERC20 deposit/withdraw",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

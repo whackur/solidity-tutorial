@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-07-eth-sign",
+  "version": "0.1.0",
+  "description": "Quiz 07 — eth_sign vs personal_sign recovery",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

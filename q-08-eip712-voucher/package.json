@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-08-eip712-voucher",
+  "version": "0.1.0",
+  "description": "Quiz 08 — EIP-712 voucher issue & redeem",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

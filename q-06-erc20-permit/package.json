@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-06-erc20-permit",
+  "version": "0.1.0",
+  "description": "Quiz 06 — EIP-2612 ERC20Permit",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
