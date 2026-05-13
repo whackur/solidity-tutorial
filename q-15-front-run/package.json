@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-15-front-run",
+  "version": "0.1.0",
+  "description": "Quiz 15 — `private` storage is not actually hidden; read the secret on-chain",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
