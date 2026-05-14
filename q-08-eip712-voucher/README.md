@@ -34,29 +34,21 @@ function usedVouchers(uint256 id) external view returns (bool);
 function isSolved(address user) external view returns (bool);
 ```
 
-## UI call sequence
+## What you can interact with
 
-1. Pick a unique `voucherId` (e.g., `1`). Each id can be redeemed only once globally.
-2. Off-chain: sign EIP-712 typed data — exactly:
-   ```
-   domain: {
-     name: "MyEIP712App",
-     version: "1",
-     chainId,
-     verifyingContract: challengeAddress
-   }
-   types: { Voucher: [token, signer, redeemer, voucherId, amount] }
-   message: {
-     token:     challenge.token(),
-     signer:    you,
-     redeemer:  you,
-     voucherId: 1,
-     amount:    50e18
-   }
-   ```
-   Wallet RPC: `eth_signTypedData_v4`.
-3. Submit `challenge.redeemVoucher(you, you, 1, 50e18, signature)` from your wallet.
-4. Read `challenge.isSolved(you)` → `true`. Verify `token.balanceOf(you) == 50e18`.
+- A voucher redemption function that validates an EIP-712 signature.
+- A token contract that mints the reward when the voucher is accepted.
+
+## Hints
+
+- The typed data must line up with the challenge's domain and the voucher fields.
+- Use a unique voucher identifier so the replay guard does not interfere.
+- The signer and redeemer roles are intentionally kept simple for this exercise.
+
+## Constraints
+
+- Sign only for the instance you are working on.
+- The lesson is structured signing, not hidden calldata tricks.
 
 ## Guards in play
 

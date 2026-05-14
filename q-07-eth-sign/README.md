@@ -31,19 +31,21 @@ function solvedPersonalSign(address user) external view returns (bool);
 function isSolved(address user) external view returns (bool);
 ```
 
-## UI call sequence
+## What you can interact with
 
-1. `challenge.startChallenge()` — the contract assigns you a fresh
-   32-byte hash; read it back via `challengeOf(you)`.
-2. In your wallet, sign that 32-byte hash with `personal_sign` (which is
-   what MetaMask calls EIP-191 for a hex-string input). Most wallet
-   libraries: `walletClient.signMessage({ message: { raw: challengeBytes32 } })`.
-3. `challenge.submitEthSign(signature)`.
-4. Sign an arbitrary byte string (e.g. `"hello, personal_sign world!"`)
-   with `personal_sign` from your wallet — same RPC method, but the
-   input is a UTF-8 string.
-5. `challenge.submitPersonalSign(messageBytes, signature)`.
-6. `challenge.isSolved(you)` → `true`.
+- A per-user challenge hash, and two signature submission paths.
+- One path expects a hash-shaped message, the other expects an arbitrary byte message.
+
+## Hints
+
+- The signing method and the message framing must match the expected digest.
+- Wallets often reuse similar UI labels for different byte encodings, so inspect what you are actually signing.
+- Both proofs should recover to your own address.
+
+## Constraints
+
+- Do not assume the same signature format works for both paths.
+- Keep the exercise scoped to your own wallet identity.
 
 ## Why two flavours?
 

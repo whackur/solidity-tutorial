@@ -4,24 +4,13 @@
 > **Korean brief**: [`docs/challenges/q-17-reentrancy-inflate.md`](../../solidity-tutorial-lecture/docs/challenges/q-17-reentrancy-inflate.md)
 > **Lecture (Korean)**: [PPT 4-1 §2, 2-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
-Variant of q-09. Same CEI violation in `withdraw`, but instead of
-draining via recursive `withdraw` calls, you exploit a *cross-function*
-mutator (`transferBalance`) to ship your still-valid balance to a
-second account, which then withdraws a clean second time. Net effect:
-a single deposit pays out twice — your balance is *inflated*, not just
-recursively drained.
+Variant of q-09. The same CEI violation appears in `withdraw`, but the interesting part is *cross-function* state reuse: another mutator touches the same balance map while the first function has not finished its effects.
 
-A pre-funded `InflateLab` is deployed. Each user calls `createInstance()`
-to get a personal `(YieldVault, InflateAttacker, InflateHelper)` triple
-with the vault pre-seeded with `1 ETH` (victim deposit).
+A pre-funded `InflateLab` is deployed. Each user gets a personal `(YieldVault, InflateAttacker, InflateHelper)` triple.
 
 ## Goal
 
-Make `InflateLab.isSolved(yourAddress)` return `true`. Three conditions:
-
-- `address(vaultOf(you)).balance == 0` — vault drained.
-- `address(attackerOf(you)).balance >= 1 ether` — first payout landed.
-- `address(helperOf(you)).balance >= 1 ether` — second payout landed.
+Make `InflateLab.isSolved(yourAddress)` return `true` by demonstrating the cross-function accounting failure in your own instance.
 
 ## Contract surface
 
@@ -67,35 +56,27 @@ function transferBalance(address to, uint256 amount) external {
 }
 ```
 
-During `withdraw`'s external call to your attacker, the attacker's
-`receive()` calls `transferBalance(helper, bal)`. The balance is
-still `bal` (not yet zeroed!) so the transfer succeeds — and `helper`
-gets credited the same `bal`. When the outer `withdraw` resumes and
-zeroes `balances[attacker]`, the helper's slot is unaffected. Helper
-then calls `withdraw()` cleanly and is paid a second time.
+The key idea is that a reentrant callback does not have to call the same function again. It can enter a different mutator that still trusts shared state from the unfinished operation.
 
-## UI call sequence
+## What you can interact with
 
-1. `lab.createInstance()` — deploys (vault, attacker, helper); vault is
-   pre-funded with `1 ETH` of "victim deposit".
-2. `attacker.attack{value: 1 ether}()` — outer attack:
-   - Attacker deposits 1 ETH (vault: 2 ETH, balances[attacker] = 1).
-   - Attacker calls `withdraw()`. Vault sends 1 ETH to attacker.
-     During receive, attacker calls `transferBalance(helper, 1)` —
-     balances[attacker] = 0, balances[helper] = 1.
-   - Outer `withdraw` resumes and re-zeroes balances[attacker] (no-op).
-3. `helper.pull()` — helper calls `withdraw()`. Vault sends 1 ETH to
-   helper. Vault now: `0 ETH`.
-4. `lab.isSolved(you)` → `true`. Optional: call `attacker.drain()` and
-   `helper.drain()` to consolidate the 2 ETH back to your EOA.
+- A vault, an attacker, and a helper in your own instance.
+- Two mutator paths touch the same balance map.
+
+## Hints
+
+- The reentry is cross-function, not just recursive.
+- Watch what remains valid while the first external call is still in progress.
+- If one function updates shared state too late, another function may observe or reuse stale assumptions.
+
+## Constraints
+
+- Use your own instance triple.
+- The lesson is joint state safety across functions.
 
 ## Concepts exercised
 
-- **Cross-function reentrancy**: distinct from q-09's same-function
-  recursion. Reentry from `withdraw` lands in *another* mutator
-  (`transferBalance`) that reads the same state. A naive `nonReentrant`
-  modifier applied only to `withdraw` does *not* block this — the
-  attacker is calling a *different* function.
+- **Cross-function reentrancy**: distinct from q-09's same-function recursion. Reentry can land in another mutator that reads the same state. A naive `nonReentrant` modifier applied to only one entry point may not protect the whole invariant.
 - **State invariants that cross functions**: any pair of functions that
   read/write the same balance map must be guarded *jointly*, not
   individually.

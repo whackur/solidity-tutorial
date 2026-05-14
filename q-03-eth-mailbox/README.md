@@ -15,7 +15,7 @@ three routes for *your* address:
 | Hit | What to send |
 |---|---|
 | `receive()` | a tx to the mailbox with `value > 0` and **empty calldata** |
-| `fallback()` | a tx with `value` and **calldata starting with an unknown selector** (e.g. `setFallbackTag(bytes32)`) |
+| `fallback()` | a tx with `value` and **calldata starting with an unknown selector** |
 | `receivePayable(bytes32)` | a tx to the named function with `value > 0` |
 
 ## Contract surface
@@ -35,15 +35,21 @@ function lastValue(address user) external view returns (uint256);
 function isSolved(address user) external view returns (bool);
 ```
 
-## UI call sequence
+## What you can interact with
 
-1. Send a plain transfer (e.g. wagmi `sendTransaction({ to: mailbox, value: 1 ether })`
-   or `cast send <mailbox> --value 1ether`). Empty calldata → triggers `receive`.
-2. Send a tx with the unknown selector `setFallbackTag(bytes32)` carrying any
-   `bytes32` tag — falls through to `fallback`. With viem:
-   `walletClient.sendTransaction({ to: mailbox, data: encodeFunctionData({ abi, functionName: 'setFallbackTag', args: [tag] }), value: 1 ether })`.
-3. Call `receivePayable(<tag>)` with any value.
-4. Read `isSolved(you)` → `true`.
+- `receive()`, `fallback()`, and the named payable function.
+- The contract records which route your own address has triggered.
+
+## Hints
+
+- Try to hit each entry point once with the right calldata shape.
+- One route is for empty calldata, one is for unknown calldata, and one is the normal function call path.
+- The tag value only needs to be consistent with your own exploration.
+
+## Constraints
+
+- Use your own address when checking progress.
+- This is about routing, not about finding a secret value.
 
 ## Concepts exercised
 
@@ -51,6 +57,5 @@ function isSolved(address user) external view returns (bool);
   - empty calldata + value → `receive()`
   - selector matches a function → that function (named here)
   - any other calldata → `fallback()`
-- `msg.sig` inside `fallback()` lets the contract sniff the would-be
-  selector and special-case it (`setFallbackTag`, `countFallback`).
+- `msg.sig` inside `fallback()` lets the contract inspect the would-be selector and optionally special-case selected calldata shapes.
 - `payable` on the named function is what lets it accept value.

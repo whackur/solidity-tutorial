@@ -4,9 +4,7 @@
 > **Korean brief**: [`docs/challenges/q-11-access-control.md`](../../solidity-tutorial-lecture/docs/challenges/q-11-access-control.md)
 > **Lecture (Korean)**: [PPT 4-1 §7](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
-A single `VulnerableRegistry` is deployed and shared. The contract's
-`grantAdmin(address)` setter forgot the `onlyOwner` modifier — anyone can
-promote any address. You promote yourself, then finalise your solve.
+A single `VulnerableRegistry` is deployed and shared. One privileged-looking state-changing function is missing the guard that should restrict who can call it.
 
 ## Goal
 
@@ -42,11 +40,18 @@ function revokeAdmin(address account) external {
 }
 ```
 
-## UI call sequence
+## What you can interact with
 
-1. `registry.grantAdmin(you)` — passes (no auth check).
-2. `registry.claimAdmin()` — flips `solved[you] = true`.
-3. `registry.isSolved(you)` → `true`.
+- A public admin-related mutator and a self-finalising function.
+
+## Hints
+
+- One mutator is intentionally missing its privilege check.
+- Compare which functions are guarded and which ones are not before deciding how to progress your own slot.
+
+## Constraints
+
+- The exercise is about the missing guard, not about bypassing the finaliser.
 
 > The two-step (`grantAdmin` + `claimAdmin`) keeps the tutorial
 > multi-tenant safe: a malicious caller can `grantAdmin(victim)` but

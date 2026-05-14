@@ -4,11 +4,7 @@
 > **Korean brief**: [`docs/challenges/q-10-signature-replay.md`](../../solidity-tutorial-lecture/docs/challenges/q-10-signature-replay.md)
 > **Lecture (Korean)**: [PPT 3-4](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-4-eip-712-signatures.md), [PPT 4-1](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
-A pre-funded `ReplayLab` is deployed. Each user calls `createInstance(you)`
-once to get a personal `VulnerableSigClaim` seeded with `5 ETH`. The
-claim contract verifies a signature over *only* `(to, amount)` — no nonce,
-no deadline, no chainId, no verifyingContract. You sign that pair once
-and replay the same signature five times to drain the contract.
+A pre-funded `ReplayLab` is deployed. Each user creates a personal `VulnerableSigClaim` seeded with ETH. The claim contract verifies a signature over too little context: it is missing the fields that normally make an authorization one-time, time-bounded, chain-specific, and contract-specific.
 
 ## Goal
 
@@ -31,36 +27,25 @@ function signer() external view returns (address);
 
 ## The bug under attack
 
-```solidity
-function claim(address payable to, uint256 amount, bytes calldata signature) external {
-    bytes32 raw = keccak256(abi.encode(to, amount));     // ← only (to, amount)
-    bytes32 ethHash = MessageHashUtils.toEthSignedMessageHash(raw);
-    address recovered = ECDSA.recover(ethHash, signature);
-    require(recovered == signer, "bad sig");
-    (bool ok,) = to.call{value: amount}("");
-    require(ok, "send failed");
-}
-```
+The vulnerable claim path authenticates a payout request with a digest that does not include enough replay-protection context. In particular, it omits the values that would normally bind a signature to a single use, time window, chain, and verifying contract.
 
-No nonce, no deadline, no chainId, no verifyingContract in the hash.
-The same `(to, amount)` always produces the same digest, so the same
-signature is accepted forever.
+If the contract cannot distinguish "first use" from "later use", the signature authorization may remain valid longer than intended.
 
-## UI call sequence
+## What you can interact with
 
-1. `lab.createInstance(you)` — deploys your claim with `signer == you`,
-   seeds it with `5 ETH`.
-2. Off-chain: sign `(payable(you), 1 ether)` once. In viem:
-   ```ts
-   const raw = keccak256(encodeAbiParameters(
-     [{ type: 'address' }, { type: 'uint256' }],
-     [you, parseEther('1')]
-   ));
-   const sig = await walletClient.signMessage({ message: { raw } });
-   ```
-3. Submit `claim.claim(you, 1 ether, sig)` *five* times from your wallet.
-   Each call drains another `1 ETH`. After five replays, `address(claim).balance == 0`.
-4. `lab.isSolved(you)` → `true`.
+- A claim contract that checks a signature over a narrow set of fields.
+- A personal instance seeded with ETH.
+
+## Hints
+
+- Ask yourself which replay-protection fields are missing from the signed payload.
+- If the same signature remains valid after one successful claim, you have found the weakness.
+- The lesson is about message design, not about a special wallet feature.
+
+## Constraints
+
+- Keep the signed message tied to your own instance.
+- Do not assume a one-time signature becomes invalid automatically.
 
 ## Concepts exercised
 

@@ -53,16 +53,20 @@ When the previous king is a contract that reverts on receive, the
 refund call always fails → the entire `bid()` tx reverts → the throne
 sticks with the reverter forever.
 
-## UI call sequence
+## What you can interact with
 
-1. `lab.createInstance()` — deploys (KingOfHill, RevertKing) for you.
-2. `kingOf(you).bid{value: 0.01 ether}()` — from your EOA. You're king.
-3. `attackerOf(you).takeThrone{value: 0.02 ether}()` — forwards a bid
-   from RevertKing. The refund to *you* succeeds (you're an EOA), so
-   RevertKing dethrones you and takes the seat.
-4. `lab.isSolved(you)` → `true`.
-5. (Optional demo) Any third-party `bid{value: 1 ether}()` now reverts
-   with `"refund failed"` — proves the lock.
+- A king-of-the-hill contract and a reverting receiver tied to your own instance.
+
+## Hints
+
+- The vulnerability appears when a refund is mandatory for progress.
+- A receiver that always reverts can freeze the game for everyone else.
+- Your goal is to understand the availability impact of push-based refunds.
+
+## Constraints
+
+- Use your own pair of contracts.
+- The lesson is the denial-of-service shape, not a specific bid amount.
 
 ## Concepts exercised
 

@@ -4,19 +4,11 @@
 > **Korean brief**: [`docs/challenges/q-04-delegatecall.md`](../../solidity-tutorial-lecture/docs/challenges/q-04-delegatecall.md)
 > **Lecture (Korean)**: [PPT 1-1](../../solidity-tutorial-lecture/docs/01-ethereum-evm/1-1-evm-internals.md), [PPT 2-3](../../solidity-tutorial-lecture/docs/02-dev-environment/2-3-entry-points-eth-calls.md)
 
-A single `DelegatecallLab` is deployed. Each user calls `createInstance()`
-once to get a personal `(DelegateCaller, DelegateLogic)` pair, then drives
-those two contracts from the wallet UI to set storage via two different
-external-call types.
+A single `DelegatecallLab` is deployed. Each user gets a personal `(DelegateCaller, DelegateLogic)` pair and explores how two external-call types affect different storage contexts.
 
 ## Goal
 
-Make `DelegatecallLab.isSolved(yourAddress)` return `true` by leaving your
-personal instances in this exact state:
-
-- `logicOf(you).number() == 42` — written by `call` (target's storage).
-- `callerOf(you).number() == 99` — written by `delegatecall` (caller's storage
-  via the logic contract's code).
+Make `DelegatecallLab.isSolved(yourAddress)` return `true` by demonstrating that a normal call updates one contract's storage while a delegated call updates another contract's storage.
 
 ## Contract surface
 
@@ -39,17 +31,21 @@ function number() external view returns (uint256);
 function sender() external view returns (address);
 ```
 
-## UI call sequence
+## What you can interact with
 
-1. From your wallet: `lab.createInstance()`. The receipt event gives you the
-   two addresses; the lab also exposes `callerOf(you)` / `logicOf(you)`.
-2. Call `caller.setVarsViaCall(logic, 42)` (value optional).
-   - Observe: `logic.number() == 42`, `caller.number() == 0`. Normal `call`
-     writes to the callee's storage.
-3. Call `caller.setVarsViaDelegatecall(logic, 99)` (value optional).
-   - Observe: `caller.number() == 99`, `logic.number()` still `42`.
-     `delegatecall` executes logic's code *in caller's storage context*.
-4. Read `lab.isSolved(you)` → `true`.
+- `createInstance()` gives you a personal caller/logic pair.
+- The two instance contracts expose the same state shape, but the call path determines which storage is updated.
+
+## Hints
+
+- Compare the result of a normal external call with the result of a delegated one.
+- The key lesson is which contract owns the storage when the code runs.
+- If the two addresses look similar, use that as a reminder that the code path matters more than the target address alone.
+
+## Constraints
+
+- Solve it with your own instance.
+- Focus on the storage context, not on exact numbers.
 
 ## Concepts exercised
 

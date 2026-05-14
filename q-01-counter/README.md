@@ -12,10 +12,10 @@ transactions to it from your wallet / web UI.
 
 Make `Counter.isSolved(yourAddress)` return `true`. That requires:
 
-1. `counts[you] == 7`.
+1. Your counter reaches the challenge target.
 2. `sawUnderflow[you] == true` — you must trigger the `CounterUnderflow`
-   revert (decrement at count 0), observe its 4-byte selector, and submit
-   that selector back via `reportUnderflowSelector(bytes4)`.
+   revert, observe its selector, and submit that selector back via
+   `reportUnderflowSelector(bytes4)`.
 
 ## Contract surface
 
@@ -29,18 +29,21 @@ function sawUnderflow(address user) external view returns (bool);
 function isSolved(address user) external view returns (bool);
 ```
 
-## UI call sequence (one valid playbook)
+## What you can interact with
 
-1. Send 7 `increment()` transactions from your wallet.
-   - Check: `counts(you) == 7`.
-2. From a *fresh* address (or `reset()` your slot first), send `decrement()`.
-   - It will revert. Copy the 4-byte selector from the revert data.
-3. Switch back to your main wallet and call
-   `reportUnderflowSelector(0xCAFE...)` with the selector you copied.
-4. Read `isSolved(you)` — should be `true`.
+- `increment()`, `decrement()`, `reset()`, and `reportUnderflowSelector(bytes4)`.
+- Your progress is tracked per address, so one wallet's actions do not affect another's slot.
 
-> The selector for `error CounterUnderflow()` is `keccak256("CounterUnderflow()")[:4]`.
-> Compute it yourself or grab it from the failing transaction's revert payload.
+## Hints
+
+- The challenge is about reaching the target count and then proving you saw the custom error path.
+- Trigger the underflow path once, then extract the selector from the revert data or derive it from the error name.
+- Submit only the selector you learned; you do not need to guess any hidden value.
+
+## Constraints
+
+- Keep the focus on your own address.
+- A revert is part of the intended exploration, not a failure of the exercise.
 
 ## Concepts exercised
 
@@ -49,10 +52,3 @@ function isSolved(address user) external view returns (bool);
 - Custom errors revert with the 4-byte function-selector encoding.
 - A revert is the *EVM's contract-level error signal* — wallets can read
   the selector and bytes, web UIs surface it to the user.
-
-## Notes for instructors
-
-The playbook used by the test harness is documented in
-[`reference/PLAYBOOK.md`](reference/PLAYBOOK.md). Auto-grading in
-`test/Challenge.t.sol` simulates two users solving in parallel with
-`vm.prank` to verify they do not interfere.

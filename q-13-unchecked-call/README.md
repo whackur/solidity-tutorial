@@ -51,12 +51,20 @@ In production this often shows up as
 `recipient.call{value: amount}("");` — the literal "fire-and-forget"
 mistake.
 
-## UI call sequence
+## What you can interact with
 
-1. `escrow.deposit{value: 1 ether}()` — fills your escrow slot.
-2. `escrow.payout(escrow.trap())` — payout to a contract that reverts
-   on receive. The function does not revert; state advances anyway.
-3. `escrow.isSolved(you)` → `true`.
+- A deposit function, a payout function, and a built-in reverting receiver.
+
+## Hints
+
+- The bug is not about reentrancy; it is about ignoring a failed low-level call.
+- Try paying a receiver that refuses ETH and observe what the escrow records.
+- The important part is that state changes continue even when the transfer does not.
+
+## Constraints
+
+- Use the provided trap instead of deploying your own receiver.
+- The exercise is about failure handling, not gas stipends.
 
 ## Concepts exercised
 

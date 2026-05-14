@@ -4,20 +4,11 @@
 > **Korean brief**: [`docs/challenges/q-09-reentrancy.md`](../../solidity-tutorial-lecture/docs/challenges/q-09-reentrancy.md)
 > **Lecture (Korean)**: [PPT 4-1](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
-A single `ReentrancyLab` is deployed and pre-funded with ETH. Every user
-calls `createInstance()` once; the lab deploys a fresh `(VulnerableVault,
-ReentrancyAttacker)` pair belonging to that user and seeds the vault
-with `10 ETH` of victim funds. The user then sends `1 ETH` bait to their
-attacker, which re-enters the vault's CEI-violating `withdraw()` and
-walks away with `11 ETH`.
+A single `ReentrancyLab` is deployed and pre-funded with ETH. Every user gets a fresh `(VulnerableVault, ReentrancyAttacker)` pair belonging only to that user. The vault violates CEI by sending ETH before updating accounting, which creates a reentrancy window.
 
 ## Goal
 
-Make `ReentrancyLab.isSolved(yourAddress)` return `true`. Two conditions
-on *your* instance:
-
-- `address(vaultOf(you)).balance == 0` — drained.
-- `address(attackerOf(you)).balance >= 10 ETH` — bait + victim funds.
+Make `ReentrancyLab.isSolved(yourAddress)` return `true` by exploiting only *your* instance pair.
 
 ## Contract surface
 
@@ -53,17 +44,23 @@ function withdraw() external {
 }
 ```
 
-When the vault calls `msg.sender.call{value: bal}("")`, your attacker's
-`receive()` runs while `balances[attacker]` is still `bal`. The attacker
-calls `vault.withdraw()` *again*, and again, until the vault's ETH
-balance falls below `attackAmount`.
+The important observation is that the external call gives the receiver control before the vault finishes its bookkeeping.
 
-## UI call sequence
+## What you can interact with
 
-1. `lab.createInstance()` — deploys your vault + attacker; vault gets `10 ETH`.
-2. `attackerOf(you).attack{value: 1 ether}()` — triggers the drain.
-3. `lab.isSolved(you)` → `true`. Optional: `attacker.drain()` to move
-   the stolen ETH back to your EOA.
+- A personal vault and a personal attacker contract.
+- The attacker has an owner-only entry point that starts the exploit.
+
+## Hints
+
+- Think about what the vault believes before and after it sends ETH out.
+- The re-entry happens while the vault still has not finished updating its accounting.
+- Think about how a contract receiver can use that unfinished accounting window.
+
+## Constraints
+
+- Use only your own instance pair.
+- The objective is to drain the vault, not to share state across users.
 
 ## Concepts exercised
 

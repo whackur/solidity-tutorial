@@ -4,19 +4,11 @@
 > **Korean brief**: [`docs/challenges/q-18-read-only-reentrancy.md`](../../solidity-tutorial-lecture/docs/challenges/q-18-read-only-reentrancy.md)
 > **Lecture (Korean)**: [PPT 4-1 §2-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
-A `ShareVault`'s `withdraw()` sends ETH out *before* updating
-`totalShares`. The `sharePrice()` view function is correct in isolation,
-but during that re-entry window it returns a temporarily-deflated price.
-A separate `PriceConsumer` contract reads `sharePrice()` and mints
-credits inversely proportional to it. By calling the consumer *from
-inside the vault's withdraw callback*, an attacker mints far more
-credits than the honest price would justify — without ever mutating
-the vault's state from outside.
+A `ShareVault`'s `withdraw()` sends ETH out *before* updating `totalShares`. The `sharePrice()` view function is correct in isolation, but during the re-entry window it can report a temporarily inconsistent value. A separate `PriceConsumer` trusts that view as if it were a stable oracle.
 
 ## Goal
 
-Make `ReadOnlyLab.isSolved(yourAddress)` return `true`:
-`consumer.credits(attackerOf(you)) >= CREDIT_THRESHOLD (5e18)`.
+Make `ReadOnlyLab.isSolved(yourAddress)` return `true` by demonstrating that a trusted view can be stale during a callback window.
 
 ## Contract surface
 
@@ -28,7 +20,6 @@ function consumerOf(address) external view returns (PriceConsumer);
 function attackerOf(address) external view returns (ReadOnlyAttacker);
 function isSolved(address user) external view returns (bool);
 uint256 public constant SEED_DEPOSIT = 0.1 ether;
-uint256 public constant CREDIT_THRESHOLD = 5e18;
 
 // ShareVault (per user — DO NOT FIX)
 function deposit() external payable;
@@ -64,33 +55,25 @@ function sharePrice() external view returns (uint256) {
 }
 ```
 
-After `msg.sender.call` lowers `address(this).balance` but before
-`totalShares -= sh` runs, `sharePrice()` returns a stale, deflated value.
-A `nonReentrant` modifier on `withdraw` alone does **not** save the
-consumer — the consumer is being called inside the same reentry window
-but `sharePrice` is a *view*, not a mutator.
+After the external call changes ETH balance but before all accounting catches up, `sharePrice()` can expose a stale value. A `nonReentrant` modifier on the mutator alone does **not** necessarily protect an external consumer that trusts a view function.
 
-```solidity
-function mintCredits(address recipient, uint256 weiAmount) external {
-    uint256 price = vault.sharePrice();                // ← reads stale price
-    require(price > 0, "bad price");
-    credits[recipient] += (weiAmount * 1e18) / price;  // ← inverse: low price → high credits
-}
-```
+The consumer bug is trusting a momentary view result as a reliable oracle input.
 
-## UI call sequence
+## What you can interact with
 
-1. `lab.createInstance()` — deploys (vault, consumer, attacker). Lab
-   pre-deposits `0.1 ETH` as "innocent depositor".
-2. `attacker.attack{value: 0.9 ether}()`:
-   - Attacker deposits `0.9 ETH` → vault: `1 ETH`, `totalShares: 1e18`.
-   - Attacker calls `withdraw(0.9e18)`. Vault sends `0.9 ETH` to attacker.
-     During attacker's `receive()`, vault balance is `0.1 ETH` but
-     `totalShares` is still `1e18` → `sharePrice = 0.1e18` (10× lower).
-   - Attacker calls `consumer.mintCredits(attacker, 1 ether)` → mints
-     `~10e18` credits.
-   - `withdraw` resumes and sets `totalShares -= 0.9e18 → 0.1e18`.
-3. `lab.isSolved(you)` → `true`.
+- A share vault, a price consumer, and an attacker contract.
+- The consumer reads a view function that can become stale during reentry.
+
+## Hints
+
+- The exploit happens without mutating the vault during the callback.
+- Focus on the brief window where the price view sees an inconsistent state.
+- If a consumer trusts a view too much, it can be fooled by timing.
+
+## Constraints
+
+- Keep the solution inside your own lab instance.
+- The lesson is read-only inconsistency, not direct storage tampering.
 
 ## Concepts exercised
 

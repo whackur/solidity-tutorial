@@ -4,17 +4,11 @@
 > **Korean brief**: [`docs/challenges/q-16-oracle-spot.md`](../../solidity-tutorial-lecture/docs/challenges/q-16-oracle-spot.md)
 > **Lecture (Korean)**: [PPT 4-1 §6, 6-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
-A pre-funded `OracleLab` is deployed. Each user calls `createInstance()`
-to get a personal `(MockToken, SimplePool, SpotLender)` triple plus a
-100 TKN faucet. The lender values TKN collateral using the pool's *spot
-price* — a single read that the user controls in the same tx via a
-swap. Push the spot price up, borrow far more ETH than your collateral
-is actually worth, drain the lender.
+A pre-funded `OracleLab` is deployed. Each user gets a personal `(MockToken, SimplePool, SpotLender)` triple plus test tokens. The lender values collateral using the pool's *spot price* — a single read that can be distorted within the same transaction.
 
 ## Goal
 
-Make `OracleLab.isSolved(yourAddress)` return `true`: drain *your*
-personal `SpotLender` to `0 ETH`.
+Make `OracleLab.isSolved(yourAddress)` return `true` by exploiting only *your* lender instance.
 
 ## Contract surface
 
@@ -59,20 +53,23 @@ function borrow(uint256 collateral) external returns (uint256 loan) {
 }
 ```
 
-Initial reserves give spot price ≈ `0.01 ETH / TKN`. A `3 ETH` swap
-into the pool raises the spot price to roughly `0.16 ETH / TKN` —
-a 16× distortion. With `40 TKN` of collateral that distorted price
-quotes `6.4 ETH`, capped at the lender's `5 ETH` liquidity — the
-entire treasury walks out.
+The exploit shape is not about a specific magic amount. It is about making a spot-price read observe a temporary market state that does not represent fair collateral value.
 
-## UI call sequence
+## What you can interact with
 
-1. `lab.createInstance()` — deploys your `(token, pool, lender)` and
-   faucets 100 TKN to your wallet.
-2. `pool.swapEthForToken{value: 3 ether}()` — push the spot price up.
-3. `token.approve(lender, type(uint256).max)`.
-4. `lender.borrow(40e18)` — borrow against inflated collateral value.
-5. `lab.isSolved(you)` → `true`.
+- A pool, a token, and a lender inside your own instance.
+- The lender values collateral using the pool's current spot price.
+
+## Hints
+
+- The key weakness is reading a manipulable price at the exact time of borrowing.
+- A same-transaction market action can temporarily distort the pool price.
+- You do not need a perfect market model to understand the exploit shape.
+
+## Constraints
+
+- Keep the attack inside your own instance.
+- This is about oracle design, not a special token bug.
 
 ## Concepts exercised
 

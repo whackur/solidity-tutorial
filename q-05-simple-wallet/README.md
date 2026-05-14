@@ -37,17 +37,21 @@ function isSolved(address user) external view returns (bool);
 function mint(address to, uint256 amount) external;
 ```
 
-## UI call sequence
+## What you can interact with
 
-1. `wallet.depositEth()` from your wallet with some value (e.g., 1 ETH).
-   - Or just send a plain transfer to the wallet — `receive()` routes it
-     through the same path.
-2. `wallet.withdrawEth(amount)` with `amount > 0` and `amount <= ethBalance`.
-3. `token.mint(you, X)` to get yourself some MCK to play with.
-4. `token.approve(wallet, X)` so the wallet can pull from you.
-5. `wallet.depositErc20(token, X)`.
-6. `wallet.withdrawErc20(token, X / 2)` (or any non-zero amount you own).
-7. Read `wallet.isSolved(you)` → `true`.
+- ETH deposit/withdraw paths and ERC-20 deposit/withdraw paths.
+- A public token faucet is available for experimentation.
+
+## Hints
+
+- There is more than one way to reach the ETH deposit path.
+- The ERC-20 flow follows the usual approve-then-pull pattern.
+- Any non-zero round trip that leaves the per-user flags set should be enough.
+
+## Constraints
+
+- Keep the actions tied to your own wallet state.
+- The exact amounts are not the lesson; the routing and accounting are.
 
 ## Concepts exercised
 

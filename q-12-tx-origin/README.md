@@ -4,19 +4,11 @@
 > **Korean brief**: [`docs/challenges/q-12-tx-origin.md`](../../solidity-tutorial-lecture/docs/challenges/q-12-tx-origin.md)
 > **Lecture (Korean)**: [PPT 4-1 §3, 3-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
-A pre-funded `TxOriginLab` is deployed. Each user calls `createInstance()`
-once to get a personal `(TxOriginVault, Phisher)` pair seeded with
-`5 ETH`. The vault's `transferTo` authenticates with `tx.origin == owner`
-instead of `msg.sender == owner` — so any contract the user calls inside
-the same tx can drain the vault on their behalf. The phisher is exactly
-that lure.
+A pre-funded `TxOriginLab` is deployed. Each user gets a personal `(TxOriginVault, Phisher)` pair. The vault authenticates with `tx.origin == owner` instead of `msg.sender == owner`, so an intermediate contract can abuse a transaction that the owner willingly starts.
 
 ## Goal
 
-Make `TxOriginLab.isSolved(yourAddress)` return `true`. That requires:
-
-- `address(vaultOf(you)).balance == 0` — drained.
-- `phisherOf(you).airdropClaimed() == true` — drained via the phisher.
+Make `TxOriginLab.isSolved(yourAddress)` return `true` by demonstrating the phishing-shaped authorization failure in your own instance.
 
 ## Contract surface
 
@@ -49,27 +41,23 @@ function transferTo(address payable to, uint256 amount) external {
 }
 ```
 
-```solidity
-function claimFreeAirdrop() external {
-    airdropClaimed = true;
-    vault.transferTo(beneficiary, address(vault).balance);
-}
-```
+The dangerous part is not a complex cryptographic bypass. It is the call stack: the owner signs the top-level transaction, but the immediate caller seen by the vault may be a different contract.
 
-The user clicks "Claim free airdrop" → their wallet sends a tx →
-phisher calls `vault.transferTo(beneficiary, balance)` → vault checks
-`tx.origin == owner` (true, because the user *is* the owner and they
-initiated the tx) → drain succeeds.
+## What you can interact with
 
-In a real attack `beneficiary` is the phisher's address. For tutorial
-grading we wire `beneficiary = msg.sender` so the drained ETH returns
-to the user and `isSolved` can verify the path.
+- A personal vault and a personal phishing contract.
+- The phishing contract represents an intermediate caller that the vault mistakes for trusted ownership.
 
-## UI call sequence
+## Hints
 
-1. `lab.createInstance()` — deploys vault (5 ETH) + phisher.
-2. `phisherOf(you).claimFreeAirdrop()` — lure pulls all 5 ETH back to you.
-3. `lab.isSolved(you)` → `true`.
+- The vulnerable check trusts the transaction origin, not the immediate caller.
+- The lure succeeds because the user initiates the transaction themselves.
+- Follow the call stack mentally; that is the whole trick.
+
+## Constraints
+
+- Work with your own instance pair.
+- This is a phishing-shaped authorization bug, not a password reset.
 
 ## Concepts exercised
 

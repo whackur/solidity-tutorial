@@ -38,31 +38,21 @@ function spendWithPermit(
 function isSolved(address user) external view returns (bool);
 ```
 
-## UI call sequence
+## What you can interact with
 
-1. `token.mint(you, 100e18)` — self-faucet.
-2. Off-chain: sign EIP-712 typed data for the Permit struct. In a web UI
-   this is a single `eth_signTypedData_v4` call. The signed struct is:
-   ```
-   domain: {
-     name: "PermitToken",
-     version: "1",
-     chainId,
-     verifyingContract: tokenAddress
-   }
-   types: { Permit: [owner, spender, value, nonce, deadline] }
-   message: {
-     owner: you,
-     spender: challengeAddress,
-     value: 100e18,
-     nonce: token.nonces(you),
-     deadline: now + 1h
-   }
-   ```
-3. Split the resulting 65-byte signature into `(v, r, s)`.
-4. Submit `challenge.spendWithPermit(you, 100e18, deadline, v, r, s, recipient)`.
-   - The challenge calls `token.permit(...)` then `transferFrom(you → recipient)` atomically.
-5. Read `challenge.isSolved(you)` → `true`.
+- A mintable ERC-20 that supports permit.
+- A challenge contract that consumes a signed permit and then spends through `transferFrom`.
+
+## Hints
+
+- The important part is the signed typed data, not the UI wrapper you use to produce it.
+- Make sure the permit matches the token, the challenge, and your own address context.
+- Once the permit is accepted, the contract performs the spending step in the same transaction.
+
+## Constraints
+
+- The challenge is about signed approval, not about guessing hidden constants.
+- Keep the signature bound to your own instance so it cannot be reused elsewhere.
 
 ## Concepts exercised
 
