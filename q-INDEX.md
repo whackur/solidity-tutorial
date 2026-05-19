@@ -41,9 +41,10 @@ function isSolved(address user) external view returns (bool);
 A web UI polls this after each transaction. The contract is otherwise
 free-form — see each `README.md` for the per-challenge call surface.
 
-For challenges that need per-user instances (q-04, q-09, q-10) the main
-contract is a `Lab` with `createInstance(...)` that deploys the user's
-personal vulnerable/attacker pair.
+For challenges that need per-user instances (q-04, q-09, q-10, q-12,
+q-14, q-15, q-16, q-17, q-18) the main contract is a `Lab` with
+`createInstance(...)` that deploys the user's personal challenge
+environment.
 
 ## Running the auto-grader (instructor / CI)
 

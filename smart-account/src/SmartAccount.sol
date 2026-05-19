@@ -43,7 +43,7 @@ contract SmartAccount is ISmartAccount, IERC1271, IERC165, ReentrancyGuardTransi
         keccak256("EIP712Domain(string name,string version,uint256 chainId,address verifyingContract)");
 
     /// @dev Hash of the domain `name` field.
-    bytes32 private constant _HASHED_NAME = keccak256("BlackCombatSmartAccount");
+    bytes32 private constant _HASHED_NAME = keccak256("TestSmartAccount");
 
     /// @dev Hash of the domain `version` field.
     ///      Bump on any change that alters digest semantics or when invalidating all
