@@ -10,7 +10,7 @@ contract MyERC20Test is Test {
     address internal other = address(0xBEEF);
 
     function setUp() public {
-        token = new MyERC20("MyERC20", "ME2", 1_000);
+        token = new MyERC20("MyERC20", "ME2", 1000);
     }
 
     function test_Metadata() public view {
@@ -29,7 +29,7 @@ contract MyERC20Test is Test {
         vm.prank(other);
         token.transfer(owner, 50);
         assertEq(token.balanceOf(other), 0);
-        assertEq(token.balanceOf(owner), 1_000);
+        assertEq(token.balanceOf(owner), 1000);
     }
 
     function test_MintIncreasesBalance() public {

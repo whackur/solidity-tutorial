@@ -46,13 +46,16 @@ contract VoucherTest is Test {
         );
     }
 
-    function _signVoucher(uint256 pk, address tokenAddr, address voucherSigner, address voucherRedeemer)
-        internal
-        view
-        returns (bytes memory)
-    {
+    function _signVoucher(
+        uint256 pk,
+        address tokenAddr,
+        address voucherSigner,
+        address voucherRedeemer
+    ) internal view returns (bytes memory) {
         bytes32 structHash = keccak256(
-            abi.encode(VOUCHER_TYPEHASH, tokenAddr, voucherSigner, voucherRedeemer, VOUCHER_ID, AMOUNT)
+            abi.encode(
+                VOUCHER_TYPEHASH, tokenAddr, voucherSigner, voucherRedeemer, VOUCHER_ID, AMOUNT
+            )
         );
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", _domainSeparator(), structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(pk, digest);

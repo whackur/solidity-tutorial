@@ -50,10 +50,10 @@ contract SimpleWalletTest is Test {
     }
 
     function test_DepositAndWithdrawErc20() public {
-        token.transfer(user, 1_000 ether);
+        token.transfer(user, 1000 ether);
 
         vm.prank(user);
-        token.approve(address(wallet), 1_000 ether);
+        token.approve(address(wallet), 1000 ether);
 
         vm.prank(user);
         wallet.depositErc20(address(token), 500 ether);

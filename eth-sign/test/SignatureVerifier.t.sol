@@ -22,7 +22,9 @@ contract SignatureVerifierTest is Test {
 
     function _personalSignHash(bytes memory message) internal pure returns (bytes32) {
         return keccak256(
-            abi.encodePacked("\x19Ethereum Signed Message:\n", _uintToString(message.length), message)
+            abi.encodePacked(
+                "\x19Ethereum Signed Message:\n", _uintToString(message.length), message
+            )
         );
     }
 
