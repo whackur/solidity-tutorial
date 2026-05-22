@@ -1,8 +1,6 @@
 # Q-02. Events & Errors — three flavours of revert
 
 > **Difficulty**: Entry ⭐
-> **Korean brief**: [`docs/challenges/q-02-events-errors.md`](../../solidity-tutorial-lecture/docs/challenges/q-02-events-errors.md)
-> **Lecture (Korean)**: [PPT 1-3](../../solidity-tutorial-lecture/docs/01-ethereum-evm/1-3-tx-success-failure.md), [PPT 2-2](../../solidity-tutorial-lecture/docs/02-dev-environment/2-2-basic-contract.md)
 
 `EventsAndErrors` exposes three intentionally-failing functions, each
 reverting with a different ABI-encoded error kind. You observe each

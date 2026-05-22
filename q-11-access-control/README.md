@@ -1,8 +1,6 @@
 # Q-11. Access control — promote yourself to admin
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-11-access-control.md`](../../solidity-tutorial-lecture/docs/challenges/q-11-access-control.md)
-> **Lecture (Korean)**: [PPT 4-1 §7](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A single `VulnerableRegistry` is deployed and shared. One privileged-looking state-changing function is missing the guard that should restrict who can call it.
 

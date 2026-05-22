@@ -1,7 +1,6 @@
 # Solidity Challenges (`q-*`) — multi-tenant web-UI CTF set
 
-> Hands-on challenges that pair with the **`solidity-tutorial-lecture`**
-> theory (Korean briefs).
+> Hands-on, transaction-only Solidity challenges.
 >
 > Each challenge contract is deployed *once* and shared by many users.
 > Progress is keyed by `msg.sender`, so any number of learners can solve
@@ -26,9 +25,6 @@ q-XX-{slug}/
 └── reference/
     └── PLAYBOOK.md      ← instructor-only ordered call list
 ```
-
-Korean brief lives at
-`../solidity-tutorial-lecture/docs/challenges/q-XX-{slug}.md`.
 
 ## Web UI contract
 
@@ -62,28 +58,28 @@ Each `test/Challenge.t.sol` uses `vm.prank` to drive two distinct
 addresses through the solve flow and verifies the per-user state is
 isolated.
 
-## Difficulty & lecture mapping
+## Difficulty
 
-| # | Challenge | Level | PPT mapping | Core idea |
-|---|---|---|---|---|
-| q-01 | counter | Entry ⭐ | 2-2 | per-user mapping + custom error selector |
-| q-02 | events-errors | Entry ⭐ | 1-3, 2-2 | three revert encodings — submit each selector |
-| q-03 | eth-mailbox | Beginner ⭐⭐ | 1-3, 2-3 | trigger receive / fallback / named payable |
-| q-04 | delegatecall | Beginner ⭐⭐ | 1-1, 2-3 | per-user (caller, logic) — call vs delegatecall |
-| q-05 | simple-wallet | Beginner ⭐⭐ | 2-4 | per-user ETH + ERC-20 deposit/withdraw cycle |
-| q-06 | erc20-permit | Intermediate ⭐⭐⭐ | 3-2, 3-4 | EIP-2612 permit + transferFrom in one tx |
-| q-07 | eth-sign | Intermediate ⭐⭐⭐ | 3-4 | EIP-191 eth_sign + personal_sign recovery |
-| q-08 | eip712-voucher | Intermediate ⭐⭐⭐ | 3-4 | EIP-712 typed-data signed mint voucher |
-| q-09 | reentrancy | Intermediate ⭐⭐⭐ | 4-1 §2 | per-user vault + attacker — CEI violation drain |
-| q-10 | signature-replay | Intermediate ⭐⭐⭐ | 3-4, 4-1 §5-2 | per-user claim — replay a nonce-less signature |
-| q-11 | access-control | Beginner ⭐⭐ | 4-1 §7 | missing `onlyOwner` setter — self-promote to admin |
-| q-12 | tx-origin | Beginner ⭐⭐ | 4-1 §3, 3-2 | phisher contract drains vault via tx.origin auth |
-| q-13 | unchecked-call | Beginner ⭐⭐ | 4-1 §4 | silent failure: low-level call return ignored |
-| q-14 | dos-revert | Beginner ⭐⭐ | 4-1 §9 | push-payment DoS via reverting receiver |
-| q-15 | front-run | Beginner ⭐⭐ | 4-1 §8 | `private` storage secret is publicly readable |
-| q-16 | oracle-spot | Intermediate ⭐⭐⭐ | 4-1 §6, 6-2 | single-pool spot price manipulation drains lender |
-| q-17 | reentrancy-inflate | Intermediate ⭐⭐⭐ | 4-1 §2, 2-2 | cross-function CEI — same deposit pays out twice |
-| q-18 | read-only-reentrancy | Intermediate ⭐⭐⭐ | 4-1 §2-2 | view returns stale state during withdraw window |
+| # | Challenge | Level | Core idea |
+|---|---|---|---|
+| q-01 | counter | Entry ⭐ | per-user mapping + custom error selector |
+| q-02 | events-errors | Entry ⭐ | three revert encodings — submit each selector |
+| q-03 | eth-mailbox | Beginner ⭐⭐ | trigger receive / fallback / named payable |
+| q-04 | delegatecall | Beginner ⭐⭐ | per-user (caller, logic) — call vs delegatecall |
+| q-05 | simple-wallet | Beginner ⭐⭐ | per-user ETH + ERC-20 deposit/withdraw cycle |
+| q-06 | erc20-permit | Intermediate ⭐⭐⭐ | EIP-2612 permit + transferFrom in one tx |
+| q-07 | eth-sign | Intermediate ⭐⭐⭐ | EIP-191 eth_sign + personal_sign recovery |
+| q-08 | eip712-voucher | Intermediate ⭐⭐⭐ | EIP-712 typed-data signed mint voucher |
+| q-09 | reentrancy | Intermediate ⭐⭐⭐ | per-user vault + attacker — CEI violation drain |
+| q-10 | signature-replay | Intermediate ⭐⭐⭐ | per-user claim — replay a nonce-less signature |
+| q-11 | access-control | Beginner ⭐⭐ | missing `onlyOwner` setter — self-promote to admin |
+| q-12 | tx-origin | Beginner ⭐⭐ | phisher contract drains vault via tx.origin auth |
+| q-13 | unchecked-call | Beginner ⭐⭐ | silent failure: low-level call return ignored |
+| q-14 | dos-revert | Beginner ⭐⭐ | push-payment DoS via reverting receiver |
+| q-15 | front-run | Beginner ⭐⭐ | `private` storage secret is publicly readable |
+| q-16 | oracle-spot | Intermediate ⭐⭐⭐ | single-pool spot price manipulation drains lender |
+| q-17 | reentrancy-inflate | Intermediate ⭐⭐⭐ | cross-function CEI — same deposit pays out twice |
+| q-18 | read-only-reentrancy | Intermediate ⭐⭐⭐ | view returns stale state during withdraw window |
 
 ## Recommended path
 

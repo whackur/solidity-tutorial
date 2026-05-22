@@ -1,8 +1,6 @@
 # Q-13. Unchecked call — silent payout failure
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-13-unchecked-call.md`](../../solidity-tutorial-lecture/docs/challenges/q-13-unchecked-call.md)
-> **Lecture (Korean)**: [PPT 4-1 §4](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A single `UnsafePayout` escrow is deployed. Its `payout(to)` advances
 the per-user state (`escrow = 0`, `paidOut = true`) *and* ignores the

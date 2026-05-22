@@ -1,8 +1,6 @@
 # Q-18. Read-only reentrancy — fool a price consumer with stale state
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-18-read-only-reentrancy.md`](../../solidity-tutorial-lecture/docs/challenges/q-18-read-only-reentrancy.md)
-> **Lecture (Korean)**: [PPT 4-1 §2-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A `ShareVault`'s `withdraw()` sends ETH out *before* updating `totalShares`. The `sharePrice()` view function is correct in isolation, but during the re-entry window it can report a temporarily inconsistent value. A separate `PriceConsumer` trusts that view as if it were a stable oracle.
 

@@ -1,8 +1,6 @@
 # Q-05. SimpleWallet — ETH + ERC-20 deposit / withdraw
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-05-simple-wallet.md`](../../solidity-tutorial-lecture/docs/challenges/q-05-simple-wallet.md)
-> **Lecture (Korean)**: [PPT 2-4](../../solidity-tutorial-lecture/docs/02-dev-environment/2-4-wallet-game.md)
 
 A single `SimpleWallet` (and a shared `MockERC20` with public `mint`) is
 deployed. Every user has their own ETH and per-token balance slots keyed

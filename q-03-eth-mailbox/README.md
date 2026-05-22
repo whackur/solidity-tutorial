@@ -1,8 +1,6 @@
 # Q-03. EthMailbox — receive / fallback / payable routing
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-03-eth-mailbox.md`](../../solidity-tutorial-lecture/docs/challenges/q-03-eth-mailbox.md)
-> **Lecture (Korean)**: [PPT 1-3](../../solidity-tutorial-lecture/docs/01-ethereum-evm/1-3-tx-success-failure.md), [PPT 2-3](../../solidity-tutorial-lecture/docs/02-dev-environment/2-3-entry-points-eth-calls.md)
 
 A single shared `EthMailbox` is deployed once. Every user must trigger
 each of its three ETH/calldata entry points from their own address.

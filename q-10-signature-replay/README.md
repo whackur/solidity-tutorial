@@ -1,8 +1,6 @@
 # Q-10. Signature replay — drain your claim with one signature
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-10-signature-replay.md`](../../solidity-tutorial-lecture/docs/challenges/q-10-signature-replay.md)
-> **Lecture (Korean)**: [PPT 3-4](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-4-eip-712-signatures.md), [PPT 4-1](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A pre-funded `ReplayLab` is deployed. Each user creates a personal `VulnerableSigClaim` seeded with ETH. The claim contract verifies a signature over too little context: it is missing the fields that normally make an authorization one-time, time-bounded, chain-specific, and contract-specific.
 

@@ -1,8 +1,6 @@
 # Q-06. ERC20 Permit — approve + transferFrom in one signed message
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-06-erc20-permit.md`](../../solidity-tutorial-lecture/docs/challenges/q-06-erc20-permit.md)
-> **Lecture (Korean)**: [PPT 3-2](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-2-erc20.md), [PPT 3-4](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-4-eip-712-signatures.md)
 
 A single `PermitToken` (EIP-2612) + `PermitChallenge` is deployed.
 You hold tokens on your EOA, sign an off-chain permit authorising the

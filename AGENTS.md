@@ -57,7 +57,7 @@ cd simple-uups && forge test -vvv
 - Solidity ^0.8.x, `solc = "0.8.35"`, `evm_version = "osaka"`.
 - Each package defines its own `remappings` in its `foundry.toml`. A matching per-package `remappings.txt` is allowed (and used in `q-*`) purely so external Solidity language servers (Cursor / VS Code) can resolve imports — `forge` itself reads `foundry.toml`. Keep the two in sync; do not introduce a *root* `remappings.txt`.
 - Tutorials are independent: do not introduce shared root-level Solidity code; copy patterns rather than abstract them.
-- **English only** in this repo. Every README, source-file comment, identifier, test message, and `q-*/README.md` is English. Korean stays in `solidity-tutorial-lecture`.
+- **English only** in this repo. Every README, source-file comment, identifier, test message, and `q-*/README.md` is English.
 - User-facing replies in chat may be in Korean — but committed files must remain English.
 - Errors: prefer custom errors for production, but tutorials may keep `require` strings for clarity — match the tutorial's existing style.
 - Markdown prose should not be hard-wrapped to a short column width. Keep one semantic paragraph or list item on one line; use line breaks only where the structure requires them, such as tables, lists, and code blocks.
@@ -92,8 +92,6 @@ q-XX-{slug}/
 └── reference/
     └── PLAYBOOK.md      ← instructor-only ordered call list
 ```
-
-The English `README.md` links to the matching Korean brief at `solidity-tutorial-lecture/docs/challenges/q-XX-*.md`.
 
 ## Tests
 

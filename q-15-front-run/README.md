@@ -1,8 +1,6 @@
 # Q-15. Front-running — read the "private" secret from storage
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-15-front-run.md`](../../solidity-tutorial-lecture/docs/challenges/q-15-front-run.md)
-> **Lecture (Korean)**: [PPT 4-1 §8](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A pre-funded `FrontRunLab` is deployed. Each user calls `createInstance()` to get a personal `FrontRunChallenge` holding `1 ETH` and a `bytes32 private _secret` that the designer mistakenly thought was hidden.
 

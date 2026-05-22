@@ -1,8 +1,6 @@
 # Q-14. DoS by revert — lock the throne with a reverting receiver
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-14-dos-revert.md`](../../solidity-tutorial-lecture/docs/challenges/q-14-dos-revert.md)
-> **Lecture (Korean)**: [PPT 4-1 §9](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A `DosLab` is deployed. Each user calls `createInstance()` to mint a
 personal `(KingOfHill, RevertKing)` pair. `KingOfHill.bid()` refunds the

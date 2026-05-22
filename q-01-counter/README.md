@@ -1,8 +1,6 @@
 # Q-01. Counter — your first transactions
 
 > **Difficulty**: Entry ⭐
-> **Korean brief**: [`docs/challenges/q-01-counter.md`](../../solidity-tutorial-lecture/docs/challenges/q-01-counter.md)
-> **Lecture (Korean)**: [PPT 2-2](../../solidity-tutorial-lecture/docs/02-dev-environment/2-2-basic-contract.md), [PPT 1-3](../../solidity-tutorial-lecture/docs/01-ethereum-evm/1-3-tx-success-failure.md)
 
 A single `Counter` contract is deployed once; every user has their own
 counter slot keyed by `msg.sender`. You solve the challenge by sending

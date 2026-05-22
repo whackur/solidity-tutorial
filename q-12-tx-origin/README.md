@@ -1,8 +1,6 @@
 # Q-12. tx.origin — drain your vault through a phisher lure
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-12-tx-origin.md`](../../solidity-tutorial-lecture/docs/challenges/q-12-tx-origin.md)
-> **Lecture (Korean)**: [PPT 4-1 §3, 3-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A pre-funded `TxOriginLab` is deployed. Each user gets a personal `(TxOriginVault, Phisher)` pair. The vault authenticates with `tx.origin == owner` instead of `msg.sender == owner`, so an intermediate contract can abuse a transaction that the owner willingly starts.
 

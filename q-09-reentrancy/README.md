@@ -1,8 +1,6 @@
 # Q-09. Reentrancy — drain your personal VulnerableVault
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-09-reentrancy.md`](../../solidity-tutorial-lecture/docs/challenges/q-09-reentrancy.md)
-> **Lecture (Korean)**: [PPT 4-1](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A single `ReentrancyLab` is deployed and pre-funded with ETH. Every user gets a fresh `(VulnerableVault, ReentrancyAttacker)` pair belonging only to that user. The vault violates CEI by sending ETH before updating accounting, which creates a reentrancy window.
 

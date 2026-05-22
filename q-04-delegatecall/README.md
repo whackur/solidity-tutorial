@@ -1,8 +1,6 @@
 # Q-04. Delegatecall — `call` vs `delegatecall` storage
 
 > **Difficulty**: Beginner ⭐⭐
-> **Korean brief**: [`docs/challenges/q-04-delegatecall.md`](../../solidity-tutorial-lecture/docs/challenges/q-04-delegatecall.md)
-> **Lecture (Korean)**: [PPT 1-1](../../solidity-tutorial-lecture/docs/01-ethereum-evm/1-1-evm-internals.md), [PPT 2-3](../../solidity-tutorial-lecture/docs/02-dev-environment/2-3-entry-points-eth-calls.md)
 
 A single `DelegatecallLab` is deployed. Each user gets a personal `(DelegateCaller, DelegateLogic)` pair and explores how two external-call types affect different storage contexts.
 

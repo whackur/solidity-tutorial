@@ -1,8 +1,6 @@
 # Q-16. Oracle manipulation — drain a spot-price lender
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-16-oracle-spot.md`](../../solidity-tutorial-lecture/docs/challenges/q-16-oracle-spot.md)
-> **Lecture (Korean)**: [PPT 4-1 §6, 6-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 A pre-funded `OracleLab` is deployed. Each user gets a personal `(MockToken, SimplePool, SpotLender)` triple plus test tokens. The lender values collateral using the pool's *spot price* — a single read that can be distorted within the same transaction.
 

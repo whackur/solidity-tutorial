@@ -1,8 +1,6 @@
 # Q-17. Reentrancy inflate — cross-function double-payout
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-17-reentrancy-inflate.md`](../../solidity-tutorial-lecture/docs/challenges/q-17-reentrancy-inflate.md)
-> **Lecture (Korean)**: [PPT 4-1 §2, 2-2](../../solidity-tutorial-lecture/docs/04-security-audit/4-1-vulnerabilities.md)
 
 Variant of q-09. The same CEI violation appears in `withdraw`, but the interesting part is *cross-function* state reuse: another mutator touches the same balance map while the first function has not finished its effects.
 

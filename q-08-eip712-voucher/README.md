@@ -1,8 +1,6 @@
 # Q-08. EIP-712 Voucher — sign a typed struct, mint your tokens
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-08-eip712-voucher.md`](../../solidity-tutorial-lecture/docs/challenges/q-08-eip712-voucher.md)
-> **Lecture (Korean)**: [PPT 3-4](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-4-eip-712-signatures.md)
 
 A single `VoucherChallenge` (with its own `VoucherToken`) is deployed.
 You produce an EIP-712 signature over a `Voucher` struct that names

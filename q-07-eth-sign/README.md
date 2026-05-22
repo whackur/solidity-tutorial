@@ -1,8 +1,6 @@
 # Q-07. ECDSA recovery — eth_sign vs personal_sign
 
 > **Difficulty**: Intermediate ⭐⭐⭐
-> **Korean brief**: [`docs/challenges/q-07-eth-sign.md`](../../solidity-tutorial-lecture/docs/challenges/q-07-eth-sign.md)
-> **Lecture (Korean)**: [PPT 3-4](../../solidity-tutorial-lecture/docs/03-openzeppelin/3-4-eip-712-signatures.md)
 
 A single `EthSignChallenge` is deployed. You prove control of your EOA
 to it twice: once by signing a per-user 32-byte challenge (eth_sign
