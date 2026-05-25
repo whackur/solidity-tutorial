@@ -38,7 +38,7 @@ A web UI polls this after each transaction. The contract is otherwise
 free-form — see each `README.md` for the per-challenge call surface.
 
 For challenges that need per-user instances (q-04, q-09, q-10, q-12,
-q-14, q-15, q-16, q-17, q-18, q-19) the main contract is a `Lab` with
+q-14, q-15, q-16, q-17, q-18, q-19, q-22) the main contract is a `Lab` with
 `createInstance(...)` that deploys the user's personal challenge
 environment.
 
@@ -81,14 +81,31 @@ isolated.
 | q-17 | reentrancy-inflate | Intermediate ⭐⭐⭐ | cross-function CEI — same deposit pays out twice |
 | q-18 | read-only-reentrancy | Intermediate ⭐⭐⭐ | view returns stale state during withdraw window |
 | q-19 | reentrancy-basic | Entry ⭐ | beginner reentrancy — drain vault with two calls (simplified q-09) |
+| q-20 | erc20-basic | Entry ⭐ | approve + transferFrom flow — claim faucet, approve a vault, let it pull |
+| q-21 | ecrecover-basic | Entry ⭐ | raw `ecrecover(hash, v, r, s)` — identify the trusted signer among candidates |
+| q-22 | spot-price-basic | Entry ⭐ | xy=k mock pool — move spot price with a single swap |
 
 ## Recommended path
 
-- **Track A (entry)**: q-01 → q-02 → q-03 → q-04 → q-05
+- **Track A (entry — Solidity basics)**: q-01 → q-02 → q-03 → q-04 → q-05
 - **Track B (intermediate — core)**: q-06 → q-07 → q-08 → q-09 → q-10
 - **Track C (vulnerability categories, beginner)**: q-11 → q-12 → q-13 → q-14 → q-15
 - **Track D (vulnerability categories, intermediate)**: q-16 → q-17 → q-18
 - **Track E (DeFi hacks playthrough — paired with lecture chapter 4-5)**: q-19 (warm-up) → q-09 (The DAO) → q-14 (King of the Ether) → q-16 (Cream Finance) → q-11 (Poly Network)
+
+## Paired progression (warm-up → applied)
+
+Each row introduces a single concept with a 2-3 transaction warm-up, then immediately re-uses it in a real-shaped applied challenge. Use this path when teaching the same topic across two consecutive slots.
+
+| # | Concept | Warm-up (Entry ⭐) | Applied (Beginner / Intermediate) |
+|---|---|---|---|
+| 1 | ERC-20 transfer flow | **q-20 erc20-basic** | q-05 simple-wallet · q-06 erc20-permit |
+| 2 | Signature recovery | **q-21 ecrecover-basic** | q-07 eth-sign · q-08 eip712-voucher · q-10 signature-replay |
+| 3 | Reentrancy / CEI | **q-19 reentrancy-basic** | q-09 reentrancy · q-17 reentrancy-inflate · q-18 read-only-reentrancy |
+| 4 | AMM / oracle | **q-22 spot-price-basic** | q-16 oracle-spot |
+| 5 | EVM call semantics | q-01 counter | q-04 delegatecall · q-13 unchecked-call |
+| 6 | Access control | q-02 events-errors | q-11 access-control · q-12 tx-origin |
+| 7 | ETH delivery edge cases | q-03 eth-mailbox | q-14 dos-revert · q-15 front-run |
 
 ## Rules
 

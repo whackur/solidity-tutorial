@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-21-ecrecover-basic",
+  "version": "0.1.0",
+  "description": "Quiz 21 — Beginner ecrecover lab: identify which published signature came from the trusted signer",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

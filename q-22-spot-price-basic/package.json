@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-22-spot-price-basic",
+  "version": "0.1.0",
+  "description": "Quiz 22 — Beginner xy=k spot-price lab: swap to move the constant-product price below TARGET",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

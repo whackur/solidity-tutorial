@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-20-erc20-basic",
+  "version": "0.1.0",
+  "description": "Quiz 20 — Beginner ERC-20 lab: claim faucet, approve a vault, and let the vault pull tokens via transferFrom",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
