@@ -38,7 +38,7 @@ A web UI polls this after each transaction. The contract is otherwise
 free-form — see each `README.md` for the per-challenge call surface.
 
 For challenges that need per-user instances (q-04, q-09, q-10, q-12,
-q-14, q-15, q-16, q-17, q-18) the main contract is a `Lab` with
+q-14, q-15, q-16, q-17, q-18, q-19) the main contract is a `Lab` with
 `createInstance(...)` that deploys the user's personal challenge
 environment.
 
@@ -80,6 +80,7 @@ isolated.
 | q-16 | oracle-spot | Intermediate ⭐⭐⭐ | single-pool spot price manipulation drains lender |
 | q-17 | reentrancy-inflate | Intermediate ⭐⭐⭐ | cross-function CEI — same deposit pays out twice |
 | q-18 | read-only-reentrancy | Intermediate ⭐⭐⭐ | view returns stale state during withdraw window |
+| q-19 | reentrancy-basic | Entry ⭐ | beginner reentrancy — drain vault with two calls (simplified q-09) |
 
 ## Recommended path
 
@@ -87,6 +88,7 @@ isolated.
 - **Track B (intermediate — core)**: q-06 → q-07 → q-08 → q-09 → q-10
 - **Track C (vulnerability categories, beginner)**: q-11 → q-12 → q-13 → q-14 → q-15
 - **Track D (vulnerability categories, intermediate)**: q-16 → q-17 → q-18
+- **Track E (DeFi hacks playthrough — paired with lecture chapter 4-5)**: q-19 (warm-up) → q-09 (The DAO) → q-14 (King of the Ether) → q-16 (Cream Finance) → q-11 (Poly Network)
 
 ## Rules
 

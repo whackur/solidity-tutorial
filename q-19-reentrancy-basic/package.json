@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-19-reentrancy-basic",
+  "version": "0.1.0",
+  "description": "Quiz 19 — Beginner reentrancy lab: drain a CEI-violating vault with two transactions (simplified q-09)",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}
