@@ -35,9 +35,9 @@
       line-height: 1.5;
     }
     main {
-      max-width: 520px;
+      max-width: 880px;
       margin: 3rem auto;
-      padding: 0 1rem;
+      padding: 0 1.5rem;
     }
     h1 {
       font-size: 1.5rem;
@@ -118,6 +118,65 @@
     #status.ok { color: var(--ok); }
     #status.err { color: var(--err); }
     a { color: inherit; }
+    h2 {
+      font-size: 1rem;
+      margin: 0 0 0.75rem 0;
+    }
+    #challenges {
+      font-size: 0.8125rem;
+      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    }
+    .ch-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    .ch-table td {
+      padding: 0.3rem 0.5rem 0.3rem 0;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+    .ch-table tr:last-child td { border-bottom: none; }
+    .ch-table td.pkg {
+      color: var(--fg);
+      white-space: nowrap;
+      font-weight: 600;
+    }
+    .ch-table td.role {
+      color: var(--muted);
+      padding-right: 0.75rem;
+    }
+    .ch-table td.addr {
+      word-break: break-all;
+      color: var(--fg);
+      width: 100%;
+    }
+    .ch-table td.copy {
+      text-align: right;
+      white-space: nowrap;
+      padding-left: 0.5rem;
+    }
+    .copy-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--fg);
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.25rem 0.625rem;
+      border-radius: 4px;
+      cursor: pointer;
+      width: auto;
+      margin: 0;
+    }
+    .copy-btn:hover:not(:disabled) {
+      background: rgba(99,102,241,0.1);
+      border-color: #6366f1;
+      color: #6366f1;
+    }
+    .copy-btn.copied {
+      border-color: var(--ok);
+      color: var(--ok);
+      background: rgba(10,140,92,0.08);
+    }
     footer {
       font-size: 0.8125rem;
       color: var(--muted);
@@ -146,9 +205,15 @@
       <div id="status" aria-live="polite"></div>
     </section>
 
+    <section class="card">
+      <h2>Deployed challenges</h2>
+      <div id="challenges">Loading…</div>
+    </section>
+
     <footer>
-      Add the chain to MetaMask, then paste your wallet address above.
-      Challenges deployed at <a href="./data/addresses.json">/data/addresses.json</a>.
+      Add the chain to MetaMask, paste your wallet address above, then
+      copy a challenge address by clicking it.
+      Raw JSON: <a href="./data/addresses.json">/data/addresses.json</a>.
     </footer>
   </main>
 
