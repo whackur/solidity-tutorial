@@ -1,0 +1,33 @@
+# Solidity Tutorial — anvil + auto-deploy stack.
+#
+# Usage (from repo root):
+#   1. forge soldeer install         # once, to populate dependencies/
+#   2. docker compose up -d --build
+#   3. cat docker/shared/addresses.json
+#
+# The container exposes anvil on host port 8545 and writes the deployed
+# challenge addresses to ./docker/shared/addresses.json for the web UI
+# or the instructor to read.
+
+services:
+  anvil:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: solidity-tutorial-anvil:dev
+    container_name: solidity-tutorial-anvil
+    ports:
+      - "8545:8545"
+    volumes:
+      - ./docker/shared:/shared
+    environment:
+      ANVIL_HOST: "0.0.0.0"
+      ANVIL_PORT: "8545"
+      ANVIL_CHAIN_ID: "31337"
+    healthcheck:
+      test: ["CMD-SHELL", "cast block-number --rpc-url http://localhost:8545 || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 20s
+    restart: unless-stopped

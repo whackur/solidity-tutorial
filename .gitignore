@@ -243,3 +243,6 @@ slither-report.json
 # Echidna
 crytic-export/
 **/test/echidna/corpus/
+
+# Docker — local-only deployment artifacts (addresses.json etc.)
+docker/shared/

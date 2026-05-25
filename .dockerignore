@@ -1,0 +1,35 @@
+# Keep the docker build context small and reproducible.
+
+.git/
+.github/
+
+# Node tooling (not needed inside the anvil image)
+node_modules/
+**/node_modules/
+.pnpm-store/
+
+# Foundry build artifacts — regenerated inside the container
+**/out/
+**/cache/
+**/broadcast/
+foundry.lock
+
+# Local secrets / overrides — never bake into the image
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Local-only volumes
+docker/shared/
+
+# Agent tooling state
+.atl/
+.claude/
+.agent/
+.agents/
+.idea/
+
+# OS junk
+.DS_Store
+Thumbs.db
