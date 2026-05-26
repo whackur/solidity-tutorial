@@ -20,12 +20,10 @@ ANVIL_MNEMONIC="${ANVIL_MNEMONIC:-test test test test test test test test test t
 ANVIL_RPC="http://127.0.0.1:${ANVIL_PORT}"
 SHARED_DIR="${SHARED_DIR:-/shared}"
 
-# anvil account #0 (deterministic from the default mnemonic).
-# Public, well-known, ZERO real value. Used only for local deploys.
-DEPLOYER_ADDR="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
-DEPLOYER_KEY="0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80"
-
 mkdir -p "$SHARED_DIR"
+# Drop any addresses.json left from a previous boot — keeps stale data from
+# leaking through the bind mount when this run aborts before rewriting it.
+rm -f "$SHARED_DIR/addresses.json"
 
 echo "[entrypoint] starting anvil on ${ANVIL_HOST}:${ANVIL_PORT} (chainId=${ANVIL_CHAIN_ID})"
 anvil \
@@ -50,6 +48,16 @@ if ! cast block-number --rpc-url "$ANVIL_RPC" >/dev/null 2>&1; then
   cat /tmp/anvil.log
   exit 1
 fi
+
+# Derive deployer (account #0) and faucet (account #9) wallets from
+# whichever mnemonic anvil was started with. Splitting accounts keeps
+# faucet drops from racing the deploy nonce.
+DEPLOYER_KEY=$(cast wallet private-key "$ANVIL_MNEMONIC" 0)
+DEPLOYER_ADDR=$(cast wallet address --private-key "$DEPLOYER_KEY")
+FAUCET_KEY=$(cast wallet private-key "$ANVIL_MNEMONIC" 9)
+FAUCET_ADDR=$(cast wallet address --private-key "$FAUCET_KEY")
+echo "[entrypoint] deployer: ${DEPLOYER_ADDR}"
+echo "[entrypoint] faucet:   ${FAUCET_ADDR}"
 
 # deploy_one <package-name>
 #   - runs forge script Deploy.s.sol:Deploy
@@ -127,8 +135,16 @@ jq -n \
   --argjson chainId "$ANVIL_CHAIN_ID" \
   --arg rpcUrl "http://localhost:${ANVIL_PORT}" \
   --arg deployer "$DEPLOYER_ADDR" \
+  --arg faucetAddr "$FAUCET_ADDR" \
+  --arg faucetKey "$FAUCET_KEY" \
   --argjson challenges "$challenges_json" \
-  '{chainId: $chainId, rpcUrl: $rpcUrl, deployer: $deployer, challenges: $challenges}' \
+  '{
+     chainId: $chainId,
+     rpcUrl: $rpcUrl,
+     deployer: $deployer,
+     faucet: {address: $faucetAddr, privateKey: $faucetKey},
+     challenges: $challenges
+   }' \
   > "$SHARED_DIR/addresses.json"
 
 echo "[entrypoint] addresses.json written:"

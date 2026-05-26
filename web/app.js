@@ -10,17 +10,19 @@ import {
 // instructor's LAN IP.
 const RPC_URL = `${location.protocol}//${location.hostname}:8545`;
 
-// anvil default account #9 — the deploy script uses account #0, so we
-// pick a separate account here to avoid nonce contention when many
-// students click the faucet at the same time. Both keys are public,
-// documented anvil constants; valid only on the local 31337 chain.
-const FAUCET_KEY = "0x2a871d0798f97d79848a013d4936a73bf4cc922c825d33c1cf7073dff6d409c6";
+// Faucet wallet is derived from ANVIL_MNEMONIC at container boot (entrypoint
+// picks account #9 to avoid nonce contention with the deployer) and exposed
+// via addresses.json. Valid only on the local anvil chain.
 const DROP = parseEther("1");
+let faucet = null;
 
 const $addr = document.getElementById("addr");
 const $btn = document.getElementById("claim");
 const $status = document.getElementById("status");
 const $infoRpc = document.getElementById("info-rpc");
+const $infoChain = document.getElementById("info-chain");
+const $infoDeployer = document.getElementById("info-deployer");
+const $infoFaucet = document.getElementById("info-faucet");
 
 $infoRpc.textContent = RPC_URL;
 
@@ -35,13 +37,17 @@ $btn.addEventListener("click", async () => {
     setStatus("Invalid address — expected 0x followed by 40 hex chars.", "err");
     return;
   }
+  if (!faucet?.privateKey) {
+    setStatus("Faucet not ready — refresh after the deploy logs finish.", "err");
+    return;
+  }
 
   $btn.disabled = true;
   setStatus("Submitting transaction…");
 
   try {
     const provider = new JsonRpcProvider(RPC_URL);
-    const wallet = new Wallet(FAUCET_KEY, provider);
+    const wallet = new Wallet(faucet.privateKey, provider);
     const tx = await wallet.sendTransaction({ to, value: DROP });
     setStatus(`Sent. Waiting for confirmation… ${tx.hash}`);
     await tx.wait();
@@ -64,6 +70,10 @@ async function loadChallenges() {
     const res = await fetch("./data/addresses.json", { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    if (data.chainId != null) $infoChain.textContent = String(data.chainId);
+    if (data.deployer) $infoDeployer.textContent = data.deployer;
+    if (data.faucet?.address) $infoFaucet.textContent = data.faucet.address;
+    if (data.faucet?.privateKey) faucet = data.faucet;
     renderChallenges($container, data.challenges || {});
   } catch (e) {
     $container.textContent =

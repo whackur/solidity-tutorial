@@ -7,7 +7,7 @@
       "script": "script",
       "libs": ["../dependencies"],
       "auto_detect_remappings": false,
-      "solc_version": "0.8.35",
+      "solc": "0.8.35",
       "evm_version": "osaka",
       "ignored_error_codes": [2424]
     }
@@ -17,8 +17,8 @@
       "ethereum": {"rpc_env": "ETHEREUM_RPC_URL", "explorer": {"key_env": "ETHERSCAN_API_KEY", "url": "https://api.etherscan.io/api", "chain": 1}},
       "sepolia": {"rpc_env": "SEPOLIA_RPC_URL", "explorer": {"key_env": "ETHERSCAN_API_KEY", "url": "https://api-sepolia.etherscan.io/api", "chain": 11155111}},
       "hoodi": {"rpc_env": "HOODI_RPC_URL", "explorer": {"key_env": "ETHERSCAN_API_KEY", "url": "https://hoodi.etherscan.io/api", "chain": 560048}},
-      "base": {"rpc_env": "BASE_RPC_URL", "explorer": {"key_env": "BASESCAN_API_KEY", "url": "https://api.basescan.org/api", "chain": 8453}},
-      "base-sepolia": {"rpc_env": "BASE_SEPOLIA_RPC_URL", "explorer": {"key_env": "BASESCAN_API_KEY", "url": "https://api-sepolia.basescan.org/api", "chain": 84532}},
+      "base": {"rpc_env": "BASE_RPC_URL", "explorer": {"key_env": "ETHERSCAN_API_KEY", "url": "https://api.basescan.org/api", "chain": 8453}},
+      "base-sepolia": {"rpc_env": "BASE_SEPOLIA_RPC_URL", "explorer": {"key_env": "ETHERSCAN_API_KEY", "url": "https://api-sepolia.basescan.org/api", "chain": 84532}},
       "optimism": {"rpc_env": "OPTIMISM_RPC_URL", "explorer": {"key_env": "OPTIMISTIC_ETHERSCAN_API_KEY", "url": "https://api-optimistic.etherscan.io/api", "chain": 10}},
       "optimism-sepolia": {"rpc_env": "OPTIMISM_SEPOLIA_RPC_URL", "explorer": {"key_env": "OPTIMISTIC_ETHERSCAN_API_KEY", "url": "https://api-sepolia-optimistic.etherscan.io/api", "chain": 11155420}}
     }
