@@ -1,9 +1,12 @@
 import {
-  JsonRpcProvider,
-  Wallet,
+  createPublicClient,
+  createWalletClient,
+  defineChain,
+  http,
   parseEther,
   isAddress,
-} from "https://cdn.jsdelivr.net/npm/ethers@6/+esm";
+} from "https://cdn.jsdelivr.net/npm/viem@2/+esm";
+import { privateKeyToAccount } from "https://cdn.jsdelivr.net/npm/viem@2/accounts/+esm";
 
 // anvil's RPC port is read from addresses.json (entrypoint writes whatever
 // ANVIL_PORT it was started with) and combined with the current page's
@@ -13,6 +16,7 @@ import {
 // via addresses.json. Valid only on the local anvil chain.
 const DROP = parseEther("1");
 let rpcUrl = null;
+let chainId = null;
 let faucet = null;
 
 const $addr = document.getElementById("addr");
@@ -34,7 +38,7 @@ $btn.addEventListener("click", async () => {
     setStatus("Invalid address — expected 0x followed by 40 hex chars.", "err");
     return;
   }
-  if (!rpcUrl || !faucet?.privateKey) {
+  if (!rpcUrl || !chainId || !faucet?.privateKey) {
     setStatus("Not ready yet — refresh after the deploy logs finish.", "err");
     return;
   }
@@ -43,12 +47,27 @@ $btn.addEventListener("click", async () => {
   setStatus("Submitting transaction…");
 
   try {
-    const provider = new JsonRpcProvider(rpcUrl);
-    const wallet = new Wallet(faucet.privateKey, provider);
-    const tx = await wallet.sendTransaction({ to, value: DROP });
-    setStatus(`Sent. Waiting for confirmation… ${tx.hash}`);
-    await tx.wait();
-    setStatus(`Delivered 1 ETH to ${to} (tx ${tx.hash})`, "ok");
+    const chain = defineChain({
+      id: chainId,
+      name: "Anvil",
+      nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+      rpcUrls: { default: { http: [rpcUrl] } },
+    });
+    const account = privateKeyToAccount(faucet.privateKey);
+    const walletClient = createWalletClient({
+      account,
+      chain,
+      transport: http(rpcUrl),
+    });
+    const publicClient = createPublicClient({
+      chain,
+      transport: http(rpcUrl),
+    });
+
+    const hash = await walletClient.sendTransaction({ to, value: DROP });
+    setStatus(`Sent. Waiting for confirmation… ${hash}`);
+    await publicClient.waitForTransactionReceipt({ hash });
+    setStatus(`Delivered 1 ETH to ${to} (tx ${hash})`, "ok");
   } catch (e) {
     setStatus(`Error: ${e?.shortMessage || e?.message || String(e)}`, "err");
   } finally {
@@ -71,7 +90,10 @@ async function loadChallenges() {
       rpcUrl = `${location.protocol}//${location.hostname}:${data.rpcPort}`;
       $infoRpc.textContent = rpcUrl;
     }
-    if (data.chainId != null) $infoChain.textContent = String(data.chainId);
+    if (data.chainId != null) {
+      chainId = data.chainId;
+      $infoChain.textContent = String(data.chainId);
+    }
     if (data.deployer) $infoDeployer.textContent = data.deployer;
     if (data.faucet?.address) $infoFaucet.textContent = data.faucet.address;
     if (data.faucet?.privateKey) faucet = data.faucet;
