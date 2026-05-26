@@ -11,7 +11,7 @@ import {Vault} from "../src/Setup.sol";
 contract Deploy is Script {
     function run() external {
         bytes32 a = keccak256(abi.encodePacked("q23.A", block.timestamp, blockhash(block.number - 1)));
-        bytes32 b = keccak256(abi.encodePacked("q23.B", block.timestamp, blockhash(block.number - 1), address(this)));
+        bytes32 b = keccak256(abi.encodePacked("q23.B", block.timestamp, blockhash(block.number - 1)));
 
         vm.startBroadcast();
         Vault vault = new Vault(a, b);
