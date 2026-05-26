@@ -34,6 +34,19 @@ docker compose down -v && docker compose up -d --build   # reset chain
 docker compose down                    # stop
 ```
 
+## Collect ABIs
+
+Build every package and aggregate project-owned ABIs into one tree:
+
+```bash
+./scripts/collect-abi.sh
+# → combined-out/<package>/<SourceFile.sol>/<ContractName>.json
+```
+
+Only artifacts whose source lives under each package's `src/` / `script/` /
+`test/` are copied — `forge-std`, OpenZeppelin, and other dependency ABIs are
+skipped. The output directory is gitignored.
+
 ## Examples
 
 - **counter**: Counter / SimpleStorage / EventsAndErrors — event (0~3 indexed + anonymous) and error (require / revert / custom / assert / auto-Panic) showcase.
@@ -55,4 +68,7 @@ docker compose down                    # stop
 - **erc2771-meta-tx**: ERC-2771 meta-transaction forwarder + recipient.
 - **smart-account**: EIP-7702 smart account with ERC-7201 namespaced storage + ERC-1271.
 
-Graded challenges live under `q-01-…` to `q-22-…`. See [`q-INDEX.md`](./q-INDEX.md).
+Graded challenges live under `q-01-…` to `q-23-…`, all inheriting the shared
+[`common/src/SolvableBase.sol`](./common/src/SolvableBase.sol) (provides
+`solve()` / `solvedBy(address)` / `Solved` event on top of each puzzle's
+`isSolved`). See [`q-INDEX.md`](./q-INDEX.md).
