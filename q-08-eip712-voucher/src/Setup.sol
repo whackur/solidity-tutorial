@@ -4,6 +4,7 @@ pragma solidity ^0.8.35;
 import {EIP712} from "@openzeppelin/contracts/utils/cryptography/EIP712.sol";
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Public-mint ERC20 paired with the voucher challenge. The challenge
 ///         contract itself is the only address allowed to mint outside the
@@ -24,7 +25,7 @@ contract VoucherToken is ERC20 {
 ///
 ///         isSolved(user) becomes true once the user redeems any voucher
 ///         where they were both signer and redeemer.
-contract VoucherChallenge is EIP712 {
+contract VoucherChallenge is EIP712, SolvableBase {
     bytes32 public constant VOUCHER_TYPEHASH = keccak256(
         "Voucher(address token,address signer,address redeemer,uint256 voucherId,uint256 amount)"
     );
@@ -89,7 +90,7 @@ contract VoucherChallenge is EIP712 {
         return _domainSeparatorV4();
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return solved[user];
     }
 }

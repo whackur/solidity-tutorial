@@ -3,6 +3,7 @@ pragma solidity ^0.8.35;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Intentionally-broken signed claim. The signed payload is just
 ///         `keccak256(abi.encode(to, amount))` — no nonce, no deadline,
@@ -35,7 +36,7 @@ contract VulnerableSigClaim {
 ///
 ///         The lab itself must hold ≥ `SEED * N` ETH at deploy time —
 ///         see the funded `receive()`.
-contract ReplayLab {
+contract ReplayLab is SolvableBase {
     uint256 public constant SEED = 5 ether;
 
     mapping(address => VulnerableSigClaim) private _claims;
@@ -62,7 +63,7 @@ contract ReplayLab {
         return _claims[user];
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         VulnerableSigClaim c = _claims[user];
         if (address(c) == address(0)) return false;
         return address(c).balance == 0;

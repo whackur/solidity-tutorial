@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Multi-tenant counter challenge. A single instance is deployed
 ///         once and shared by many users — each user has their own counter
 ///         keyed by msg.sender.
@@ -11,8 +13,9 @@ pragma solidity ^0.8.35;
 ///              read the 4-byte selector from the revert data, and submit
 ///              it back via reportUnderflowSelector.
 ///
-///         Web UI grades by polling isSolved(msg.sender).
-contract Counter {
+///         Web UI grades by polling isSolved(msg.sender). Submit solve()
+///         once the conditions are met to record an on-chain proof.
+contract Counter is SolvableBase {
     mapping(address => uint256) public counts;
     mapping(address => bool) public sawUnderflow;
 
@@ -53,7 +56,7 @@ contract Counter {
         emit UnderflowSelectorReported(msg.sender, selector);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return counts[user] == 7 && sawUnderflow[user];
     }
 }

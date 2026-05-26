@@ -1,0 +1,13 @@
+{
+  "name": "@quiz/q-23-storage-slots",
+  "version": "0.1.0",
+  "description": "Quiz 23 — Reading private storage via eth_getStorageAt (sequential + arbitrary slots)",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv",
+    "lint": "forge fmt --check",
+    "format": "forge fmt"
+  },
+  "license": "MIT"
+}

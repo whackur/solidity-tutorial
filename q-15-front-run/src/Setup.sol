@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice A "guess the secret to win the prize" game whose designer
 ///         thought `bytes32 private` was enough to hide the answer.
 ///         Anyone can read the secret directly from chain storage via
@@ -45,7 +47,7 @@ contract FrontRunChallenge {
 /// @notice Multi-tenant lab. `createInstance()` deploys a per-user
 ///         `FrontRunChallenge` seeded with `PRIZE` ETH and a fresh
 ///         secret derived from caller + tx context.
-contract FrontRunLab {
+contract FrontRunLab is SolvableBase {
     uint256 public constant PRIZE = 1 ether;
 
     mapping(address => FrontRunChallenge) private _challenges;
@@ -72,7 +74,7 @@ contract FrontRunLab {
         return _challenges[user];
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         FrontRunChallenge c = _challenges[user];
         if (address(c) == address(0)) return false;
         return c.winner() == user;

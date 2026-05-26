@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice The logic contract — both `call` and `delegatecall` paths target
 ///         this code. Storage layout is mirrored by DelegateCaller.
 contract DelegateLogic {
@@ -51,7 +53,7 @@ contract DelegateCaller {
 ///         Solve goal (per user):
 ///         - logicOf(user).number() == 42  (set via `call`, target writes to logic storage)
 ///         - callerOf(user).number() == 99 (set via `delegatecall`, logic code writes to caller storage)
-contract DelegatecallLab {
+contract DelegatecallLab is SolvableBase {
     struct Instance {
         DelegateCaller caller;
         DelegateLogic logic;
@@ -78,7 +80,7 @@ contract DelegatecallLab {
         return _instances[user].logic;
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.caller) == address(0)) return false;
         return inst.logic.number() == 42 && inst.caller.number() == 99;

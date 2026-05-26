@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Vault with cross-function CEI violations. `withdraw` performs
 ///         an external call before zeroing the caller's balance — the
 ///         classic shape. `transferBalance` is a *separate* mutator that
@@ -113,7 +115,7 @@ contract InflateHelper {
 /// @notice Multi-tenant inflate lab. Each user calls `createInstance()`
 ///         once; the lab deploys (vault, attacker, helper) and pre-funds
 ///         the vault with `SEED` ETH playing the role of victim deposit.
-contract InflateLab {
+contract InflateLab is SolvableBase {
     uint256 public constant SEED = 1 ether;
 
     struct Instance {
@@ -157,7 +159,7 @@ contract InflateLab {
 
     /// @notice Solved when the vault is drained AND the user has been
     ///         paid twice — once via the attacker, once via the helper.
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.vault) == address(0)) return false;
         return address(inst.vault).balance == 0

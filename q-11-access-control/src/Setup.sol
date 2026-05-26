@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Privileged registry whose admin setter is missing an `onlyOwner`
 ///         modifier. Anyone can promote any address to admin.
 ///
@@ -11,7 +13,7 @@ pragma solidity ^0.8.35;
 ///              final `solved[user]` flag for themselves.
 ///
 ///         A web UI polls `isSolved(user)`.
-contract VulnerableRegistry {
+contract VulnerableRegistry is SolvableBase {
     address public immutable owner;
 
     mapping(address => bool) public adminPromoted;
@@ -45,7 +47,7 @@ contract VulnerableRegistry {
         emit AdminClaimed(msg.sender);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return solved[user];
     }
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice The classic CEI-violating vault. External call before state update,
 ///         so re-entering during the call returns the same balance forever.
 contract VulnerableVault {
@@ -68,7 +70,7 @@ contract ReentrancyAttacker {
 ///
 ///         The lab itself must hold enough ETH at deploy time to seed
 ///         every expected instance — see the funded `receive()`.
-contract ReentrancyLab {
+contract ReentrancyLab is SolvableBase {
     struct Instance {
         VulnerableVault vault;
         ReentrancyAttacker attacker;
@@ -105,7 +107,7 @@ contract ReentrancyLab {
         return _instances[user].attacker;
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.vault) == address(0)) return false;
         return address(inst.vault).balance == 0 && address(inst.attacker).balance >= SEED;

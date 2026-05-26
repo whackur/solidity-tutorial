@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Minimal hand-rolled ERC-20 (no inheritance, no libraries) so a
 ///         beginner sees the raw allowance + transferFrom flow on a 60-line
 ///         contract. Solver's mental model: balances[] is the ledger and
@@ -90,7 +92,7 @@ contract PullVault {
 /// @notice Multi-tenant beginner ERC-20 lab. A single Faucet + a single
 ///         PullVault are deployed once; users solve in parallel because
 ///         all per-user state lives in `claimed[]` and `deposited[]`.
-contract Erc20BasicLab {
+contract Erc20BasicLab is SolvableBase {
     Faucet public immutable faucet;
     PullVault public immutable vault;
     uint256 public constant TARGET = 25e18;
@@ -100,7 +102,7 @@ contract Erc20BasicLab {
         vault = new PullVault(faucet);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return faucet.claimed(user) && vault.deposited(user) >= TARGET;
     }
 }

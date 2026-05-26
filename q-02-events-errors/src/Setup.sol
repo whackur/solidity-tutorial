@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Multi-tenant revert classifier. Every user must observe three
 ///         distinct revert flavours and submit their 4-byte selectors back.
 ///         A single instance is shared across users; progress is keyed by
 ///         msg.sender so users do not interfere.
-contract EventsAndErrors {
+contract EventsAndErrors is SolvableBase {
     error InsufficientBalance(uint256 available, uint256 required);
     error WrongSelector(bytes4 submitted, bytes4 expected);
 
@@ -54,7 +56,7 @@ contract EventsAndErrors {
         emit CustomSelectorReported(msg.sender);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return solvedError[user] && solvedPanic[user] && solvedCustom[user];
     }
 }

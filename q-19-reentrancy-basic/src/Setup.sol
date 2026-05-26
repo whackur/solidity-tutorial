@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Minimal CEI-violating vault. Identical pattern to q-09 but with a
 ///         smaller seed so the demonstration fits in a beginner walkthrough.
 contract VulnerableMiniVault {
@@ -79,7 +81,7 @@ contract BasicAttacker {
 ///
 ///         The lab itself must hold enough ETH at deploy time to seed every
 ///         expected instance — see the funded `receive()`.
-contract ReentrancyBasicLab {
+contract ReentrancyBasicLab is SolvableBase {
     struct Instance {
         VulnerableMiniVault vault;
         BasicAttacker attacker;
@@ -119,7 +121,7 @@ contract ReentrancyBasicLab {
         return _instances[user].attacker;
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.vault) == address(0)) return false;
         return address(inst.vault).balance == 0 && address(inst.attacker).balance >= SEED;

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Multi-tenant mailbox demonstrating the three ETH/calldata entry
 ///         points of a Solidity contract. A single instance is shared
 ///         across users; hits are tracked per msg.sender.
@@ -9,7 +11,7 @@ pragma solidity ^0.8.35;
 ///         - call with empty calldata + value  → receive()
 ///         - call with unknown selector        → fallback()
 ///         - call to receivePayable(bytes32)   → named function
-contract EthMailbox {
+contract EthMailbox is SolvableBase {
     enum Trigger {
         None,
         Receive,
@@ -63,7 +65,7 @@ contract EthMailbox {
         emit ReceivePayableHit(msg.sender, msg.value, tag);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return hitReceive[user] && hitFallback[user] && hitReceivePayable[user];
     }
 }

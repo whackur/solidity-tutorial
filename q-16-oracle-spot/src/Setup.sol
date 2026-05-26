@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Minimal mintable ERC-20-like token. Trimmed for tutorial brevity —
 ///         no events typed, no safe math (compiler already overflow-checks).
 contract MockToken {
@@ -124,7 +126,7 @@ contract SpotLender {
 /// @notice Multi-tenant oracle lab. `createInstance()` deploys a personal
 ///         (token, pool, lender) triple per user and faucets the user
 ///         some TKN for the manipulation.
-contract OracleLab {
+contract OracleLab is SolvableBase {
     /// Pool seed: small reserves so a few ETH of swap moves spot a lot.
     uint256 public constant POOL_ETH_SEED = 1 ether;
     uint256 public constant POOL_TKN_SEED = 100e18;
@@ -176,7 +178,7 @@ contract OracleLab {
         return _instances[user].lender;
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.lender) == address(0)) return false;
         return address(inst.lender).balance == 0;

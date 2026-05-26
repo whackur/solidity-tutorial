@@ -3,6 +3,7 @@ pragma solidity ^0.8.35;
 
 import {ECDSA} from "@openzeppelin/contracts/utils/cryptography/ECDSA.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
+import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Multi-tenant EIP-191 signature lab. A single instance is shared.
 ///         Each user proves possession of their EOA private key by signing
@@ -11,7 +12,7 @@ import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/Messa
 ///         caller's own address.
 ///
 ///         Progress is keyed by msg.sender (= recovered signer).
-contract EthSignChallenge {
+contract EthSignChallenge is SolvableBase {
     using MessageHashUtils for bytes32;
     using MessageHashUtils for bytes;
 
@@ -57,7 +58,7 @@ contract EthSignChallenge {
         emit PersonalSignVerified(msg.sender);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return solvedEthSign[user] && solvedPersonalSign[user];
     }
 }

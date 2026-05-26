@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice ETH share vault. `withdraw` sends ETH out before updating
 ///         `totalShares` — so during the external call the *view*
 ///         `sharePrice()` returns a temporarily-deflated price:
@@ -117,7 +119,7 @@ contract ReadOnlyAttacker {
 ///         `(vault, consumer, attacker)` triple. The lab seeds the vault
 ///         with a small "innocent depositor" stake so the share price
 ///         drop during withdraw is large and observable.
-contract ReadOnlyLab {
+contract ReadOnlyLab is SolvableBase {
     uint256 public constant SEED_DEPOSIT = 0.1 ether;
     /// @notice credits threshold for solved. Honest single-tx interaction
     ///         (1 ETH at price 1e18) would only mint 1e18 credits. The
@@ -165,7 +167,7 @@ contract ReadOnlyLab {
 
     /// @notice Solved when the consumer minted inflated credits to the
     ///         user's attacker contract.
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.vault) == address(0)) return false;
         return inst.consumer.credits(address(inst.attacker)) >= CREDIT_THRESHOLD;

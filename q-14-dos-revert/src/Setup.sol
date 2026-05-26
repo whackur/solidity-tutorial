@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice "King of the Hill" with the classic push-payment DoS shape.
 ///         To dethrone the current king, you must refund their previous
 ///         bid via a low-level call AND require the refund to succeed.
@@ -59,7 +61,7 @@ contract RevertKing {
 ///         attacker) pair via `createInstance()`. The user makes an
 ///         opening bid from their EOA, then dethrones themselves via the
 ///         attacker — at which point the throne is locked.
-contract DosLab {
+contract DosLab is SolvableBase {
     struct Instance {
         KingOfHill king;
         RevertKing attacker;
@@ -91,7 +93,7 @@ contract DosLab {
     /// @notice Solved when the user's RevertKing sits on the throne — at
     ///         that point any third party calling `king.bid(...)` reverts
     ///         with `"refund failed"`.
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.king) == address(0)) return false;
         return inst.king.currentKing() == address(inst.attacker);

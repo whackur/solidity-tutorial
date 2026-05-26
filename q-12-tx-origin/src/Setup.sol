@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Personal vault whose `transferTo` checks `tx.origin == owner`
 ///         instead of `msg.sender == owner`. Any contract called within
 ///         the same tx by the owner can drain the vault.
@@ -50,7 +52,7 @@ contract Phisher {
 /// @notice Multi-tenant tx.origin lab. Each user calls `createInstance()`
 ///         once; the lab deploys a fresh (vault, phisher) pair owned by
 ///         them and seeds the vault with `SEED` ETH.
-contract TxOriginLab {
+contract TxOriginLab is SolvableBase {
     uint256 public constant SEED = 5 ether;
 
     struct Instance {
@@ -84,7 +86,7 @@ contract TxOriginLab {
         return _instances[user].phisher;
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.vault) == address(0)) return false;
         return address(inst.vault).balance == 0 && inst.phisher.airdropClaimed();

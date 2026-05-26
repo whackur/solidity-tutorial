@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Helper contract that always rejects ETH. Provided by the
 ///         challenge so learners don't need to deploy their own.
 contract RevertOnReceive {
@@ -25,7 +27,7 @@ contract RevertOnReceive {
 ///         tracked but not used for grading. The `stranded` field is
 ///         instructor-grade bookkeeping — a real bug would have no such
 ///         accounting at all.
-contract UnsafePayout {
+contract UnsafePayout is SolvableBase {
     RevertOnReceive public immutable trap;
 
     mapping(address => uint256) public escrow;
@@ -65,7 +67,7 @@ contract UnsafePayout {
         emit PayoutAttempted(msg.sender, to, amount, ok);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         // The user observably "paid out" yet the funds stayed in the contract
         // (proved by stranded > 0). That's the exact failure mode that
         // unchecked low-level calls hide in production.

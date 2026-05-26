@@ -5,6 +5,7 @@ import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/ERC20Permit.sol";
 import {IERC20Permit} from "@openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Public-faucet ERC-20 with EIP-2612 permit. Any address can mint
 ///         themselves a balance to play with.
@@ -24,7 +25,7 @@ contract PermitToken is ERC20, ERC20Permit {
 ///         Progress is keyed by the *signer* (permit `owner`), which is
 ///         the user's EOA. isSolved(user) becomes true after the user
 ///         consumes at least one permit and a non-zero pull moves tokens.
-contract PermitChallenge {
+contract PermitChallenge is SolvableBase {
     PermitToken public immutable token;
 
     mapping(address => bool) public usedPermit;
@@ -58,7 +59,7 @@ contract PermitChallenge {
         emit PermitSpent(owner, value, recipient);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return usedPermit[user] && token.nonces(user) > 0;
     }
 }

@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Beginner ecrecover lab. The lab publishes N candidate signed
 ///         messages (a `messageHash`, plus `(v, r, s)`). Exactly ONE of
 ///         them was signed by `trustedSigner`. The student reads each
@@ -12,7 +14,7 @@ pragma solidity ^0.8.35;
 ///         to see the *raw* `ecrecover(hash, v, r, s) -> signer` primitive
 ///         on its own before q-07 layers the eth-sign prefix and q-08
 ///         adds typed-data domain separation.
-contract EcrecoverBasicLab {
+contract EcrecoverBasicLab is SolvableBase {
     struct Candidate {
         bytes32 messageHash; // keccak256(message), no eth-sign wrapping
         uint8 v;
@@ -67,7 +69,7 @@ contract EcrecoverBasicLab {
         return _submittedIndex[user];
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return _solved[user];
     }
 }

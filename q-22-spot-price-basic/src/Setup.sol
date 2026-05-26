@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
+import {SolvableBase} from "@common/SolvableBase.sol";
+
 /// @notice Per-user xy=k mock pool. No real ERC-20s are involved — only
 ///         the `reserveA` and `reserveB` numbers move. This lets a
 ///         student see *why* a single-pool spot price is a terrible
@@ -48,7 +50,7 @@ contract MockPool {
 ///         `1e18`. The goal is to swap enough of A in to drag the spot
 ///         price down to `TARGET_PRICE_E18` or below — i.e., to see that
 ///         a single trade can shift the "oracle".
-contract SpotPriceBasicLab {
+contract SpotPriceBasicLab is SolvableBase {
     uint256 public constant INITIAL_RESERVE = 1_000e18;
     /// @dev Equivalent to "A is at least 2x more abundant than B". A
     ///      swap of ~414 A from the initial 1000:1000 pool reaches this.
@@ -66,7 +68,7 @@ contract SpotPriceBasicLab {
         return address(p);
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         MockPool p = poolOf[user];
         if (address(p) == address(0)) return false;
         return p.getSpotPriceE18() <= TARGET_PRICE_E18;

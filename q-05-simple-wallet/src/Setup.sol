@@ -3,11 +3,12 @@ pragma solidity ^0.8.35;
 
 import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Multi-tenant wallet supporting ETH + any ERC-20 deposit/withdraw.
 ///         Per-user balances and per-user solve flags. A single instance
 ///         is shared; users do not interfere.
-contract SimpleWallet {
+contract SimpleWallet is SolvableBase {
     mapping(address => uint256) private _ethBalances;
     mapping(address => mapping(address => uint256)) private _erc20Balances;
 
@@ -60,7 +61,7 @@ contract SimpleWallet {
         return _erc20Balances[user][tokenAddress];
     }
 
-    function isSolved(address user) external view returns (bool) {
+    function isSolved(address user) public view override returns (bool) {
         return depositedEth[user] && withdrewEth[user] && depositedErc20[user]
             && withdrewErc20[user];
     }
