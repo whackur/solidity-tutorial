@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1.7
+# syntax=docker/dockerfile:1
 #
 # Solidity Tutorial — anvil + auto-deploy image.
 #
@@ -21,12 +21,20 @@ RUN if command -v apk >/dev/null 2>&1; then \
 WORKDIR /app
 
 # Copy the full repo; .dockerignore strips node_modules/, out/, cache/,
-# broadcast/, .git/, agent state, etc.
+# broadcast/, .git/, agent state, and the host's dependencies/ (we install
+# fresh inside the image so versions always match soldeer.lock).
 COPY . .
 
-# Pre-compile every challenge so container startup only has to send
-# broadcast transactions — no fresh solc run per boot.
-RUN bash -c 'set -e; for d in q-*/; do echo "[build] forge build in $d"; (cd "$d" && forge build); done'
+# Install Solidity dependencies pinned by soldeer.lock.
+RUN forge soldeer install
+
+# Pre-compile every package that ships a Deploy script so container startup
+# only has to send broadcast transactions — no fresh solc run per boot.
+RUN bash -c 'set -e; shopt -s nullglob; for f in /app/*/script/Deploy.s.sol; do \
+      d=$(dirname "$(dirname "$f")"); \
+      echo "[build] forge build in $(basename "$d")"; \
+      (cd "$d" && forge build); \
+    done'
 
 RUN chmod +x /app/docker/entrypoint.sh
 

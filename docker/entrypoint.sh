@@ -1,12 +1,15 @@
 #!/usr/bin/env bash
 # Solidity Tutorial — anvil + auto-deploy entrypoint.
 #
-# Boot anvil, wait for RPC, run every q-XX/script/Deploy.s.sol, and write
-# the deployed addresses to /shared/addresses.json so a web UI or the
-# instructor can hand them out.
+# Boot anvil, wait for RPC, run every */script/Deploy.s.sol found at depth 2,
+# and write deployed addresses to /shared/addresses.json so the web UI or
+# the instructor can hand them out.
 #
-# Each Deploy.s.sol must emit `console2.log("ADDR:<key>:", address)` lines.
-# Those lines are parsed here and grouped into a per-challenge JSON object.
+# Each Deploy.s.sol must:
+#   - declare `contract Deploy is Script`
+#   - emit `console2.log("ADDR:<key>:", address)` lines for each contract
+#     that should appear in addresses.json
+# Folders without a Deploy.s.sol are ignored.
 
 set -euo pipefail
 
@@ -48,8 +51,8 @@ if ! cast block-number --rpc-url "$ANVIL_RPC" >/dev/null 2>&1; then
   exit 1
 fi
 
-# deploy_one <package-dir>
-#   - runs forge script for the package
+# deploy_one <package-name>
+#   - runs forge script Deploy.s.sol:Deploy
 #   - parses ADDR:<key>: 0x... lines from the output
 #   - emits a single-line JSON object on stdout: {"key1":"0x...","key2":"0x..."}
 deploy_one() {
@@ -69,7 +72,6 @@ deploy_one() {
   local rc=$?
   set -e
 
-  # Surface forge output to the container log regardless of success.
   cat "$outfile" >&2
 
   if [[ $rc -ne 0 ]]; then
@@ -78,11 +80,9 @@ deploy_one() {
     exit 1
   fi
 
-  # Extract `ADDR:<key>: 0x...` lines (forge prepends a couple of spaces
-  # under the `== Logs ==` section).
   local pairs
   pairs=$(grep -E "ADDR:[A-Za-z0-9_]+:[[:space:]]+0x[0-9a-fA-F]+" "$outfile" \
-    | sed -E 's/.*ADDR:([A-Za-z0-9_]+):[[:space:]]+(0x[0-9a-fA-F]+).*/"\1":"\2"/')
+    | sed -E 's/.*ADDR:([A-Za-z0-9_]+):[[:space:]]+(0x[0-9a-fA-F]+).*/"\1":"\2"/' || true)
 
   rm -f "$outfile"
   popd >/dev/null
@@ -95,61 +95,41 @@ deploy_one() {
   echo "{$(echo "$pairs" | paste -sd,)}"
 }
 
-# --- run all per-challenge deploys -----------------------------------------
-Q01=$(deploy_one "q-01-counter")
-Q02=$(deploy_one "q-02-events-errors")
-Q03=$(deploy_one "q-03-eth-mailbox")
-Q04=$(deploy_one "q-04-delegatecall")
-Q05=$(deploy_one "q-05-simple-wallet")
-Q06=$(deploy_one "q-06-erc20-permit")
-Q07=$(deploy_one "q-07-eth-sign")
-Q08=$(deploy_one "q-08-eip712-voucher")
-Q09=$(deploy_one "q-09-reentrancy")
-Q10=$(deploy_one "q-10-signature-replay")
-Q11=$(deploy_one "q-11-access-control")
-Q12=$(deploy_one "q-12-tx-origin")
-Q13=$(deploy_one "q-13-unchecked-call")
-Q14=$(deploy_one "q-14-dos-revert")
-Q15=$(deploy_one "q-15-front-run")
-Q16=$(deploy_one "q-16-oracle-spot")
-Q17=$(deploy_one "q-17-reentrancy-inflate")
-Q18=$(deploy_one "q-18-read-only-reentrancy")
-Q19=$(deploy_one "q-19-reentrancy-basic")
-# ---------------------------------------------------------------------------
+# --- discover every package with script/Deploy.s.sol -----------------------
+shopt -s nullglob
+pkg_names=()
+for deploy_file in /app/*/script/Deploy.s.sol; do
+  pkg_dir=$(dirname "$(dirname "$deploy_file")")
+  pkg_names+=("$(basename "$pkg_dir")")
+done
+shopt -u nullglob
 
-cat > "$SHARED_DIR/addresses.json" <<EOF
-{
-  "chainId": ${ANVIL_CHAIN_ID},
-  "rpcUrl": "http://localhost:${ANVIL_PORT}",
-  "deployer": "${DEPLOYER_ADDR}",
-  "challenges": {
-    "q-01-counter": ${Q01},
-    "q-02-events-errors": ${Q02},
-    "q-03-eth-mailbox": ${Q03},
-    "q-04-delegatecall": ${Q04},
-    "q-05-simple-wallet": ${Q05},
-    "q-06-erc20-permit": ${Q06},
-    "q-07-eth-sign": ${Q07},
-    "q-08-eip712-voucher": ${Q08},
-    "q-09-reentrancy": ${Q09},
-    "q-10-signature-replay": ${Q10},
-    "q-11-access-control": ${Q11},
-    "q-12-tx-origin": ${Q12},
-    "q-13-unchecked-call": ${Q13},
-    "q-14-dos-revert": ${Q14},
-    "q-15-front-run": ${Q15},
-    "q-16-oracle-spot": ${Q16},
-    "q-17-reentrancy-inflate": ${Q17},
-    "q-18-read-only-reentrancy": ${Q18},
-    "q-19-reentrancy-basic": ${Q19}
-  }
-}
-EOF
-
-# Pretty-print with jq for validation + nicer logs.
-if jq . "$SHARED_DIR/addresses.json" > "$SHARED_DIR/addresses.pretty.json" 2>/dev/null; then
-  mv "$SHARED_DIR/addresses.pretty.json" "$SHARED_DIR/addresses.json"
+if [[ ${#pkg_names[@]} -eq 0 ]]; then
+  echo "[entrypoint] ERROR: no script/Deploy.s.sol files found under /app/*/" >&2
+  exit 1
 fi
+
+# Sort alphabetically for deterministic addresses.json ordering.
+IFS=$'\n' read -r -d '' -a packages < <(printf '%s\n' "${pkg_names[@]}" | sort && printf '\0')
+
+echo "[entrypoint] discovered ${#packages[@]} packages: ${packages[*]}"
+
+# --- run all deploys, accumulate challenges JSON ---------------------------
+challenges_json="{}"
+for pkg in "${packages[@]}"; do
+  pairs_json=$(deploy_one "$pkg")
+  challenges_json=$(echo "$challenges_json" \
+    | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
+done
+
+# --- assemble final addresses.json -----------------------------------------
+jq -n \
+  --argjson chainId "$ANVIL_CHAIN_ID" \
+  --arg rpcUrl "http://localhost:${ANVIL_PORT}" \
+  --arg deployer "$DEPLOYER_ADDR" \
+  --argjson challenges "$challenges_json" \
+  '{chainId: $chainId, rpcUrl: $rpcUrl, deployer: $deployer, challenges: $challenges}' \
+  > "$SHARED_DIR/addresses.json"
 
 echo "[entrypoint] addresses.json written:"
 cat "$SHARED_DIR/addresses.json"

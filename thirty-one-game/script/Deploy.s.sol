@@ -1,22 +1,26 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
+import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import {ThirtyOneGame} from "../src/ThirtyOneGame.sol";
 
-contract DeployScript is Script {
-    function run() public {
-        string memory mnemonic = vm.envString("DEPLOYER_MNEMONIC");
-        uint256 deployerPrivateKey = vm.deriveKey(mnemonic, 0);
+contract MockToken is ERC20 {
+    constructor() ERC20("ThirtyOneTestToken", "T31") {
+        _mint(msg.sender, 1_000_000 ether);
+    }
+}
 
-        address tokenAddress = vm.envAddress("THIRTYONE_TOKEN_ADDRESS");
+contract Deploy is Script {
+    function run() external {
         uint256 winnerPercentage = vm.envOr("THIRTYONE_WINNER_PERCENTAGE", uint256(80));
 
-        vm.startBroadcast(deployerPrivateKey);
-
-        ThirtyOneGame game = new ThirtyOneGame(tokenAddress, winnerPercentage);
-        console.log("ThirtyOneGame deployed at:", address(game));
-
+        vm.startBroadcast();
+        MockToken token = new MockToken();
+        ThirtyOneGame game = new ThirtyOneGame(address(token), winnerPercentage);
         vm.stopBroadcast();
+
+        console2.log("ADDR:token:", address(token));
+        console2.log("ADDR:game:", address(game));
     }
 }

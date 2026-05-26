@@ -1,22 +1,58 @@
 # Solidity Tutorial
 
+Hands-on Solidity course with a local anvil + auto-deployed challenges.
+
+## Run
+
+```bash
+docker compose up -d --build
+```
+
+- RPC:    `http://localhost:8545` (chainId `31337`)
+- Faucet: `http://localhost:8888`
+- Deployed addresses: `docker/shared/addresses.json`
+
+Override ports/mnemonic in `.env` if needed (`cp .env.sample .env`).
+
+## What runs
+
+| Service  | Port   | Role                                                |
+| -------- | ------ | --------------------------------------------------- |
+| `anvil`  | `8545` | Local EVM node, auto-runs every `q-XX/Deploy.s.sol` |
+| `faucet` | `8888` | Static UI that sends 1 ETH from anvil account #0    |
+
+Deployer account (anvil's well-known test key, **never use on mainnet**):
+
+- `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`
+- `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
+
+## Common commands
+
+```bash
+docker compose logs -f anvil           # tail deploy + RPC logs
+docker compose down -v && docker compose up -d --build   # reset chain
+docker compose down                    # stop
+```
+
 ## Examples
 
-- **counter**: Entry-level Counter / SimpleStorage / EventsAndErrors — event (0~3 indexed + anonymous) and error (require / revert / custom / assert / auto-Panic) showcase.
-- **tx-basics**: ETH transfer and execution examples: transfer/send/call, delegatecall, receive/fallback.
+- **counter**: Counter / SimpleStorage / EventsAndErrors — event (0~3 indexed + anonymous) and error (require / revert / custom / assert / auto-Panic) showcase.
+- **tx-basics**: ETH transfer and execution: transfer/send/call, delegatecall, receive/fallback.
 - **simple-wallet**: Simple wallet implementation.
 - **thirty-one-game**: A simple game contract.
-- **default-erc-20**: Basic ERC20 implementation.
-- **default-erc-721**: Basic ERC721 implementation (ERC721 + ERC721URIStorage).
+- **default-erc-20**: Basic ERC20.
+- **default-erc-721**: Basic ERC721 (ERC721 + ERC721URIStorage).
 - **erc20-extended**: ERC-20 with Permit + Votes + Burnable + Capped + Pausable + Ownable combined.
 - **erc1155-multi-token**: ERC-1155 multi-token (FT/NFT mix, mintBatch, safeBatchTransferFrom, uri(id)).
-- **eth-sign**: Ethereum signing examples (EIP-191 prefix variants).
-- **eip-712-voucher**: EIP-712 usage for vouchers.
-- **access-control**: Ownable vs AccessControl (MINTER_ROLE / PAUSER_ROLE split) comparison.
+- **eth-sign**: Ethereum signing (EIP-191 prefix variants).
+- **eip-712-voucher**: EIP-712 vouchers.
+- **access-control**: Ownable vs AccessControl (MINTER_ROLE / PAUSER_ROLE split).
 - **vulnerabilities**: 4 attack-vs-patch pairs — Reentrancy, tx.origin, Signature replay, Oracle manipulation.
-- **minimal-proxy**: Minimal Proxy (EIP-1167) usage.
+- **minimal-proxy**: Minimal Proxy (EIP-1167).
 - **simple-transparent**: Transparent Proxy upgrade pattern.
-- **simple-uups**: UUPS Upgradeable contract example.
+- **simple-uups**: UUPS Upgradeable contract.
 - **beacon-proxy**: Beacon Proxy upgrade pattern.
 - **erc2771-meta-tx**: ERC-2771 meta-transaction forwarder + recipient.
 - **smart-account**: EIP-7702 smart account with ERC-7201 namespaced storage + ERC-1271.
+
+Graded challenges live under `q-01-…` to `q-22-…`. See [`q-INDEX.md`](./q-INDEX.md).

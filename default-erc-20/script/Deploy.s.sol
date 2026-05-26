@@ -1,19 +1,15 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 import {MyERC20} from "../src/MyERC20.sol";
 
-contract DeployScript is Script {
-    function run() public {
-        string memory mnemonic = vm.envString("DEPLOYER_MNEMONIC");
-        uint256 deployerPrivateKey = vm.deriveKey(mnemonic, 0);
-
-        vm.startBroadcast(deployerPrivateKey);
-
+contract Deploy is Script {
+    function run() external {
+        vm.startBroadcast();
         MyERC20 token = new MyERC20("MyERC20", "ME2", 100_000_000 ether);
-        console.log("MyERC20 deployed at:", address(token));
-
         vm.stopBroadcast();
+
+        console2.log("ADDR:token:", address(token));
     }
 }

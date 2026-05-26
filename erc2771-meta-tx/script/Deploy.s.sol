@@ -1,24 +1,19 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
-import {Script, console} from "forge-std/Script.sol";
+import {Script, console2} from "forge-std/Script.sol";
 
 import {MyForwarder} from "../src/MyForwarder.sol";
 import {MetaCounter} from "../src/MetaCounter.sol";
 
-contract DeployScript is Script {
-    function run() public {
-        string memory mnemonic = vm.envString("DEPLOYER_MNEMONIC");
-        uint256 deployerPrivateKey = vm.deriveKey(mnemonic, 0);
-
-        vm.startBroadcast(deployerPrivateKey);
-
+contract Deploy is Script {
+    function run() external {
+        vm.startBroadcast();
         MyForwarder forwarder = new MyForwarder();
         MetaCounter counter = new MetaCounter(address(forwarder));
-
         vm.stopBroadcast();
 
-        console.log("MyForwarder:", address(forwarder));
-        console.log("MetaCounter:", address(counter));
+        console2.log("ADDR:forwarder:", address(forwarder));
+        console2.log("ADDR:counter:", address(counter));
     }
 }

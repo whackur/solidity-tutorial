@@ -1,10 +1,9 @@
 # Solidity Tutorial — anvil + auto-deploy stack.
 #
 # Usage (from repo root):
-#   1. forge soldeer install         # once, to populate dependencies/
-#   2. cp .env.sample .env           # optional — override anvil host/port/etc.
-#   3. docker compose up -d --build
-#   4. open http://<instructor-ip>:8888/        # faucet UI
+#   1. cp .env.sample .env           # optional — override anvil host/port/etc.
+#   2. docker compose up -d --build
+#   3. open http://<instructor-ip>:8888/        # faucet UI
 #      cat docker/shared/addresses.json         # deployed challenge addresses
 #
 # The anvil container exposes its RPC on host port 8545 (bound to 0.0.0.0).

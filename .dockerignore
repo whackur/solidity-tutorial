@@ -14,6 +14,10 @@ node_modules/
 **/broadcast/
 foundry.lock
 
+# Solidity dependencies — installed fresh inside the container so the
+# image matches soldeer.lock exactly, not whatever the host has.
+dependencies/
+
 # Local secrets / overrides — never bake into the image
 .env
 .env.*
