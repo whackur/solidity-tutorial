@@ -17,21 +17,26 @@ ANVIL_HOST="${ANVIL_HOST:-0.0.0.0}"
 ANVIL_PORT="${ANVIL_PORT:-8545}"
 ANVIL_CHAIN_ID="${ANVIL_CHAIN_ID:-31337}"
 ANVIL_MNEMONIC="${ANVIL_MNEMONIC:-test test test test test test test test test test test junk}"
+ANVIL_LOG_LEVEL="${ANVIL_LOG_LEVEL:-INFO}"
 ANVIL_RPC="http://127.0.0.1:${ANVIL_PORT}"
 SHARED_DIR="${SHARED_DIR:-/shared}"
+LOG_FILTER="/app/docker/anvil-log-filter.awk"
 
 mkdir -p "$SHARED_DIR"
 # Drop any addresses.json left from a previous boot — keeps stale data from
 # leaking through the bind mount when this run aborts before rewriting it.
 rm -f "$SHARED_DIR/addresses.json"
 
-echo "[entrypoint] starting anvil on ${ANVIL_HOST}:${ANVIL_PORT} (chainId=${ANVIL_CHAIN_ID})"
+echo "[entrypoint] starting anvil on ${ANVIL_HOST}:${ANVIL_PORT} (chainId=${ANVIL_CHAIN_ID}, log=${ANVIL_LOG_LEVEL})"
+# anvil stdout is piped through anvil-log-filter.awk to fold each multi-line
+# tx block into a single leveled record (INFO/DEBUG/WARN). awk follows anvil
+# in the pipeline so a Ctrl+C / SIGTERM tears down both.
 anvil \
   --host "$ANVIL_HOST" \
   --port "$ANVIL_PORT" \
   --chain-id "$ANVIL_CHAIN_ID" \
   --mnemonic "$ANVIL_MNEMONIC" \
-  > /tmp/anvil.log 2>&1 &
+  2>&1 | awk -v level="$ANVIL_LOG_LEVEL" -v port="$ANVIL_PORT" -f "$LOG_FILTER" &
 ANVIL_PID=$!
 
 echo "[entrypoint] waiting for anvil to accept RPC..."
@@ -44,8 +49,7 @@ for i in $(seq 1 60); do
 done
 
 if ! cast block-number --rpc-url "$ANVIL_RPC" >/dev/null 2>&1; then
-  echo "[entrypoint] ERROR: anvil failed to start. log:"
-  cat /tmp/anvil.log
+  echo "[entrypoint] ERROR: anvil failed to start (see anvil output above)." >&2
   exit 1
 fi
 
