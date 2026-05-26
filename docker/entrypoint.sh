@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Solidity Tutorial — anvil + auto-deploy entrypoint.
+# Solidity Tutorial — anvil load-state entrypoint.
 #
-# Boot anvil, wait for RPC, run every */script/Deploy.s.sol found at depth 2,
-# and write deployed addresses to /shared/addresses.json so the web UI or
-# the instructor can hand them out.
+# The image was already deployed into and snapshotted by
+# docker/build-snapshot.sh during `docker build`. At runtime we just:
+#   1. sanity-check the runtime mnemonic against the snapshot's deployer,
+#   2. publish /snapshot/addresses.json to /shared with the live RPC port,
+#   3. boot anvil with --load-state so all 36 packages are already deployed
+#      the moment RPC comes online.
 #
-# Each Deploy.s.sol must:
-#   - declare `contract Deploy is Script`
-#   - emit `console2.log("ADDR:<key>:", address)` lines for each contract
-#     that should appear in addresses.json
-# Folders without a Deploy.s.sol are ignored.
+# Boot time is ~1s instead of ~30s. To rebuild the snapshot after editing
+# a Setup.sol or changing the mnemonic, run `docker compose up -d --build`.
 
 set -euo pipefail
 
@@ -18,141 +18,51 @@ ANVIL_PORT="${ANVIL_PORT:-8545}"
 ANVIL_CHAIN_ID="${ANVIL_CHAIN_ID:-31337}"
 ANVIL_MNEMONIC="${ANVIL_MNEMONIC:-test test test test test test test test test test test junk}"
 ANVIL_LOG_LEVEL="${ANVIL_LOG_LEVEL:-INFO}"
-ANVIL_RPC="http://127.0.0.1:${ANVIL_PORT}"
 SHARED_DIR="${SHARED_DIR:-/shared}"
+SNAPSHOT_DIR=/snapshot
 LOG_FILTER="/app/docker/anvil-log-filter.awk"
 
-mkdir -p "$SHARED_DIR"
-# Drop any addresses.json left from a previous boot — keeps stale data from
-# leaking through the bind mount when this run aborts before rewriting it.
-rm -f "$SHARED_DIR/addresses.json"
+if [[ ! -f "$SNAPSHOT_DIR/state.json" || ! -f "$SNAPSHOT_DIR/addresses.json" ]]; then
+  echo "[entrypoint] ERROR: snapshot not found at $SNAPSHOT_DIR. Rebuild the image with 'docker compose up -d --build'." >&2
+  exit 1
+fi
 
+# Sanity check: the snapshot was deployed by account #0 of the build-time
+# mnemonic. If the runtime mnemonic differs, the runtime deployer key will
+# not match the snapshot's pre-funded balances and faucet/admin txs will
+# fail with cryptic errors. Catch that here with a clear message.
+SNAPSHOT_DEPLOYER=$(jq -r .deployer "$SNAPSHOT_DIR/addresses.json")
+RUNTIME_KEY=$(cast wallet private-key "$ANVIL_MNEMONIC" 0)
+RUNTIME_DEPLOYER=$(cast wallet address --private-key "$RUNTIME_KEY")
+
+if [[ "$SNAPSHOT_DEPLOYER" != "$RUNTIME_DEPLOYER" ]]; then
+  cat >&2 <<EOF
+[entrypoint] ERROR: runtime mnemonic does not match the baked-in snapshot.
+  snapshot deployer : $SNAPSHOT_DEPLOYER
+  runtime deployer  : $RUNTIME_DEPLOYER
+The snapshot was deployed at build time. To pick up a new ANVIL_MNEMONIC,
+rebuild with: docker compose up -d --build
+EOF
+  exit 1
+fi
+
+mkdir -p "$SHARED_DIR"
+# Publish addresses.json with the live RPC port filled in. The snapshot's
+# copy leaves rpcPort/rpcUrl null because they're runtime concerns.
+jq --argjson p "$ANVIL_PORT" '. + {rpcPort: $p}' "$SNAPSHOT_DIR/addresses.json" \
+  > "$SHARED_DIR/addresses.json"
+
+echo "[entrypoint] snapshot OK — deployer ${RUNTIME_DEPLOYER}, $(jq '.challenges | length' "$SHARED_DIR/addresses.json") packages"
 echo "[entrypoint] starting anvil on ${ANVIL_HOST}:${ANVIL_PORT} (chainId=${ANVIL_CHAIN_ID}, log=${ANVIL_LOG_LEVEL})"
-# anvil stdout is piped through anvil-log-filter.awk to fold each multi-line
-# tx block into a single leveled record (INFO/DEBUG/WARN). awk follows anvil
-# in the pipeline so a Ctrl+C / SIGTERM tears down both.
+
 anvil \
   --host "$ANVIL_HOST" \
   --port "$ANVIL_PORT" \
   --chain-id "$ANVIL_CHAIN_ID" \
   --mnemonic "$ANVIL_MNEMONIC" \
+  --load-state "$SNAPSHOT_DIR/state.json" \
   2>&1 | awk -v level="$ANVIL_LOG_LEVEL" -v port="$ANVIL_PORT" -f "$LOG_FILTER" &
 ANVIL_PID=$!
 
-echo "[entrypoint] waiting for anvil to accept RPC..."
-for i in $(seq 1 60); do
-  if cast block-number --rpc-url "$ANVIL_RPC" >/dev/null 2>&1; then
-    echo "[entrypoint] anvil ready after ${i} polls"
-    break
-  fi
-  sleep 0.5
-done
-
-if ! cast block-number --rpc-url "$ANVIL_RPC" >/dev/null 2>&1; then
-  echo "[entrypoint] ERROR: anvil failed to start (see anvil output above)." >&2
-  exit 1
-fi
-
-# Derive deployer (account #0) and faucet (account #9) wallets from
-# whichever mnemonic anvil was started with. Splitting accounts keeps
-# faucet drops from racing the deploy nonce.
-DEPLOYER_KEY=$(cast wallet private-key "$ANVIL_MNEMONIC" 0)
-DEPLOYER_ADDR=$(cast wallet address --private-key "$DEPLOYER_KEY")
-FAUCET_KEY=$(cast wallet private-key "$ANVIL_MNEMONIC" 9)
-FAUCET_ADDR=$(cast wallet address --private-key "$FAUCET_KEY")
-echo "[entrypoint] deployer: ${DEPLOYER_ADDR}"
-echo "[entrypoint] faucet:   ${FAUCET_ADDR}"
-
-# deploy_one <package-name>
-#   - runs forge script Deploy.s.sol:Deploy
-#   - parses ADDR:<key>: 0x... lines from the output
-#   - emits a single-line JSON object on stdout: {"key1":"0x...","key2":"0x..."}
-deploy_one() {
-  local pkg="$1"
-
-  echo "[entrypoint] >>> deploying ${pkg}" >&2
-  pushd "/app/${pkg}" >/dev/null
-
-  local outfile
-  outfile=$(mktemp)
-  set +e
-  forge script script/Deploy.s.sol:Deploy \
-    --rpc-url "$ANVIL_RPC" \
-    --broadcast \
-    --private-key "$DEPLOYER_KEY" \
-    > "$outfile" 2>&1
-  local rc=$?
-  set -e
-
-  cat "$outfile" >&2
-
-  if [[ $rc -ne 0 ]]; then
-    echo "[entrypoint] ERROR: forge script failed for ${pkg} (rc=${rc})" >&2
-    rm -f "$outfile"
-    exit 1
-  fi
-
-  local pairs
-  pairs=$(grep -E "ADDR:[A-Za-z0-9_]+:[[:space:]]+0x[0-9a-fA-F]+" "$outfile" \
-    | sed -E 's/.*ADDR:([A-Za-z0-9_]+):[[:space:]]+(0x[0-9a-fA-F]+).*/"\1":"\2"/' || true)
-
-  rm -f "$outfile"
-  popd >/dev/null
-
-  if [[ -z "$pairs" ]]; then
-    echo "[entrypoint] ERROR: no ADDR: lines found for ${pkg}" >&2
-    exit 1
-  fi
-
-  echo "{$(echo "$pairs" | paste -sd,)}"
-}
-
-# --- discover every package with script/Deploy.s.sol -----------------------
-shopt -s nullglob
-pkg_names=()
-for deploy_file in /app/*/script/Deploy.s.sol; do
-  pkg_dir=$(dirname "$(dirname "$deploy_file")")
-  pkg_names+=("$(basename "$pkg_dir")")
-done
-shopt -u nullglob
-
-if [[ ${#pkg_names[@]} -eq 0 ]]; then
-  echo "[entrypoint] ERROR: no script/Deploy.s.sol files found under /app/*/" >&2
-  exit 1
-fi
-
-# Sort alphabetically for deterministic addresses.json ordering.
-IFS=$'\n' read -r -d '' -a packages < <(printf '%s\n' "${pkg_names[@]}" | sort && printf '\0')
-
-echo "[entrypoint] discovered ${#packages[@]} packages: ${packages[*]}"
-
-# --- run all deploys, accumulate challenges JSON ---------------------------
-challenges_json="{}"
-for pkg in "${packages[@]}"; do
-  pairs_json=$(deploy_one "$pkg")
-  challenges_json=$(echo "$challenges_json" \
-    | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
-done
-
-# --- assemble final addresses.json -----------------------------------------
-jq -n \
-  --argjson chainId "$ANVIL_CHAIN_ID" \
-  --argjson rpcPort "$ANVIL_PORT" \
-  --arg deployer "$DEPLOYER_ADDR" \
-  --arg faucetAddr "$FAUCET_ADDR" \
-  --arg faucetKey "$FAUCET_KEY" \
-  --argjson challenges "$challenges_json" \
-  '{
-     chainId: $chainId,
-     rpcPort: $rpcPort,
-     deployer: $deployer,
-     faucet: {address: $faucetAddr, privateKey: $faucetKey},
-     challenges: $challenges
-   }' \
-  > "$SHARED_DIR/addresses.json"
-
-echo "[entrypoint] addresses.json written:"
-cat "$SHARED_DIR/addresses.json"
-
-echo "[entrypoint] anvil now in foreground (PID=${ANVIL_PID}). Ctrl+C to stop."
+echo "[entrypoint] anvil PID=${ANVIL_PID}. Ctrl+C to stop."
 wait "$ANVIL_PID"

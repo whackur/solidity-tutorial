@@ -15,6 +15,11 @@ services:
     build:
       context: .
       dockerfile: docker/Dockerfile
+      # Forward .env values into the build so the pre-deploy snapshot is
+      # invalidated whenever the mnemonic or chain id changes.
+      args:
+        ANVIL_MNEMONIC: "${ANVIL_MNEMONIC:-test test test test test test test test test test test junk}"
+        ANVIL_CHAIN_ID: "${ANVIL_CHAIN_ID:-31337}"
     image: solidity-tutorial-anvil:dev
     container_name: solidity-tutorial-anvil
     ports:
