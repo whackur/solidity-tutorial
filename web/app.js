@@ -5,8 +5,8 @@ import {
   http,
   parseEther,
   isAddress,
-} from "https://cdn.jsdelivr.net/npm/viem@2/+esm";
-import { privateKeyToAccount } from "https://cdn.jsdelivr.net/npm/viem@2/accounts/+esm";
+} from "https://esm.sh/viem@2";
+import { privateKeyToAccount } from "https://esm.sh/viem@2/accounts";
 
 // anvil's RPC port is read from addresses.json (entrypoint writes whatever
 // ANVIL_PORT it was started with) and combined with the current page's
