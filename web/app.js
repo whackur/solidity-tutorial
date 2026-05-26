@@ -5,15 +5,14 @@ import {
   isAddress,
 } from "https://cdn.jsdelivr.net/npm/ethers@6/+esm";
 
-// anvil exposes its RPC on the same host the page is served from, port 8545.
-// Works whether the page is opened as http://localhost:8080/ or via the
-// instructor's LAN IP.
-const RPC_URL = `${location.protocol}//${location.hostname}:8545`;
-
+// anvil's RPC port is read from addresses.json (entrypoint writes whatever
+// ANVIL_PORT it was started with) and combined with the current page's
+// hostname, so the same UI works from localhost, LAN IPs, or VPN.
 // Faucet wallet is derived from ANVIL_MNEMONIC at container boot (entrypoint
 // picks account #9 to avoid nonce contention with the deployer) and exposed
 // via addresses.json. Valid only on the local anvil chain.
 const DROP = parseEther("1");
+let rpcUrl = null;
 let faucet = null;
 
 const $addr = document.getElementById("addr");
@@ -23,8 +22,6 @@ const $infoRpc = document.getElementById("info-rpc");
 const $infoChain = document.getElementById("info-chain");
 const $infoDeployer = document.getElementById("info-deployer");
 const $infoFaucet = document.getElementById("info-faucet");
-
-$infoRpc.textContent = RPC_URL;
 
 function setStatus(text, cls = "") {
   $status.textContent = text;
@@ -37,8 +34,8 @@ $btn.addEventListener("click", async () => {
     setStatus("Invalid address — expected 0x followed by 40 hex chars.", "err");
     return;
   }
-  if (!faucet?.privateKey) {
-    setStatus("Faucet not ready — refresh after the deploy logs finish.", "err");
+  if (!rpcUrl || !faucet?.privateKey) {
+    setStatus("Not ready yet — refresh after the deploy logs finish.", "err");
     return;
   }
 
@@ -46,7 +43,7 @@ $btn.addEventListener("click", async () => {
   setStatus("Submitting transaction…");
 
   try {
-    const provider = new JsonRpcProvider(RPC_URL);
+    const provider = new JsonRpcProvider(rpcUrl);
     const wallet = new Wallet(faucet.privateKey, provider);
     const tx = await wallet.sendTransaction({ to, value: DROP });
     setStatus(`Sent. Waiting for confirmation… ${tx.hash}`);
@@ -70,6 +67,10 @@ async function loadChallenges() {
     const res = await fetch("./data/addresses.json", { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
+    if (data.rpcPort) {
+      rpcUrl = `${location.protocol}//${location.hostname}:${data.rpcPort}`;
+      $infoRpc.textContent = rpcUrl;
+    }
     if (data.chainId != null) $infoChain.textContent = String(data.chainId);
     if (data.deployer) $infoDeployer.textContent = data.deployer;
     if (data.faucet?.address) $infoFaucet.textContent = data.faucet.address;

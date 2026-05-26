@@ -133,14 +133,14 @@ done
 # --- assemble final addresses.json -----------------------------------------
 jq -n \
   --argjson chainId "$ANVIL_CHAIN_ID" \
-  --arg rpcUrl "http://localhost:${ANVIL_PORT}" \
+  --argjson rpcPort "$ANVIL_PORT" \
   --arg deployer "$DEPLOYER_ADDR" \
   --arg faucetAddr "$FAUCET_ADDR" \
   --arg faucetKey "$FAUCET_KEY" \
   --argjson challenges "$challenges_json" \
   '{
      chainId: $chainId,
-     rpcUrl: $rpcUrl,
+     rpcPort: $rpcPort,
      deployer: $deployer,
      faucet: {address: $faucetAddr, privateKey: $faucetKey},
      challenges: $challenges
