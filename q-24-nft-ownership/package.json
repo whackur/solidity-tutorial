@@ -1,0 +1,13 @@
+{
+  "name": "@quiz/q-24-nft-ownership",
+  "version": "0.1.0",
+  "description": "Quiz 24 — ERC-721 claim + approve + deposit (ownership and approval flow)",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv",
+    "lint": "forge fmt --check",
+    "format": "forge fmt"
+  },
+  "license": "MIT"
+}

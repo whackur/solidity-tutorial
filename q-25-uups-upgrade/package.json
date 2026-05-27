@@ -1,0 +1,13 @@
+{
+  "name": "@quiz/q-25-uups-upgrade",
+  "version": "0.1.0",
+  "description": "Quiz 25 — UUPS proxy upgrade V1 to V2 (per-user instance, _authorizeUpgrade)",
+  "private": true,
+  "scripts": {
+    "build": "forge build",
+    "test": "forge test -vv",
+    "lint": "forge fmt --check",
+    "format": "forge fmt"
+  },
+  "license": "MIT"
+}
