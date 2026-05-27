@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`C` = deployed `EthSignChallenge`. `USER` = user's EOA.
+`C` = deployed `Q07EthSignChallenge`. `USER` = user's EOA.
 
 ## Steps
 

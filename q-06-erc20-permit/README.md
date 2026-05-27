@@ -2,14 +2,14 @@
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A single `PermitToken` (EIP-2612) + `PermitChallenge` is deployed.
+A single `Q06PermitToken` (EIP-2612) + `Q06PermitChallenge` is deployed.
 You hold tokens on your EOA, sign an off-chain permit authorising the
 challenge contract as `spender`, then submit the permit + a pull in
 one transaction (yours or a relayer's).
 
 ## Goal
 
-Make `PermitChallenge.isSolved(yourAddress)` return `true`.
+Make `Q06PermitChallenge.isSolved(yourAddress)` return `true`.
 
 Conditions:
 - `usedPermit[you] == true` — you've consumed at least one of your permits.
@@ -18,14 +18,14 @@ Conditions:
 ## Contract surface
 
 ```solidity
-// PermitToken (EIP-2612)
+// Q06PermitToken (EIP-2612)
 function mint(address to, uint256 amount) external;   // public faucet
 function permit(address owner, address spender, uint256 value, uint256 deadline,
                 uint8 v, bytes32 r, bytes32 s) external;
 function nonces(address owner) external view returns (uint256);
 function DOMAIN_SEPARATOR() external view returns (bytes32);
 
-// PermitChallenge
+// Q06PermitChallenge
 function spendWithPermit(
     address owner,
     uint256 value,

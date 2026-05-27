@@ -2,11 +2,11 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A single `VulnerableRegistry` is deployed and shared. One privileged-looking state-changing function is missing the guard that should restrict who can call it.
+A single `Q11VulnerableRegistry` is deployed and shared. One privileged-looking state-changing function is missing the guard that should restrict who can call it.
 
 ## Goal
 
-Make `VulnerableRegistry.isSolved(yourAddress)` return `true`.
+Make `Q11VulnerableRegistry.isSolved(yourAddress)` return `true`.
 
 ## Contract surface
 

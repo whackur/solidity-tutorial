@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {ReplayLab} from "../src/Setup.sol";
+import {Q10ReplayLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user claims (SEED = 5 ether each).
@@ -10,7 +10,7 @@ contract Deploy is Script {
 
     function run() external {
         vm.startBroadcast();
-        ReplayLab lab = new ReplayLab();
+        Q10ReplayLab lab = new Q10ReplayLab();
         (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
         require(ok, "lab funding failed");
         vm.stopBroadcast();

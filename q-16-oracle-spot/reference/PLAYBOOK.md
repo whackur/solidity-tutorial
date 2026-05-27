@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `OracleLab` (pre-funded with at least `(POOL_ETH_SEED + LENDER_SEED) * N` ETH).
+`LAB` = deployed `Q16OracleLab` (pre-funded with at least `(POOL_ETH_SEED + LENDER_SEED) * N` ETH).
 `USER` = user's EOA (needs ≥ 3 ETH for the swap).
 
 ## Steps

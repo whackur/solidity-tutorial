@@ -3,31 +3,31 @@
 > **Difficulty**: Beginner ⭐
 > **Companion to**: [`q-09-reentrancy/`](../q-09-reentrancy/README.md). This is a stripped-down version of the same pattern, designed as the first contact with re-entrancy in a beginner walkthrough.
 
-A single `ReentrancyBasicLab` is deployed and pre-funded with ETH. Every user gets a fresh `(VulnerableMiniVault, BasicAttacker)` pair belonging only to that user. The vault violates CEI by sending ETH before updating accounting, which creates a re-entrancy window.
+A single `Q19ReentrancyBasicLab` is deployed and pre-funded with ETH. Every user gets a fresh `(Q19VulnerableMiniVault, Q19BasicAttacker)` pair belonging only to that user. The vault violates CEI by sending ETH before updating accounting, which creates a re-entrancy window.
 
 Unlike q-09, the lab pre-funds the attacker with bait so the student does not have to attach any ETH to their call. The total student transaction count is **two**.
 
 ## Goal
 
-Make `ReentrancyBasicLab.isSolved(yourAddress)` return `true` by exploiting only *your* instance pair.
+Make `Q19ReentrancyBasicLab.isSolved(yourAddress)` return `true` by exploiting only *your* instance pair.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address vault, address attacker);
-function vaultOf(address user) external view returns (VulnerableMiniVault);
-function attackerOf(address user) external view returns (BasicAttacker);
+function vaultOf(address user) external view returns (Q19VulnerableMiniVault);
+function attackerOf(address user) external view returns (Q19BasicAttacker);
 function isSolved(address user) external view returns (bool);
 uint256 public constant SEED = 5 ether;
 uint256 public constant BAIT = 0.05 ether;
 
-// VulnerableMiniVault (your personal instance — DO NOT FIX)
+// Q19VulnerableMiniVault (your personal instance — DO NOT FIX)
 function deposit() external payable;
 function withdraw() external;       // CEI violation: external call before state update
 function balances(address) external view returns (uint256);
 
-// BasicAttacker (your personal instance, owner = you)
+// Q19BasicAttacker (your personal instance, owner = you)
 function attack() external;         // only owner; non-payable, uses pre-funded bait
 function drain() external;          // only owner; forward ETH back to your EOA
 function attackAmount() external view returns (uint256);

@@ -2,14 +2,14 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`ESC` = deployed `UnsafePayout`.
+`ESC` = deployed `Q13UnsafePayout`.
 `USER` = user's EOA (needs at least 1 ETH for the deposit).
 
 ## Steps
 
 | # | From | To | Call | Value | Notes |
 |---|---|---|---|---|---|
-| 1 | view | `ESC` | `trap()` | — | snapshot the per-deploy `RevertOnReceive` helper |
+| 1 | view | `ESC` | `trap()` | — | snapshot the per-deploy `Q13RevertOnReceive` helper |
 | 2 | `USER` | `ESC` | `deposit()` | `1 ether` | `escrow[USER] = 1e18` |
 | 3 | `USER` | `ESC` | `payout(payable)` | 0 | arg = `trap`. `call` reverts inside the trap; `payout` does not propagate. `escrow[USER]=0`, `paidOut[USER]=true`, `stranded[USER]=1e18` |
 | 4 | view | `ESC` | `isSolved(USER)` | — | `true` |
@@ -25,7 +25,7 @@ users showing as paid.
 
 ## Notes
 
-- `RevertOnReceive` has both `receive()` and `fallback()` reverting,
+- `Q13RevertOnReceive` has both `receive()` and `fallback()` reverting,
   so any payment shape (empty calldata, non-empty calldata) fails.
 - The bug shape contrasts with q-09 (reentrancy CEI violation) — here
   the state ordering is *correct*, the bug is *return value handling*.

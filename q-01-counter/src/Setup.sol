@@ -15,7 +15,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///
 ///         Web UI grades by polling isSolved(msg.sender). Submit solve()
 ///         once the conditions are met to record an on-chain proof.
-contract Counter is SolvableBase {
+contract Q01Counter is SolvableBase {
     mapping(address => uint256) public counts;
     mapping(address => bool) public sawUnderflow;
 

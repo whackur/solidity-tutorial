@@ -2,17 +2,17 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {DosLab, KingOfHill, RevertKing} from "../src/Setup.sol";
+import {Q14DosLab, Q14KingOfHill, Q14RevertKing} from "../src/Setup.sol";
 
 contract Q14DosRevertTest is Test {
-    DosLab internal lab;
+    Q14DosLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
     address internal carol = makeAddr("carol");
 
     function setUp() public {
-        lab = new DosLab();
+        lab = new Q14DosLab();
         vm.deal(alice, 5 ether);
         vm.deal(bob, 5 ether);
         vm.deal(carol, 5 ether);
@@ -21,8 +21,8 @@ contract Q14DosRevertTest is Test {
     function _solve(address user) internal {
         vm.startPrank(user);
         lab.createInstance();
-        KingOfHill king = lab.kingOf(user);
-        RevertKing attacker = lab.attackerOf(user);
+        Q14KingOfHill king = lab.kingOf(user);
+        Q14RevertKing attacker = lab.attackerOf(user);
 
         // Opening bid from the user (EOA — accepts refunds fine).
         king.bid{value: 0.01 ether}();
@@ -33,8 +33,8 @@ contract Q14DosRevertTest is Test {
 
     function test_AliceLocksThrone() public {
         _solve(alice);
-        KingOfHill king = lab.kingOf(alice);
-        RevertKing attacker = lab.attackerOf(alice);
+        Q14KingOfHill king = lab.kingOf(alice);
+        Q14RevertKing attacker = lab.attackerOf(alice);
         assertEq(king.currentKing(), address(attacker));
         assertTrue(lab.isSolved(alice));
     }
@@ -42,7 +42,7 @@ contract Q14DosRevertTest is Test {
     /// @notice After the takeover, NO ONE can outbid — proving the DoS.
     function test_OutbidAttemptReverts() public {
         _solve(alice);
-        KingOfHill king = lab.kingOf(alice);
+        Q14KingOfHill king = lab.kingOf(alice);
 
         vm.prank(carol);
         vm.expectRevert(bytes("refund failed"));
@@ -62,7 +62,7 @@ contract Q14DosRevertTest is Test {
     function test_NonOwnerAttackerCallReverts() public {
         vm.prank(alice);
         lab.createInstance();
-        RevertKing attacker = lab.attackerOf(alice);
+        Q14RevertKing attacker = lab.attackerOf(alice);
 
         vm.deal(bob, 1 ether);
         vm.prank(bob);

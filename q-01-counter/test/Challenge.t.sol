@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {Counter} from "../src/Setup.sol";
+import {Q01Counter} from "../src/Setup.sol";
 
 contract Q01CounterTest is Test {
-    Counter internal counter;
+    Q01Counter internal counter;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        counter = new Counter();
+        counter = new Q01Counter();
     }
 
     /// @notice Alice solves the challenge end-to-end through a sequence of
@@ -29,12 +29,12 @@ contract Q01CounterTest is Test {
         //    error toast — we observe it in the test via expectRevert.
         address probe = makeAddr("probe");
         vm.prank(probe);
-        vm.expectRevert(Counter.CounterUnderflow.selector);
+        vm.expectRevert(Q01Counter.CounterUnderflow.selector);
         counter.decrement();
 
         // 3) Alice submits the selector she observed.
         vm.prank(alice);
-        counter.reportUnderflowSelector(Counter.CounterUnderflow.selector);
+        counter.reportUnderflowSelector(Q01Counter.CounterUnderflow.selector);
 
         assertTrue(counter.isSolved(alice), "alice solved");
     }
@@ -44,14 +44,14 @@ contract Q01CounterTest is Test {
         // Alice gets to 7 the simple way.
         vm.startPrank(alice);
         for (uint256 i = 0; i < 7; ++i) counter.increment();
-        counter.reportUnderflowSelector(Counter.CounterUnderflow.selector);
+        counter.reportUnderflowSelector(Q01Counter.CounterUnderflow.selector);
         vm.stopPrank();
 
         // Bob takes a detour: 8, decrement back to 7.
         vm.startPrank(bob);
         for (uint256 i = 0; i < 8; ++i) counter.increment();
         counter.decrement();
-        counter.reportUnderflowSelector(Counter.CounterUnderflow.selector);
+        counter.reportUnderflowSelector(Q01Counter.CounterUnderflow.selector);
         vm.stopPrank();
 
         assertTrue(counter.isSolved(alice), "alice solved");
@@ -73,7 +73,7 @@ contract Q01CounterTest is Test {
             revert("decrement should have reverted");
         } catch (bytes memory reason) {
             bytes4 sel = bytes4(reason);
-            assertEq(sel, Counter.CounterUnderflow.selector, "expected selector");
+            assertEq(sel, Q01Counter.CounterUnderflow.selector, "expected selector");
         }
     }
 }

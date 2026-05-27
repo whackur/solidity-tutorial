@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `EcrecoverBasicLab`.
+`LAB` = deployed `Q21EcrecoverBasicLab`.
 `USER` = user's EOA — does not need any ETH for this challenge.
 
 The deploy script seeds three candidates with index `1` as the trusted one. The lab is intentionally agnostic — any deployment configuration with at least one valid signature will work; the *correct index* is whatever the deployer chose. Instructors using the bundled `Deploy.s.sol` can rely on the index being `1`.

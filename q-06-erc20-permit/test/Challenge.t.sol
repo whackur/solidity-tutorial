@@ -2,11 +2,11 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {PermitToken, PermitChallenge} from "../src/Setup.sol";
+import {Q06PermitToken, Q06PermitChallenge} from "../src/Setup.sol";
 
 contract Q06PermitTest is Test {
-    PermitToken internal token;
-    PermitChallenge internal challenge;
+    Q06PermitToken internal token;
+    Q06PermitChallenge internal challenge;
 
     address internal alice;
     uint256 internal alicePk;
@@ -25,8 +25,8 @@ contract Q06PermitTest is Test {
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");
 
-        token = new PermitToken();
-        challenge = new PermitChallenge(token);
+        token = new Q06PermitToken();
+        challenge = new Q06PermitChallenge(token);
 
         token.mint(alice, VALUE);
         token.mint(bob, VALUE);

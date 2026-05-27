@@ -2,14 +2,14 @@
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A single `VoucherChallenge` (with its own `VoucherToken`) is deployed.
+A single `Q08VoucherChallenge` (with its own `Q08VoucherToken`) is deployed.
 You produce an EIP-712 signature over a `Voucher` struct that names
 yourself as both `signer` and `redeemer`, submit it, and the challenge
 mints you the requested amount of `VCH`.
 
 ## Goal
 
-Make `VoucherChallenge.isSolved(yourAddress)` return `true`. That happens
+Make `Q08VoucherChallenge.isSolved(yourAddress)` return `true`. That happens
 when you successfully `redeemVoucher(...)` with `signer == redeemer == you`
 and a unique `voucherId`.
 
@@ -27,7 +27,7 @@ function redeemVoucher(
 function computeDigest(address signer, address redeemer, uint256 voucherId, uint256 amount)
     external view returns (bytes32);   // helper: gives the digest you must sign
 function domainSeparator() external view returns (bytes32);
-function token() external view returns (VoucherToken);
+function token() external view returns (Q08VoucherToken);
 function usedVouchers(uint256 id) external view returns (bool);
 function isSolved(address user) external view returns (bool);
 ```

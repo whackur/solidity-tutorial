@@ -2,14 +2,14 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `SpotPriceBasicLab`.
+`LAB` = deployed `Q22SpotPriceBasicLab`.
 `USER` = user's EOA — does not need any ETH for this challenge.
 
 ## Steps
 
 | # | From | To | Call | Value | Notes |
 |---|---|---|---|---|---|
-| 1 | `USER` | `LAB` | `createInstance()` | 0 | deploys MockPool with 1000:1000 reserves, owner = USER |
+| 1 | `USER` | `LAB` | `createInstance()` | 0 | deploys Q22MockPool with 1000:1000 reserves, owner = USER |
 | 2 | view | `LAB` | `poolOf(USER)` | — | grab pool address |
 | 3 | view | pool | `getSpotPriceE18()` | — | starts at exactly `1e18` |
 | 4 | `USER` | pool | `swapAForB(500e18)` | 0 | xy=k: reserves go to ~1500 A / ~667 B, spot ≈ `0.444e18` |

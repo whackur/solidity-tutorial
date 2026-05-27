@@ -2,32 +2,32 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A `DosLab` is deployed. Each user calls `createInstance()` to mint a
-personal `(KingOfHill, RevertKing)` pair. `KingOfHill.bid()` refunds the
+A `Q14DosLab` is deployed. Each user calls `createInstance()` to mint a
+personal `(Q14KingOfHill, Q14RevertKing)` pair. `Q14KingOfHill.bid()` refunds the
 previous king via `call` and *requires the refund to succeed*. The
-`RevertKing` reverts on every receive — once it becomes king, the throne
+`Q14RevertKing` reverts on every receive — once it becomes king, the throne
 is permanently locked because no future bidder can refund it.
 
 ## Goal
 
-Make `DosLab.isSolved(yourAddress)` return `true`: the current king of
-your personal `KingOfHill` is your personal `RevertKing`.
+Make `Q14DosLab.isSolved(yourAddress)` return `true`: the current king of
+your personal `Q14KingOfHill` is your personal `Q14RevertKing`.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address king, address attacker);
-function kingOf(address user) external view returns (KingOfHill);
-function attackerOf(address user) external view returns (RevertKing);
+function kingOf(address user) external view returns (Q14KingOfHill);
+function attackerOf(address user) external view returns (Q14RevertKing);
 function isSolved(address user) external view returns (bool);
 
-// KingOfHill (per user — DO NOT FIX)
+// Q14KingOfHill (per user — DO NOT FIX)
 function bid() external payable;             // require(ok) on push refund
 function currentKing() external view returns (address);
 function currentBid() external view returns (uint256);
 
-// RevertKing (per user, owner = you)
+// Q14RevertKing (per user, owner = you)
 function takeThrone() external payable;       // onlyOwner, forwards bid
 function owner() external view returns (address);
 // receive() / fallback() always revert

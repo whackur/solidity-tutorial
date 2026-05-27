@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {FrontRunLab} from "../src/Setup.sol";
+import {Q15FrontRunLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user challenges (PRIZE = 1 ether each).
@@ -10,7 +10,7 @@ contract Deploy is Script {
 
     function run() external {
         vm.startBroadcast();
-        FrontRunLab lab = new FrontRunLab();
+        Q15FrontRunLab lab = new Q15FrontRunLab();
         (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
         require(ok, "lab funding failed");
         vm.stopBroadcast();

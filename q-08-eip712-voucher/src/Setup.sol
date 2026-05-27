@@ -10,7 +10,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         contract itself is the only address allowed to mint outside the
 ///         standard faucet path, but a public mint is left open so students
 ///         can also use this token in other tutorials.
-contract VoucherToken is ERC20 {
+contract Q08VoucherToken is ERC20 {
     constructor() ERC20("Voucher", "VCH") {}
 
     function mint(address to, uint256 amount) external {
@@ -25,12 +25,12 @@ contract VoucherToken is ERC20 {
 ///
 ///         isSolved(user) becomes true once the user redeems any voucher
 ///         where they were both signer and redeemer.
-contract VoucherChallenge is EIP712, SolvableBase {
+contract Q08VoucherChallenge is EIP712, SolvableBase {
     bytes32 public constant VOUCHER_TYPEHASH = keccak256(
         "Voucher(address token,address signer,address redeemer,uint256 voucherId,uint256 amount)"
     );
 
-    VoucherToken public immutable token;
+    Q08VoucherToken public immutable token;
 
     mapping(uint256 => bool) public usedVouchers;
     mapping(address => bool) public solved;
@@ -43,7 +43,7 @@ contract VoucherChallenge is EIP712, SolvableBase {
     );
 
     constructor() EIP712("MyEIP712App", "1") {
-        token = new VoucherToken();
+        token = new Q08VoucherToken();
     }
 
     /// @notice Redeem a signed voucher. The signer must equal the redeemer

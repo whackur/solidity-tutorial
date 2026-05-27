@@ -5,14 +5,14 @@ import {ERC2771Forwarder} from "@openzeppelin/contracts/metatx/ERC2771Forwarder.
 import {ERC2771Context} from "@openzeppelin/contracts/metatx/ERC2771Context.sol";
 import {SolvableBase} from "@common/SolvableBase.sol";
 
-/// @notice Concrete ERC-2771 forwarder. The EIP-712 domain name "MyForwarder"
+/// @notice Concrete ERC-2771 forwarder. The EIP-712 domain name "Q26MyForwarder"
 ///         is load-bearing — off-chain signers must use it when signing the
 ///         ForwardRequest.
-contract MyForwarder is ERC2771Forwarder {
-    constructor() ERC2771Forwarder("MyForwarder") {}
+contract Q26MyForwarder is ERC2771Forwarder {
+    constructor() ERC2771Forwarder("Q26MyForwarder") {}
 }
 
-/// @notice Multi-tenant ERC-2771 challenge. A single MetaCounter is shared,
+/// @notice Multi-tenant ERC-2771 challenge. A single Q26MetaCounter is shared,
 ///         trusting one forwarder. Per-user state is keyed by the *recovered*
 ///         signer, not the direct caller.
 ///
@@ -20,10 +20,10 @@ contract MyForwarder is ERC2771Forwarder {
 ///           1. Build a ForwardRequest calling increment(), with `from` = you.
 ///           2. Sign it with the forwarder's EIP-712 domain.
 ///           3. Call forwarder.execute(request) (anyone may relay it).
-///         Because MetaCounter trusts the forwarder, increment() reads
+///         Because Q26MetaCounter trusts the forwarder, increment() reads
 ///         _msgSender() as the signer (you), so counterOf[you] goes up — even
 ///         though the forwarder paid the gas and sent the actual transaction.
-contract MetaCounter is ERC2771Context, SolvableBase {
+contract Q26MetaCounter is ERC2771Context, SolvableBase {
     mapping(address account => uint256 count) public counterOf;
     address public lastSender;
 

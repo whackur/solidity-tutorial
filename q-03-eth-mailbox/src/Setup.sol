@@ -11,7 +11,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         - call with empty calldata + value  → receive()
 ///         - call with unknown selector        → fallback()
 ///         - call to receivePayable(bytes32)   → named function
-contract EthMailbox is SolvableBase {
+contract Q03EthMailbox is SolvableBase {
     enum Trigger {
         None,
         Receive,

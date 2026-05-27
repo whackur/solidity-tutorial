@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`MB` = deployed `EthMailbox` address. `USER` = user's EOA.
+`MB` = deployed `Q03EthMailbox` address. `USER` = user's EOA.
 
 ## Steps
 

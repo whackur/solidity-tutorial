@@ -3,13 +3,13 @@
 > **Difficulty**: Entry ⭐
 > **Companion to**: [`q-05-simple-wallet/`](../q-05-simple-wallet/README.md) and [`q-06-erc20-permit/`](../q-06-erc20-permit/README.md). This is the first contact with the **approve + transferFrom** flow that those two challenges then apply.
 
-A single `Erc20BasicLab` is deployed. Inside the lab there is one shared `Faucet` (a tiny hand-rolled ERC-20 with a per-user `claim()`) and one shared `PullVault` that pulls tokens from depositors via `transferFrom`. Every learner solves in parallel because all per-user state lives in `claimed[]` and `deposited[]`.
+A single `Q20Erc20BasicLab` is deployed. Inside the lab there is one shared `Q20Faucet` (a tiny hand-rolled ERC-20 with a per-user `claim()`) and one shared `Q20PullVault` that pulls tokens from depositors via `transferFrom`. Every learner solves in parallel because all per-user state lives in `claimed[]` and `deposited[]`.
 
 There is no exploit here — the goal is to **see how an ERC-20 transfer actually works** when a contract is the spender. Three transactions, no Solidity to write.
 
 ## Goal
 
-Make `Erc20BasicLab.isSolved(yourAddress)` return `true`. That requires:
+Make `Q20Erc20BasicLab.isSolved(yourAddress)` return `true`. That requires:
 
 1. `faucet.claimed[you] == true` — you claimed your one-time mint.
 2. `vault.deposited[you] >= TARGET` (25 MNT).
@@ -19,11 +19,11 @@ Make `Erc20BasicLab.isSolved(yourAddress)` return `true`. That requires:
 ```solidity
 // Lab
 function isSolved(address user) external view returns (bool);
-function faucet() external view returns (Faucet);
-function vault() external view returns (PullVault);
+function faucet() external view returns (Q20Faucet);
+function vault() external view returns (Q20PullVault);
 uint256 public constant TARGET = 25e18;
 
-// Faucet (shared; per-user claim guard)
+// Q20Faucet (shared; per-user claim guard)
 function claim() external;
 function claimed(address user) external view returns (bool);
 function approve(address spender, uint256 amount) external returns (bool);
@@ -32,7 +32,7 @@ function balanceOf(address user) external view returns (uint256);
 function allowance(address owner, address spender) external view returns (uint256);
 uint256 public constant CLAIM_AMOUNT = 100e18;
 
-// PullVault (shared; per-user deposited tally)
+// Q20PullVault (shared; per-user deposited tally)
 function pull(uint256 amount) external;             // calls transferFrom(msg.sender, vault, amount)
 function deposited(address user) external view returns (uint256);
 ```
@@ -58,7 +58,7 @@ function deposited(address user) external view returns (uint256);
 
 ## Constraints
 
-- One claim per address. Faucet enforces this with `claimed[]`.
+- One claim per address. Q20Faucet enforces this with `claimed[]`.
 - `pull(amount)` must be called by *you*; the inner `transferFrom` decrements `allowance[you][vault]`, not someone else's.
 
 ## Concepts exercised

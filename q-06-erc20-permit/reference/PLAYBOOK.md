@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`T` = deployed `PermitToken`. `C` = deployed `PermitChallenge` (with `T`).
+`T` = deployed `Q06PermitToken`. `C` = deployed `Q06PermitChallenge` (with `T`).
 `USER` = user's EOA. `R` = recipient chosen by user.
 
 ## Steps
@@ -29,7 +29,7 @@
     ]
   },
   "domain": {
-    "name": "PermitToken",
+    "name": "Q06PermitToken",
     "version": "1",
     "chainId": <currentChain>,
     "verifyingContract": "<T address>"

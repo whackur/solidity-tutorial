@@ -3,14 +3,14 @@ pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
 import {ERC2771Forwarder} from "@openzeppelin/contracts/metatx/ERC2771Forwarder.sol";
-import {MyForwarder, MetaCounter} from "../src/Setup.sol";
+import {Q26MyForwarder, Q26MetaCounter} from "../src/Setup.sol";
 
 /// @notice Proves the intended solve path: a forwarder-relayed, EIP-712-signed
 ///         ForwardRequest credits the signer via _msgSender(), while a direct
 ///         EOA call reverts.
 contract SolveTest is Test {
-    MyForwarder forwarder;
-    MetaCounter counter;
+    Q26MyForwarder forwarder;
+    Q26MetaCounter counter;
     uint256 userPk = 0xA11CE;
     address user;
 
@@ -22,18 +22,18 @@ contract SolveTest is Test {
 
     function setUp() public {
         user = vm.addr(userPk);
-        forwarder = new MyForwarder();
-        counter = new MetaCounter(address(forwarder));
+        forwarder = new Q26MyForwarder();
+        counter = new Q26MetaCounter(address(forwarder));
     }
 
     function test_directCallReverts() public {
         vm.prank(user);
-        vm.expectRevert(MetaCounter.MustGoThroughForwarder.selector);
+        vm.expectRevert(Q26MetaCounter.MustGoThroughForwarder.selector);
         counter.increment();
     }
 
     function test_forwarderRelayedSolve() public {
-        bytes memory data = abi.encodeCall(MetaCounter.increment, ());
+        bytes memory data = abi.encodeCall(Q26MetaCounter.increment, ());
         uint256 nonce = forwarder.nonces(user);
         uint48 deadline = uint48(block.timestamp + 1 hours);
         uint256 gas = 200_000;
@@ -41,7 +41,7 @@ contract SolveTest is Test {
         bytes32 structHash =
             keccak256(abi.encode(FORWARD_REQUEST_TYPEHASH, user, address(counter), 0, gas, nonce, deadline, keccak256(data)));
         bytes32 domainSep = keccak256(
-            abi.encode(EIP712_DOMAIN_TYPEHASH, keccak256("MyForwarder"), keccak256("1"), block.chainid, address(forwarder))
+            abi.encode(EIP712_DOMAIN_TYPEHASH, keccak256("Q26MyForwarder"), keccak256("1"), block.chainid, address(forwarder))
         );
         bytes32 digest = keccak256(abi.encodePacked("\x19\x01", domainSep, structHash));
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(userPk, digest);

@@ -2,14 +2,14 @@
 
 > **Difficulty**: Entry ⭐
 
-`EventsAndErrors` exposes three intentionally-failing functions, each
+`Q02EventsAndErrors` exposes three intentionally-failing functions, each
 reverting with a different ABI-encoded error kind. You observe each
 revert via your wallet / web UI and submit its 4-byte selector back to
 the contract.
 
 ## Goal
 
-Make `EventsAndErrors.isSolved(yourAddress)` return `true` by submitting
+Make `Q02EventsAndErrors.isSolved(yourAddress)` return `true` by submitting
 all three selectors:
 
 | Function called | Revert kind | What to note |

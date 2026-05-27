@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {OracleLab} from "../src/Setup.sol";
+import {Q16OracleLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user instances
@@ -11,7 +11,7 @@ contract Deploy is Script {
 
     function run() external {
         vm.startBroadcast();
-        OracleLab lab = new OracleLab();
+        Q16OracleLab lab = new Q16OracleLab();
         (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
         require(ok, "lab funding failed");
         vm.stopBroadcast();

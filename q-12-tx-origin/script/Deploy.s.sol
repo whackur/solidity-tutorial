@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {TxOriginLab} from "../src/Setup.sol";
+import {Q12TxOriginLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user vaults (SEED = 5 ether each).
@@ -10,7 +10,7 @@ contract Deploy is Script {
 
     function run() external {
         vm.startBroadcast();
-        TxOriginLab lab = new TxOriginLab();
+        Q12TxOriginLab lab = new Q12TxOriginLab();
         (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
         require(ok, "lab funding failed");
         vm.stopBroadcast();

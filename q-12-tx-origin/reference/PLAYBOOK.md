@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `TxOriginLab` (pre-funded with at least `SEED * N` ETH).
+`LAB` = deployed `Q12TxOriginLab` (pre-funded with at least `SEED * N` ETH).
 `USER` = user's EOA.
 
 ## Steps

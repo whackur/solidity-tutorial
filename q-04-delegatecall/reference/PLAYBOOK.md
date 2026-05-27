@@ -2,15 +2,15 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `DelegatecallLab` address. `USER` = user's EOA.
+`LAB` = deployed `Q04DelegatecallLab` address. `USER` = user's EOA.
 
 ## Steps
 
 | # | From | To | Call | Args | Notes |
 |---|---|---|---|---|---|
-| 1 | `USER` | `LAB` | `createInstance()` | — | deploys `(DelegateCaller, DelegateLogic)` for USER; event `InstanceCreated(USER, caller, logic)` |
+| 1 | `USER` | `LAB` | `createInstance()` | — | deploys `(Q04DelegateCaller, Q04DelegateLogic)` for USER; event `InstanceCreated(USER, caller, logic)` |
 | 2 | view | `LAB` | `callerOf(USER)` / `logicOf(USER)` | — | snapshot the two addresses |
-| 3 | `USER` | `caller` | `setVarsViaCall(DelegateLogic,uint256)` | `(logic, 42)` | normal call → writes to `logic` storage slot 0 |
+| 3 | `USER` | `caller` | `setVarsViaCall(Q04DelegateLogic,uint256)` | `(logic, 42)` | normal call → writes to `logic` storage slot 0 |
 | 4 | view | `logic` | `number()` | — | `42` |
 | 5 | view | `caller` | `number()` | — | `0` (unchanged — call wrote to logic, not caller) |
 | 6 | `USER` | `caller` | `setVarsViaDelegatecall(address,uint256)` | `(logic, 99)` | delegatecall → executes logic code in caller's storage |

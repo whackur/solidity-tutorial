@@ -3,13 +3,13 @@
 > **Difficulty**: Entry ⭐
 > **Companion to**: [`q-07-eth-sign/`](../q-07-eth-sign/README.md) and [`q-08-eip712-voucher/`](../q-08-eip712-voucher/README.md). This is the first contact with the raw `ecrecover` primitive; q-07 then adds the EIP-191 `\x19Ethereum Signed Message:\n` prefix, and q-08 adds an EIP-712 domain separator on top.
 
-A single `EcrecoverBasicLab` is deployed. The lab publishes a fixed set of *candidate signatures* — each candidate is a tuple `(messageHash, v, r, s)`. Exactly **one** of them was signed by `trustedSigner` (a public, immutable address on the lab). The other candidates were signed by random impostor keys.
+A single `Q21EcrecoverBasicLab` is deployed. The lab publishes a fixed set of *candidate signatures* — each candidate is a tuple `(messageHash, v, r, s)`. Exactly **one** of them was signed by `trustedSigner` (a public, immutable address on the lab). The other candidates were signed by random impostor keys.
 
 Your job is to identify which candidate index recovers to `trustedSigner` and submit it. No on-chain hashing tricks — the raw `keccak256(message)` is already on the lab as `messageHash`.
 
 ## Goal
 
-Make `EcrecoverBasicLab.isSolved(yourAddress)` return `true`. That requires one `submit(uint256 index)` call where `ecrecover(messageHash, v, r, s) == trustedSigner` for that index.
+Make `Q21EcrecoverBasicLab.isSolved(yourAddress)` return `true`. That requires one `submit(uint256 index)` call where `ecrecover(messageHash, v, r, s) == trustedSigner` for that index.
 
 ## Contract surface
 

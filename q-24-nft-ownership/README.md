@@ -2,29 +2,29 @@
 
 > **Difficulty**: Entry ⭐
 
-A shared `NftLab` mints you an ERC-721 token, then asks you to hand it back.
+A shared `Q24NftLab` mints you an ERC-721 token, then asks you to hand it back.
 The catch: the lab is not the token owner, so it can only take your NFT if
 you **approve** it first. This is the ERC-721 approval flow — the same shape
 as ERC-20 `approve` / `transferFrom`.
 
 ## Goal
 
-Make `NftLab.isSolved(you)` return `true`, which requires `deposited[you] == true`.
+Make `Q24NftLab.isSolved(you)` return `true`, which requires `deposited[you] == true`.
 
 ## Contract surface
 
 ```solidity
-// NftLab
+// Q24NftLab
 function claim() external returns (uint256 id);        // mint one NFT to you
 function deposit(uint256 tokenId) external;            // lab pulls it (needs approval)
 function claimedToken(address user) external view returns (uint256);
 function deposited(address user) external view returns (bool);
-function nft() external view returns (ChallengeNFT);
+function nft() external view returns (Q24ChallengeNFT);
 function isSolved(address user) external view returns (bool);
 function solve() external;
 function solvedBy(address user) external view returns (bool);
 
-// ChallengeNFT (standard ERC-721)
+// Q24ChallengeNFT (standard ERC-721)
 function approve(address to, uint256 tokenId) external;
 function setApprovalForAll(address operator, bool approved) external;
 function ownerOf(uint256 tokenId) external view returns (address);

@@ -14,7 +14,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         to see the *raw* `ecrecover(hash, v, r, s) -> signer` primitive
 ///         on its own before q-07 layers the eth-sign prefix and q-08
 ///         adds typed-data domain separation.
-contract EcrecoverBasicLab is SolvableBase {
+contract Q21EcrecoverBasicLab is SolvableBase {
     struct Candidate {
         bytes32 messageHash; // keccak256(message), no eth-sign wrapping
         uint8 v;

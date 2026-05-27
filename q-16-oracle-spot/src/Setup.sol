@@ -5,7 +5,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Minimal mintable ERC-20-like token. Trimmed for tutorial brevity —
 ///         no events typed, no safe math (compiler already overflow-checks).
-contract MockToken {
+contract Q16MockToken {
     string public constant name = "OracleToken";
     string public constant symbol = "OTK";
     uint8 public constant decimals = 18;
@@ -47,10 +47,10 @@ contract MockToken {
 
 /// @notice Constant-product (x*y=k) ETH/TKN pool with no fees. Per-user
 ///         instance — manipulation does not affect other users.
-contract SimplePool {
-    MockToken public immutable token;
+contract Q16SimplePool {
+    Q16MockToken public immutable token;
 
-    constructor(MockToken t) payable {
+    constructor(Q16MockToken t) payable {
         token = t;
     }
 
@@ -90,13 +90,13 @@ contract SimplePool {
 /// @notice Buggy lender that prices collateral with a single-pool spot
 ///         oracle. Inflate the pool's price → borrow far more ETH than
 ///         the collateral is worth → drain the lender.
-contract SpotLender {
-    SimplePool public immutable pool;
-    MockToken public immutable token;
+contract Q16SpotLender {
+    Q16SimplePool public immutable pool;
+    Q16MockToken public immutable token;
 
     mapping(address => uint256) public collateralOf;
 
-    constructor(SimplePool p) payable {
+    constructor(Q16SimplePool p) payable {
         pool = p;
         token = p.token();
     }
@@ -126,7 +126,7 @@ contract SpotLender {
 /// @notice Multi-tenant oracle lab. `createInstance()` deploys a personal
 ///         (token, pool, lender) triple per user and faucets the user
 ///         some TKN for the manipulation.
-contract OracleLab is SolvableBase {
+contract Q16OracleLab is SolvableBase {
     /// Pool seed: small reserves so a few ETH of swap moves spot a lot.
     uint256 public constant POOL_ETH_SEED = 1 ether;
     uint256 public constant POOL_TKN_SEED = 100e18;
@@ -134,9 +134,9 @@ contract OracleLab is SolvableBase {
     uint256 public constant USER_TKN_FAUCET = 100e18;
 
     struct Instance {
-        MockToken token;
-        SimplePool pool;
-        SpotLender lender;
+        Q16MockToken token;
+        Q16SimplePool pool;
+        Q16SpotLender lender;
     }
 
     mapping(address => Instance) private _instances;
@@ -149,14 +149,14 @@ contract OracleLab is SolvableBase {
         require(address(_instances[msg.sender].token) == address(0), "already created");
         require(address(this).balance >= POOL_ETH_SEED + LENDER_SEED, "lab underfunded");
 
-        MockToken t = new MockToken();
+        Q16MockToken t = new Q16MockToken();
         // Pool: seeded with ETH + TKN
         t.mint(address(this), POOL_TKN_SEED);
-        SimplePool p = new SimplePool{value: POOL_ETH_SEED}(t);
+        Q16SimplePool p = new Q16SimplePool{value: POOL_ETH_SEED}(t);
         t.transfer(address(p), POOL_TKN_SEED);
 
         // Lender: seeded with ETH only
-        SpotLender l = new SpotLender{value: LENDER_SEED}(p);
+        Q16SpotLender l = new Q16SpotLender{value: LENDER_SEED}(p);
 
         // User faucet
         t.mint(msg.sender, USER_TKN_FAUCET);
@@ -166,15 +166,15 @@ contract OracleLab is SolvableBase {
         return (address(t), address(p), address(l));
     }
 
-    function tokenOf(address user) external view returns (MockToken) {
+    function tokenOf(address user) external view returns (Q16MockToken) {
         return _instances[user].token;
     }
 
-    function poolOf(address user) external view returns (SimplePool) {
+    function poolOf(address user) external view returns (Q16SimplePool) {
         return _instances[user].pool;
     }
 
-    function lenderOf(address user) external view returns (SpotLender) {
+    function lenderOf(address user) external view returns (Q16SpotLender) {
         return _instances[user].lender;
     }
 

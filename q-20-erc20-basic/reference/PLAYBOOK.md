@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `Erc20BasicLab`.
+`LAB` = deployed `Q20Erc20BasicLab`.
 `FAUCET` = `LAB.faucet()` (deployed by the lab constructor).
 `VAULT` = `LAB.vault()` (deployed by the lab constructor).
 `USER` = user's EOA — does not need any ETH for this challenge.
@@ -48,5 +48,5 @@ If a student does not yet see why a contract cannot "just take" their tokens, wa
 
 ## Notes
 
-- The `Faucet` is `MiniERC20` — a hand-rolled, 60-line ERC-20 without OpenZeppelin so beginners can read the entire token implementation in one screen.
+- The `Q20Faucet` is `Q20MiniERC20` — a hand-rolled, 60-line ERC-20 without OpenZeppelin so beginners can read the entire token implementation in one screen.
 - `transferFrom` does short-circuit `allowance == type(uint256).max` (the modern OpenZeppelin convention): an infinite approval is not decremented. With a finite approval (this challenge's case) you can verify the allowance drained to zero after `pull(25e18)`.

@@ -2,14 +2,14 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {DelegatecallLab} from "../src/Setup.sol";
+import {Q04DelegatecallLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
         // Lab only — per-user (caller, logic) pair is deployed inside
         // createInstance() at runtime, so no funding is required up-front.
-        DelegatecallLab lab = new DelegatecallLab();
+        Q04DelegatecallLab lab = new Q04DelegatecallLab();
         vm.stopBroadcast();
 
         console2.log("=== q-04-delegatecall deployment ===");

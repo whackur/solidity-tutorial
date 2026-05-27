@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {InflateLab, YieldVault, InflateAttacker, InflateHelper} from "../src/Setup.sol";
+import {Q17InflateLab, Q17YieldVault, Q17InflateAttacker, Q17InflateHelper} from "../src/Setup.sol";
 
 contract Q17ReentrancyInflateTest is Test {
-    InflateLab internal lab;
+    Q17InflateLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new InflateLab();
+        lab = new Q17InflateLab();
         vm.deal(address(lab), 100 ether);
         vm.deal(alice, 5 ether);
         vm.deal(bob, 5 ether);
@@ -20,8 +20,8 @@ contract Q17ReentrancyInflateTest is Test {
     function _solve(address user) internal {
         vm.startPrank(user);
         lab.createInstance();
-        InflateAttacker attacker = lab.attackerOf(user);
-        InflateHelper helper = lab.helperOf(user);
+        Q17InflateAttacker attacker = lab.attackerOf(user);
+        Q17InflateHelper helper = lab.helperOf(user);
 
         attacker.attack{value: 1 ether}();   // outer withdraw + cross-function transfer
         helper.pull();                       // second payout
@@ -31,9 +31,9 @@ contract Q17ReentrancyInflateTest is Test {
     function test_AliceInflates() public {
         _solve(alice);
 
-        YieldVault vault = lab.vaultOf(alice);
-        InflateAttacker attacker = lab.attackerOf(alice);
-        InflateHelper helper = lab.helperOf(alice);
+        Q17YieldVault vault = lab.vaultOf(alice);
+        Q17InflateAttacker attacker = lab.attackerOf(alice);
+        Q17InflateHelper helper = lab.helperOf(alice);
 
         assertEq(address(vault).balance, 0, "vault drained");
         assertEq(address(attacker).balance, 1 ether, "attacker paid once");
@@ -54,7 +54,7 @@ contract Q17ReentrancyInflateTest is Test {
     function test_NoCrossFunctionLeavesSeedAlone() public {
         vm.startPrank(alice);
         lab.createInstance();
-        YieldVault vault = lab.vaultOf(alice);
+        Q17YieldVault vault = lab.vaultOf(alice);
 
         vault.deposit{value: 1 ether}();
         vault.withdraw();
@@ -67,8 +67,8 @@ contract Q17ReentrancyInflateTest is Test {
     function test_DrainForwardsToOwner() public {
         _solve(alice);
         uint256 aliceBefore = alice.balance;
-        InflateAttacker attacker = lab.attackerOf(alice);
-        InflateHelper helper = lab.helperOf(alice);
+        Q17InflateAttacker attacker = lab.attackerOf(alice);
+        Q17InflateHelper helper = lab.helperOf(alice);
 
         vm.startPrank(alice);
         attacker.drain();
@@ -83,7 +83,7 @@ contract Q17ReentrancyInflateTest is Test {
     function test_NonOwnerAttackerCallReverts() public {
         vm.prank(alice);
         lab.createInstance();
-        InflateAttacker attacker = lab.attackerOf(alice);
+        Q17InflateAttacker attacker = lab.attackerOf(alice);
 
         vm.deal(bob, 1 ether);
         vm.prank(bob);

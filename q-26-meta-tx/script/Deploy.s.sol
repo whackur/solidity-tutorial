@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {MyForwarder, MetaCounter} from "../src/Setup.sol";
+import {Q26MyForwarder, Q26MetaCounter} from "../src/Setup.sol";
 
 /// @notice Deploys q-26-meta-tx. Lines prefixed `ADDR:<key>:` are parsed by
 ///         docker/entrypoint.sh and merged into addresses.json. Students need
@@ -10,8 +10,8 @@ import {MyForwarder, MetaCounter} from "../src/Setup.sol";
 contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
-        MyForwarder forwarder = new MyForwarder();
-        MetaCounter counter = new MetaCounter(address(forwarder));
+        Q26MyForwarder forwarder = new Q26MyForwarder();
+        Q26MetaCounter counter = new Q26MetaCounter(address(forwarder));
         vm.stopBroadcast();
 
         console2.log("=== q-26-meta-tx deployment ===");

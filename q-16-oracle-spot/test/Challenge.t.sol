@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {OracleLab, MockToken, SimplePool, SpotLender} from "../src/Setup.sol";
+import {Q16OracleLab, Q16MockToken, Q16SimplePool, Q16SpotLender} from "../src/Setup.sol";
 
 contract Q16OracleSpotTest is Test {
-    OracleLab internal lab;
+    Q16OracleLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new OracleLab();
+        lab = new Q16OracleLab();
         vm.deal(address(lab), 100 ether);
         vm.deal(alice, 5 ether);
         vm.deal(bob, 5 ether);
@@ -20,9 +20,9 @@ contract Q16OracleSpotTest is Test {
     function _solve(address user) internal {
         vm.startPrank(user);
         lab.createInstance();
-        MockToken token = lab.tokenOf(user);
-        SimplePool pool = lab.poolOf(user);
-        SpotLender lender = lab.lenderOf(user);
+        Q16MockToken token = lab.tokenOf(user);
+        Q16SimplePool pool = lab.poolOf(user);
+        Q16SpotLender lender = lab.lenderOf(user);
 
         // Inflate the spot price: swap 3 ETH → TKN (pool becomes ETH-heavy,
         // TKN-scarce → price up ~16x).
@@ -41,7 +41,7 @@ contract Q16OracleSpotTest is Test {
         uint256 aliceBefore = alice.balance;
         _solve(alice);
 
-        SpotLender lender = lab.lenderOf(alice);
+        Q16SpotLender lender = lab.lenderOf(alice);
         assertEq(address(lender).balance, 0, "lender drained");
         assertTrue(lab.isSolved(alice));
         // Net wallet change should be: -3 ETH swapped in + 5 ETH borrowed = +2 ETH
@@ -61,8 +61,8 @@ contract Q16OracleSpotTest is Test {
     function test_HonestBorrowDoesNotDrain() public {
         vm.startPrank(alice);
         lab.createInstance();
-        MockToken token = lab.tokenOf(alice);
-        SpotLender lender = lab.lenderOf(alice);
+        Q16MockToken token = lab.tokenOf(alice);
+        Q16SpotLender lender = lab.lenderOf(alice);
 
         // Borrow without manipulation — spot price ~ 0.01 ETH/TKN.
         token.approve(address(lender), type(uint256).max);

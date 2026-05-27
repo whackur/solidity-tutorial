@@ -9,8 +9,8 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Public-faucet ERC-20 with EIP-2612 permit. Any address can mint
 ///         themselves a balance to play with.
-contract PermitToken is ERC20, ERC20Permit {
-    constructor() ERC20("PermitToken", "PT") ERC20Permit("PermitToken") {}
+contract Q06PermitToken is ERC20, ERC20Permit {
+    constructor() ERC20("Q06PermitToken", "PT") ERC20Permit("Q06PermitToken") {}
 
     function mint(address to, uint256 amount) external {
         _mint(to, amount);
@@ -25,14 +25,14 @@ contract PermitToken is ERC20, ERC20Permit {
 ///         Progress is keyed by the *signer* (permit `owner`), which is
 ///         the user's EOA. isSolved(user) becomes true after the user
 ///         consumes at least one permit and a non-zero pull moves tokens.
-contract PermitChallenge is SolvableBase {
-    PermitToken public immutable token;
+contract Q06PermitChallenge is SolvableBase {
+    Q06PermitToken public immutable token;
 
     mapping(address => bool) public usedPermit;
 
     event PermitSpent(address indexed owner, uint256 value, address indexed recipient);
 
-    constructor(PermitToken t) {
+    constructor(Q06PermitToken t) {
         token = t;
     }
 

@@ -3,19 +3,19 @@ pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {SimpleWallet, MockERC20} from "../src/Setup.sol";
+import {Q05SimpleWallet, Q05MockERC20} from "../src/Setup.sol";
 
 contract Q05WalletTest is Test {
-    SimpleWallet internal wallet;
-    MockERC20 internal token;
+    Q05SimpleWallet internal wallet;
+    Q05MockERC20 internal token;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
     uint256 internal constant TOKEN_AMOUNT = 100e18;
 
     function setUp() public {
-        wallet = new SimpleWallet();
-        token = new MockERC20();
+        wallet = new Q05SimpleWallet();
+        token = new Q05MockERC20();
         vm.deal(alice, 5 ether);
         vm.deal(bob, 5 ether);
     }

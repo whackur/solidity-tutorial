@@ -7,13 +7,13 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 /// @notice The challenge's NFT collection. Only the lab (its deployer) can
 ///         mint; everything else is standard ERC-721 (ownerOf, approve,
 ///         setApprovalForAll, transferFrom).
-contract ChallengeNFT is ERC721 {
+contract Q24ChallengeNFT is ERC721 {
     address public immutable lab;
     uint256 public nextId;
 
     error OnlyLab();
 
-    constructor() ERC721("ChallengeNFT", "cNFT") {
+    constructor() ERC721("Q24ChallengeNFT", "cNFT") {
         lab = msg.sender;
     }
 
@@ -35,8 +35,8 @@ contract ChallengeNFT is ERC721 {
 ///         Step 2 is the point: the lab is NOT the owner, so the pull in
 ///         deposit() only succeeds if you approved the lab first. That is the
 ///         ERC-721 approval flow, the same shape as ERC-20 approve/transferFrom.
-contract NftLab is SolvableBase {
-    ChallengeNFT public immutable nft;
+contract Q24NftLab is SolvableBase {
+    Q24ChallengeNFT public immutable nft;
 
     mapping(address => uint256) public claimedToken; // tokenId (0 = not claimed)
     mapping(address => bool) public deposited;
@@ -48,7 +48,7 @@ contract NftLab is SolvableBase {
     error NotYourClaim();
 
     constructor() {
-        nft = new ChallengeNFT();
+        nft = new Q24ChallengeNFT();
     }
 
     function claim() external returns (uint256 id) {

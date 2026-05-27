@@ -2,27 +2,27 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A pre-funded `TxOriginLab` is deployed. Each user gets a personal `(TxOriginVault, Phisher)` pair. The vault authenticates with `tx.origin == owner` instead of `msg.sender == owner`, so an intermediate contract can abuse a transaction that the owner willingly starts.
+A pre-funded `Q12TxOriginLab` is deployed. Each user gets a personal `(Q12TxOriginVault, Q12Phisher)` pair. The vault authenticates with `tx.origin == owner` instead of `msg.sender == owner`, so an intermediate contract can abuse a transaction that the owner willingly starts.
 
 ## Goal
 
-Make `TxOriginLab.isSolved(yourAddress)` return `true` by demonstrating the phishing-shaped authorization failure in your own instance.
+Make `Q12TxOriginLab.isSolved(yourAddress)` return `true` by demonstrating the phishing-shaped authorization failure in your own instance.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address vault, address phisher);
-function vaultOf(address user) external view returns (TxOriginVault);
-function phisherOf(address user) external view returns (Phisher);
+function vaultOf(address user) external view returns (Q12TxOriginVault);
+function phisherOf(address user) external view returns (Q12Phisher);
 function isSolved(address user) external view returns (bool);
 uint256 public constant SEED = 5 ether;
 
-// TxOriginVault (your personal instance — DO NOT FIX)
+// Q12TxOriginVault (your personal instance — DO NOT FIX)
 function transferTo(address payable to, uint256 amount) external;
 function owner() external view returns (address);
 
-// Phisher (your personal instance, beneficiary = you)
+// Q12Phisher (your personal instance, beneficiary = you)
 function claimFreeAirdrop() external;
 function airdropClaimed() external view returns (bool);
 ```

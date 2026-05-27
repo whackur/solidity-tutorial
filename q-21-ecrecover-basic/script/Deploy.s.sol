@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {EcrecoverBasicLab} from "../src/Setup.sol";
+import {Q21EcrecoverBasicLab} from "../src/Setup.sol";
 
 /// @notice Deploy with three deterministic candidates. Two are signed by
 ///         impostor keys derived from `forge std` `makeAddrAndKey`-style
@@ -23,13 +23,13 @@ contract Deploy is Script {
 
         address trustedSigner = vm.addr(trustedPk);
 
-        EcrecoverBasicLab.Candidate[] memory cands = new EcrecoverBasicLab.Candidate[](3);
+        Q21EcrecoverBasicLab.Candidate[] memory cands = new Q21EcrecoverBasicLab.Candidate[](3);
         cands[0] = _sign(impostorAPk, keccak256("hello from imposter A"));
         cands[1] = _sign(trustedPk, keccak256("trusted signer authorized this message"));
         cands[2] = _sign(impostorBPk, keccak256("hello from imposter B"));
 
         vm.startBroadcast();
-        EcrecoverBasicLab lab = new EcrecoverBasicLab(trustedSigner, cands);
+        Q21EcrecoverBasicLab lab = new Q21EcrecoverBasicLab(trustedSigner, cands);
         vm.stopBroadcast();
 
         console2.log("=== q-21-ecrecover-basic deployment ===");
@@ -38,8 +38,8 @@ contract Deploy is Script {
         console2.log("trustedSigner:", trustedSigner);
     }
 
-    function _sign(uint256 pk, bytes32 hash) internal pure returns (EcrecoverBasicLab.Candidate memory) {
+    function _sign(uint256 pk, bytes32 hash) internal pure returns (Q21EcrecoverBasicLab.Candidate memory) {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(pk, hash);
-        return EcrecoverBasicLab.Candidate({messageHash: hash, v: v, r: r, s: s});
+        return Q21EcrecoverBasicLab.Candidate({messageHash: hash, v: v, r: r, s: s});
     }
 }

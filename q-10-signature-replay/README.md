@@ -2,11 +2,11 @@
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A pre-funded `ReplayLab` is deployed. Each user creates a personal `VulnerableSigClaim` seeded with ETH. The claim contract verifies a signature over too little context: it is missing the fields that normally make an authorization one-time, time-bounded, chain-specific, and contract-specific.
+A pre-funded `Q10ReplayLab` is deployed. Each user creates a personal `Q10VulnerableSigClaim` seeded with ETH. The claim contract verifies a signature over too little context: it is missing the fields that normally make an authorization one-time, time-bounded, chain-specific, and contract-specific.
 
 ## Goal
 
-Make `ReplayLab.isSolved(yourAddress)` return `true`: drain *your* claim
+Make `Q10ReplayLab.isSolved(yourAddress)` return `true`: drain *your* claim
 contract to `0` ETH.
 
 ## Contract surface
@@ -14,11 +14,11 @@ contract to `0` ETH.
 ```solidity
 // Lab
 function createInstance(address signer) external returns (address claim);
-function claimOf(address user) external view returns (VulnerableSigClaim);
+function claimOf(address user) external view returns (Q10VulnerableSigClaim);
 function isSolved(address user) external view returns (bool);
 uint256 public constant SEED = 5 ether;
 
-// VulnerableSigClaim (your personal instance, signer = the addr you passed)
+// Q10VulnerableSigClaim (your personal instance, signer = the addr you passed)
 function claim(address payable to, uint256 amount, bytes calldata signature) external;
 function signer() external view returns (address);
 ```

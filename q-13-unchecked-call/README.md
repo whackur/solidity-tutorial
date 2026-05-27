@@ -2,18 +2,18 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A single `UnsafePayout` escrow is deployed. Its `payout(to)` advances
+A single `Q13UnsafePayout` escrow is deployed. Its `payout(to)` advances
 the per-user state (`escrow = 0`, `paidOut = true`) *and* ignores the
 boolean return of the low-level call. If `to` reverts on receive, the
 funds stay in the contract, but the user is still recorded as "paid out"
 — a silent failure.
 
-The contract exposes a helper `RevertOnReceive` (`trap`) so you don't
+The contract exposes a helper `Q13RevertOnReceive` (`trap`) so you don't
 need to deploy your own reverting receiver.
 
 ## Goal
 
-Make `UnsafePayout.isSolved(yourAddress)` return `true`. That requires:
+Make `Q13UnsafePayout.isSolved(yourAddress)` return `true`. That requires:
 
 - `paidOut[you] == true` — payout function was called.
 - `stranded[you] > 0` — your payout target rejected ETH, yet you got
@@ -24,7 +24,7 @@ Make `UnsafePayout.isSolved(yourAddress)` return `true`. That requires:
 ```solidity
 function deposit() external payable;                  // escrow[you] += msg.value
 function payout(address payable to) external;        // BUG: ignores call return
-function trap() external view returns (RevertOnReceive);
+function trap() external view returns (Q13RevertOnReceive);
 function escrow(address) external view returns (uint256);
 function paidOut(address) external view returns (bool);
 function stranded(address) external view returns (uint256);

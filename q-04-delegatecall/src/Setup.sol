@@ -4,8 +4,8 @@ pragma solidity ^0.8.35;
 import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice The logic contract — both `call` and `delegatecall` paths target
-///         this code. Storage layout is mirrored by DelegateCaller.
-contract DelegateLogic {
+///         this code. Storage layout is mirrored by Q04DelegateCaller.
+contract Q04DelegateLogic {
     uint256 public number;
     address public sender;
     uint256 public value;
@@ -18,14 +18,14 @@ contract DelegateLogic {
     }
 }
 
-/// @notice The caller contract — same storage slots 0/1/2 as DelegateLogic.
+/// @notice The caller contract — same storage slots 0/1/2 as Q04DelegateLogic.
 ///         Routing helpers let you compare `call` vs `delegatecall`.
-contract DelegateCaller {
+contract Q04DelegateCaller {
     uint256 public number;
     address public sender;
     uint256 public value;
 
-    function setVarsViaCall(DelegateLogic logic, uint256 newNumber)
+    function setVarsViaCall(Q04DelegateLogic logic, uint256 newNumber)
         external
         payable
         returns (uint256, address, uint256)
@@ -38,7 +38,7 @@ contract DelegateCaller {
         payable
         returns (uint256, address, uint256)
     {
-        bytes memory data = abi.encodeCall(DelegateLogic.setVars, (newNumber));
+        bytes memory data = abi.encodeCall(Q04DelegateLogic.setVars, (newNumber));
         (bool ok, bytes memory ret) = logic.delegatecall(data);
         require(ok, "delegatecall failed");
         return abi.decode(ret, (uint256, address, uint256));
@@ -53,10 +53,10 @@ contract DelegateCaller {
 ///         Solve goal (per user):
 ///         - logicOf(user).number() == 42  (set via `call`, target writes to logic storage)
 ///         - callerOf(user).number() == 99 (set via `delegatecall`, logic code writes to caller storage)
-contract DelegatecallLab is SolvableBase {
+contract Q04DelegatecallLab is SolvableBase {
     struct Instance {
-        DelegateCaller caller;
-        DelegateLogic logic;
+        Q04DelegateCaller caller;
+        Q04DelegateLogic logic;
     }
 
     mapping(address => Instance) private _instances;
@@ -65,18 +65,18 @@ contract DelegatecallLab is SolvableBase {
 
     function createInstance() external returns (address caller, address logic) {
         require(address(_instances[msg.sender].caller) == address(0), "already created");
-        DelegateCaller c = new DelegateCaller();
-        DelegateLogic l = new DelegateLogic();
+        Q04DelegateCaller c = new Q04DelegateCaller();
+        Q04DelegateLogic l = new Q04DelegateLogic();
         _instances[msg.sender] = Instance(c, l);
         emit InstanceCreated(msg.sender, address(c), address(l));
         return (address(c), address(l));
     }
 
-    function callerOf(address user) external view returns (DelegateCaller) {
+    function callerOf(address user) external view returns (Q04DelegateCaller) {
         return _instances[user].caller;
     }
 
-    function logicOf(address user) external view returns (DelegateLogic) {
+    function logicOf(address user) external view returns (Q04DelegateLogic) {
         return _instances[user].logic;
     }
 

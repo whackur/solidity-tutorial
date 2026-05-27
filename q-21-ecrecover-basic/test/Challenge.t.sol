@@ -2,10 +2,10 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {EcrecoverBasicLab} from "../src/Setup.sol";
+import {Q21EcrecoverBasicLab} from "../src/Setup.sol";
 
 contract Q21EcrecoverBasicTest is Test {
-    EcrecoverBasicLab internal lab;
+    Q21EcrecoverBasicLab internal lab;
 
     address internal trustedSigner;
     uint256 internal trustedSignerPk;
@@ -27,18 +27,18 @@ contract Q21EcrecoverBasicTest is Test {
 
         // Build three deterministic candidates. Pick a fixed index for the
         // correct one so the tests document the layout.
-        EcrecoverBasicLab.Candidate[] memory cands = new EcrecoverBasicLab.Candidate[](3);
+        Q21EcrecoverBasicLab.Candidate[] memory cands = new Q21EcrecoverBasicLab.Candidate[](3);
         cands[0] = _sign(impostorAPk, keccak256("hello from imposter A"));
         cands[1] = _sign(trustedSignerPk, keccak256("trusted signer authorized this message"));
         cands[2] = _sign(impostorBPk, keccak256("hello from imposter B"));
         correctIndex = 1;
 
-        lab = new EcrecoverBasicLab(trustedSigner, cands);
+        lab = new Q21EcrecoverBasicLab(trustedSigner, cands);
     }
 
-    function _sign(uint256 pk, bytes32 hash) internal pure returns (EcrecoverBasicLab.Candidate memory) {
+    function _sign(uint256 pk, bytes32 hash) internal pure returns (Q21EcrecoverBasicLab.Candidate memory) {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(pk, hash);
-        return EcrecoverBasicLab.Candidate({messageHash: hash, v: v, r: r, s: s});
+        return Q21EcrecoverBasicLab.Candidate({messageHash: hash, v: v, r: r, s: s});
     }
 
     function test_AliceSubmitsCorrectIndex() public {
@@ -72,7 +72,7 @@ contract Q21EcrecoverBasicTest is Test {
 
     function test_OutOfRangeReverts() public {
         vm.prank(alice);
-        vm.expectRevert(EcrecoverBasicLab.InvalidIndex.selector);
+        vm.expectRevert(Q21EcrecoverBasicLab.InvalidIndex.selector);
         lab.submit(99);
     }
 

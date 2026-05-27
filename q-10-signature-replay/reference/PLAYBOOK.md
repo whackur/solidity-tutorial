@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `ReplayLab` (pre-funded with at least `SEED * N` ETH).
+`LAB` = deployed `Q10ReplayLab` (pre-funded with at least `SEED * N` ETH).
 `USER` = user's EOA (their own pk signs the payload).
 
 ## Steps

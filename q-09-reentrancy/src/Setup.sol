@@ -5,7 +5,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice The classic CEI-violating vault. External call before state update,
 ///         so re-entering during the call returns the same balance forever.
-contract VulnerableVault {
+contract Q09VulnerableVault {
     mapping(address => uint256) public balances;
 
     function deposit() external payable {
@@ -27,15 +27,15 @@ contract VulnerableVault {
 }
 
 /// @notice Per-user attacker contract. Owned by the EOA that calls
-///         `attack(...)` after `ReentrancyLab.createInstance()` deploys it.
+///         `attack(...)` after `Q09ReentrancyLab.createInstance()` deploys it.
 ///         Re-enters the vault from `receive()` while the vault still
 ///         shows the user's full deposit.
-contract ReentrancyAttacker {
-    VulnerableVault public immutable vault;
+contract Q09ReentrancyAttacker {
+    Q09VulnerableVault public immutable vault;
     address public immutable owner;
     uint256 public attackAmount;
 
-    constructor(VulnerableVault v, address o) {
+    constructor(Q09VulnerableVault v, address o) {
         vault = v;
         owner = o;
     }
@@ -70,10 +70,10 @@ contract ReentrancyAttacker {
 ///
 ///         The lab itself must hold enough ETH at deploy time to seed
 ///         every expected instance — see the funded `receive()`.
-contract ReentrancyLab is SolvableBase {
+contract Q09ReentrancyLab is SolvableBase {
     struct Instance {
-        VulnerableVault vault;
-        ReentrancyAttacker attacker;
+        Q09VulnerableVault vault;
+        Q09ReentrancyAttacker attacker;
     }
 
     uint256 public constant SEED = 10 ether;
@@ -88,8 +88,8 @@ contract ReentrancyLab is SolvableBase {
         require(address(_instances[msg.sender].vault) == address(0), "already created");
         require(address(this).balance >= SEED, "lab underfunded");
 
-        VulnerableVault v = new VulnerableVault();
-        ReentrancyAttacker a = new ReentrancyAttacker(v, msg.sender);
+        Q09VulnerableVault v = new Q09VulnerableVault();
+        Q09ReentrancyAttacker a = new Q09ReentrancyAttacker(v, msg.sender);
 
         // Lab itself becomes the "victim depositor" — pre-funds the vault.
         v.deposit{value: SEED}();
@@ -99,11 +99,11 @@ contract ReentrancyLab is SolvableBase {
         return (address(v), address(a));
     }
 
-    function vaultOf(address user) external view returns (VulnerableVault) {
+    function vaultOf(address user) external view returns (Q09VulnerableVault) {
         return _instances[user].vault;
     }
 
-    function attackerOf(address user) external view returns (ReentrancyAttacker) {
+    function attackerOf(address user) external view returns (Q09ReentrancyAttacker) {
         return _instances[user].attacker;
     }
 

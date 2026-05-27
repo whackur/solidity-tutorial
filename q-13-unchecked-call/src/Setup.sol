@@ -5,7 +5,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Helper contract that always rejects ETH. Provided by the
 ///         challenge so learners don't need to deploy their own.
-contract RevertOnReceive {
+contract Q13RevertOnReceive {
     error AlwaysReverts();
 
     receive() external payable {
@@ -27,8 +27,8 @@ contract RevertOnReceive {
 ///         tracked but not used for grading. The `stranded` field is
 ///         instructor-grade bookkeeping — a real bug would have no such
 ///         accounting at all.
-contract UnsafePayout is SolvableBase {
-    RevertOnReceive public immutable trap;
+contract Q13UnsafePayout is SolvableBase {
+    Q13RevertOnReceive public immutable trap;
 
     mapping(address => uint256) public escrow;
     mapping(address => bool) public paidOut;
@@ -38,7 +38,7 @@ contract UnsafePayout is SolvableBase {
     event PayoutAttempted(address indexed user, address to, uint256 amount, bool ok);
 
     constructor() {
-        trap = new RevertOnReceive();
+        trap = new Q13RevertOnReceive();
     }
 
     function deposit() external payable {

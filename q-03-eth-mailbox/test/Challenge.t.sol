@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {EthMailbox} from "../src/Setup.sol";
+import {Q03EthMailbox} from "../src/Setup.sol";
 
 contract Q03MailboxTest is Test {
-    EthMailbox internal mb;
+    Q03EthMailbox internal mb;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        mb = new EthMailbox();
+        mb = new Q03EthMailbox();
         vm.deal(alice, 10 ether);
         vm.deal(bob, 10 ether);
     }
@@ -38,7 +38,7 @@ contract Q03MailboxTest is Test {
     function test_AliceSolvesAllThree() public {
         _triggerReceive(alice, 1 ether);
         assertTrue(mb.hitReceive(alice), "receive hit");
-        assertEq(uint8(mb.lastTrigger(alice)), uint8(EthMailbox.Trigger.Receive));
+        assertEq(uint8(mb.lastTrigger(alice)), uint8(Q03EthMailbox.Trigger.Receive));
 
         _triggerFallback(alice, bytes32(uint256(0xCAFEBABE)));
         assertTrue(mb.hitFallback(alice), "fallback hit");

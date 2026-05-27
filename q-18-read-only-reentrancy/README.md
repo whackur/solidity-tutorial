@@ -2,35 +2,35 @@
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A `ShareVault`'s `withdraw()` sends ETH out *before* updating `totalShares`. The `sharePrice()` view function is correct in isolation, but during the re-entry window it can report a temporarily inconsistent value. A separate `PriceConsumer` trusts that view as if it were a stable oracle.
+A `Q18ShareVault`'s `withdraw()` sends ETH out *before* updating `totalShares`. The `sharePrice()` view function is correct in isolation, but during the re-entry window it can report a temporarily inconsistent value. A separate `Q18PriceConsumer` trusts that view as if it were a stable oracle.
 
 ## Goal
 
-Make `ReadOnlyLab.isSolved(yourAddress)` return `true` by demonstrating that a trusted view can be stale during a callback window.
+Make `Q18ReadOnlyLab.isSolved(yourAddress)` return `true` by demonstrating that a trusted view can be stale during a callback window.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address vault, address consumer, address attacker);
-function vaultOf(address) external view returns (ShareVault);
-function consumerOf(address) external view returns (PriceConsumer);
-function attackerOf(address) external view returns (ReadOnlyAttacker);
+function vaultOf(address) external view returns (Q18ShareVault);
+function consumerOf(address) external view returns (Q18PriceConsumer);
+function attackerOf(address) external view returns (Q18ReadOnlyAttacker);
 function isSolved(address user) external view returns (bool);
 uint256 public constant SEED_DEPOSIT = 0.1 ether;
 
-// ShareVault (per user — DO NOT FIX)
+// Q18ShareVault (per user — DO NOT FIX)
 function deposit() external payable;
 function withdraw(uint256 sh) external;
 function sharePrice() external view returns (uint256);
 function shares(address) external view returns (uint256);
 function totalShares() external view returns (uint256);
 
-// PriceConsumer (per user)
+// Q18PriceConsumer (per user)
 function mintCredits(address recipient, uint256 weiAmount) external;
 function credits(address) external view returns (uint256);
 
-// ReadOnlyAttacker (per user, owner = you)
+// Q18ReadOnlyAttacker (per user, owner = you)
 function attack() external payable;    // onlyOwner
 function drain() external;             // onlyOwner
 ```

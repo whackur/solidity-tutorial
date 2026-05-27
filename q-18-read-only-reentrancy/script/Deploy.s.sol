@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {ReadOnlyLab} from "../src/Setup.sol";
+import {Q18ReadOnlyLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user vaults (SEED_DEPOSIT = 0.1 ether each).
@@ -10,7 +10,7 @@ contract Deploy is Script {
 
     function run() external {
         vm.startBroadcast();
-        ReadOnlyLab lab = new ReadOnlyLab();
+        Q18ReadOnlyLab lab = new Q18ReadOnlyLab();
         (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
         require(ok, "lab funding failed");
         vm.stopBroadcast();

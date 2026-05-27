@@ -3,10 +3,10 @@ pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {EthSignChallenge} from "../src/Setup.sol";
+import {Q07EthSignChallenge} from "../src/Setup.sol";
 
 contract Q07EthSignTest is Test {
-    EthSignChallenge internal sig;
+    Q07EthSignChallenge internal sig;
 
     address internal alice;
     uint256 internal alicePk;
@@ -14,7 +14,7 @@ contract Q07EthSignTest is Test {
     uint256 internal bobPk;
 
     function setUp() public {
-        sig = new EthSignChallenge();
+        sig = new Q07EthSignChallenge();
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");
     }

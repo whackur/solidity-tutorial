@@ -2,12 +2,12 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {VulnerableRegistry} from "../src/Setup.sol";
+import {Q11VulnerableRegistry} from "../src/Setup.sol";
 
 contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
-        VulnerableRegistry registry = new VulnerableRegistry();
+        Q11VulnerableRegistry registry = new Q11VulnerableRegistry();
         vm.stopBroadcast();
 
         console2.log("=== q-11-access-control deployment ===");

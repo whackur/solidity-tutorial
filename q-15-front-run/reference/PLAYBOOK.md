@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `FrontRunLab` (pre-funded with at least `PRIZE * N` ETH).
+`LAB` = deployed `Q15FrontRunLab` (pre-funded with at least `PRIZE * N` ETH).
 `USER` = user's EOA.
 
 ## Steps

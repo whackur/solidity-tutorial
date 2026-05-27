@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`W` = deployed `SimpleWallet`. `T` = deployed `MockERC20`. `USER` = user's EOA.
+`W` = deployed `Q05SimpleWallet`. `T` = deployed `Q05MockERC20`. `USER` = user's EOA.
 
 ## Steps
 
@@ -23,5 +23,5 @@
 - Amounts must be `> 0`; the wallet rejects zero deposits/withdrawals.
 - Per-user accounting is independent: another user solving the same
   challenge does not change `ethBalanceOf(USER)` or any solve flag.
-- The MockERC20 has a public `mint`; this is *only acceptable for
+- The Q05MockERC20 has a public `mint`; this is *only acceptable for
   tutorials*. Production tokens should not expose this.

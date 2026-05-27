@@ -13,7 +13,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///              final `solved[user]` flag for themselves.
 ///
 ///         A web UI polls `isSolved(user)`.
-contract VulnerableRegistry is SolvableBase {
+contract Q11VulnerableRegistry is SolvableBase {
     address public immutable owner;
 
     mapping(address => bool) public adminPromoted;

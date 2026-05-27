@@ -1,14 +1,14 @@
-# Q-01. Counter — your first transactions
+# Q-01. Q01Counter — your first transactions
 
 > **Difficulty**: Entry ⭐
 
-A single `Counter` contract is deployed once; every user has their own
+A single `Q01Counter` contract is deployed once; every user has their own
 counter slot keyed by `msg.sender`. You solve the challenge by sending
 transactions to it from your wallet / web UI.
 
 ## Goal
 
-Make `Counter.isSolved(yourAddress)` return `true`. That requires:
+Make `Q01Counter.isSolved(yourAddress)` return `true`. That requires:
 
 1. Your counter reaches the challenge target.
 2. `sawUnderflow[you] == true` — you must trigger the `CounterUnderflow`

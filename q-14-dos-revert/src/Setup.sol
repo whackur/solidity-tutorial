@@ -8,7 +8,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         bid via a low-level call AND require the refund to succeed.
 ///         If the king is a contract that reverts on receive, no one
 ///         can ever outbid them — the throne is locked.
-contract KingOfHill {
+contract Q14KingOfHill {
     address public currentKing;
     uint256 public currentBid;
 
@@ -32,13 +32,13 @@ contract KingOfHill {
 /// @notice Per-user attacker. Refuses every refund. Once it becomes king,
 ///         the throne is permanently locked because no future bidder can
 ///         successfully refund it.
-contract RevertKing {
-    KingOfHill public immutable target;
+contract Q14RevertKing {
+    Q14KingOfHill public immutable target;
     address public immutable owner;
 
     error AlwaysReverts();
 
-    constructor(KingOfHill t, address o) {
+    constructor(Q14KingOfHill t, address o) {
         target = t;
         owner = o;
     }
@@ -61,10 +61,10 @@ contract RevertKing {
 ///         attacker) pair via `createInstance()`. The user makes an
 ///         opening bid from their EOA, then dethrones themselves via the
 ///         attacker — at which point the throne is locked.
-contract DosLab is SolvableBase {
+contract Q14DosLab is SolvableBase {
     struct Instance {
-        KingOfHill king;
-        RevertKing attacker;
+        Q14KingOfHill king;
+        Q14RevertKing attacker;
     }
 
     mapping(address => Instance) private _instances;
@@ -74,23 +74,23 @@ contract DosLab is SolvableBase {
     function createInstance() external returns (address kingAddr, address attackerAddr) {
         require(address(_instances[msg.sender].king) == address(0), "already created");
 
-        KingOfHill k = new KingOfHill();
-        RevertKing a = new RevertKing(k, msg.sender);
+        Q14KingOfHill k = new Q14KingOfHill();
+        Q14RevertKing a = new Q14RevertKing(k, msg.sender);
 
         _instances[msg.sender] = Instance(k, a);
         emit InstanceCreated(msg.sender, address(k), address(a));
         return (address(k), address(a));
     }
 
-    function kingOf(address user) external view returns (KingOfHill) {
+    function kingOf(address user) external view returns (Q14KingOfHill) {
         return _instances[user].king;
     }
 
-    function attackerOf(address user) external view returns (RevertKing) {
+    function attackerOf(address user) external view returns (Q14RevertKing) {
         return _instances[user].attacker;
     }
 
-    /// @notice Solved when the user's RevertKing sits on the throne — at
+    /// @notice Solved when the user's Q14RevertKing sits on the throne — at
     ///         that point any third party calling `king.bid(...)` reverts
     ///         with `"refund failed"`.
     function isSolved(address user) public view override returns (bool) {

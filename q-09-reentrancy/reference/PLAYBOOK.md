@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `ReentrancyLab` (pre-funded with at least `SEED * N` ETH).
+`LAB` = deployed `Q09ReentrancyLab` (pre-funded with at least `SEED * N` ETH).
 `USER` = user's EOA (needs at least 1 ETH for the bait).
 
 ## Steps
@@ -18,7 +18,7 @@
 ## Pre-deploy funding
 
 ```solidity
-ReentrancyLab lab = new ReentrancyLab();
+Q09ReentrancyLab lab = new Q09ReentrancyLab();
 vm.deal(address(lab), 100 ether);   // tutorial setup; 10 users at SEED=10 ETH each
 ```
 

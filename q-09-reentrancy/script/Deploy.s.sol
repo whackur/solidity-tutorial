@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {ReentrancyLab} from "../src/Setup.sol";
+import {Q09ReentrancyLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user vaults (SEED = 10 ether each).
@@ -10,7 +10,7 @@ contract Deploy is Script {
 
     function run() external {
         vm.startBroadcast();
-        ReentrancyLab lab = new ReentrancyLab();
+        Q09ReentrancyLab lab = new Q09ReentrancyLab();
         (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
         require(ok, "lab funding failed");
         vm.stopBroadcast();

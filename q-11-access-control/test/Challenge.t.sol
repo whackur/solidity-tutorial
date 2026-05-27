@@ -2,17 +2,17 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {VulnerableRegistry} from "../src/Setup.sol";
+import {Q11VulnerableRegistry} from "../src/Setup.sol";
 
 contract Q11AccessControlTest is Test {
-    VulnerableRegistry internal registry;
+    Q11VulnerableRegistry internal registry;
 
     address internal deployer = address(this);
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        registry = new VulnerableRegistry();
+        registry = new Q11VulnerableRegistry();
         assertEq(registry.owner(), deployer, "owner is deployer");
     }
 

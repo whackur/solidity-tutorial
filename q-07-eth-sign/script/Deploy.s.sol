@@ -2,12 +2,12 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {EthSignChallenge} from "../src/Setup.sol";
+import {Q07EthSignChallenge} from "../src/Setup.sol";
 
 contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
-        EthSignChallenge challenge = new EthSignChallenge();
+        Q07EthSignChallenge challenge = new Q07EthSignChallenge();
         vm.stopBroadcast();
 
         console2.log("=== q-07-eth-sign deployment ===");

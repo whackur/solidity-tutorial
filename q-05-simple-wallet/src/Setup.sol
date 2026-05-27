@@ -8,7 +8,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 /// @notice Multi-tenant wallet supporting ETH + any ERC-20 deposit/withdraw.
 ///         Per-user balances and per-user solve flags. A single instance
 ///         is shared; users do not interfere.
-contract SimpleWallet is SolvableBase {
+contract Q05SimpleWallet is SolvableBase {
     mapping(address => uint256) private _ethBalances;
     mapping(address => mapping(address => uint256)) private _erc20Balances;
 
@@ -69,7 +69,7 @@ contract SimpleWallet is SolvableBase {
 
 /// @notice Public-mint mock ERC-20 — any user can mint themselves a balance
 ///         to play with. There is no faucet rate limit; it's only a tutorial.
-contract MockERC20 is ERC20 {
+contract Q05MockERC20 is ERC20 {
     constructor() ERC20("Mock", "MCK") {}
 
     function mint(address to, uint256 amount) external {

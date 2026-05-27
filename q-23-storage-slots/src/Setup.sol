@@ -21,7 +21,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         `eth_getStorageAt(addr, slot)` and read the raw 32-byte word.
 ///         Solving this challenge means doing exactly that for both slots
 ///         and then proving you can read them by calling submit().
-contract Vault is SolvableBase {
+contract Q23Vault is SolvableBase {
     // SolvableBase declares `solvedBy` (mapping) first, which occupies
     // slot 0 (the mapping head — the per-key data lives at keccak slots,
     // not at slot 0 itself). The next freshly declared variable therefore

@@ -3,7 +3,7 @@
 > Ordered transactions a user's web UI would send to reach `isSolved(user) == true`.
 > Kept out of student-facing materials.
 
-`EE` = deployed `EventsAndErrors` address. `USER` = user's EOA.
+`EE` = deployed `Q02EventsAndErrors` address. `USER` = user's EOA.
 
 ## Steps
 

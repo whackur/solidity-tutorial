@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {TxOriginLab, TxOriginVault, Phisher} from "../src/Setup.sol";
+import {Q12TxOriginLab, Q12TxOriginVault, Q12Phisher} from "../src/Setup.sol";
 
 contract Q12TxOriginTest is Test {
-    TxOriginLab internal lab;
+    Q12TxOriginLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new TxOriginLab();
+        lab = new Q12TxOriginLab();
         vm.deal(address(lab), 100 ether);
     }
 
@@ -20,7 +20,7 @@ contract Q12TxOriginTest is Test {
         // a real wallet-initiated transaction.
         vm.prank(user, user);
         lab.createInstance();
-        Phisher phisher = lab.phisherOf(user);
+        Q12Phisher phisher = lab.phisherOf(user);
 
         // User clicks the "free airdrop" button — tx originates from them,
         // so tx.origin == vault.owner and the vault drain succeeds.
@@ -30,7 +30,7 @@ contract Q12TxOriginTest is Test {
 
     function test_AliceSolves() public {
         _solve(alice);
-        TxOriginVault vault = lab.vaultOf(alice);
+        Q12TxOriginVault vault = lab.vaultOf(alice);
         assertEq(address(vault).balance, 0, "vault drained");
         assertEq(alice.balance, 5 ether, "drained funds returned to alice");
         assertTrue(lab.phisherOf(alice).airdropClaimed());
@@ -53,7 +53,7 @@ contract Q12TxOriginTest is Test {
     function test_OutsidePhisherCallFails() public {
         vm.prank(alice, alice);
         lab.createInstance();
-        Phisher phisher = lab.phisherOf(alice);
+        Q12Phisher phisher = lab.phisherOf(alice);
 
         vm.prank(bob, bob);
         vm.expectRevert(bytes("not owner"));
@@ -65,7 +65,7 @@ contract Q12TxOriginTest is Test {
     function test_DirectVaultCallByOwnerStillWorks() public {
         vm.prank(alice, alice);
         lab.createInstance();
-        TxOriginVault vault = lab.vaultOf(alice);
+        Q12TxOriginVault vault = lab.vaultOf(alice);
         // Alice can of course also withdraw directly — tx.origin == msg.sender == owner.
         vm.prank(alice, alice);
         vault.transferTo(payable(alice), 1 ether);

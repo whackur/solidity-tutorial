@@ -4,34 +4,34 @@
 
 Variant of q-09. The same CEI violation appears in `withdraw`, but the interesting part is *cross-function* state reuse: another mutator touches the same balance map while the first function has not finished its effects.
 
-A pre-funded `InflateLab` is deployed. Each user gets a personal `(YieldVault, InflateAttacker, InflateHelper)` triple.
+A pre-funded `Q17InflateLab` is deployed. Each user gets a personal `(Q17YieldVault, Q17InflateAttacker, Q17InflateHelper)` triple.
 
 ## Goal
 
-Make `InflateLab.isSolved(yourAddress)` return `true` by demonstrating the cross-function accounting failure in your own instance.
+Make `Q17InflateLab.isSolved(yourAddress)` return `true` by demonstrating the cross-function accounting failure in your own instance.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address vault, address attacker, address helper);
-function vaultOf(address user) external view returns (YieldVault);
-function attackerOf(address user) external view returns (InflateAttacker);
-function helperOf(address user) external view returns (InflateHelper);
+function vaultOf(address user) external view returns (Q17YieldVault);
+function attackerOf(address user) external view returns (Q17InflateAttacker);
+function helperOf(address user) external view returns (Q17InflateHelper);
 function isSolved(address user) external view returns (bool);
 uint256 public constant SEED = 1 ether;
 
-// YieldVault (per user — DO NOT FIX)
+// Q17YieldVault (per user — DO NOT FIX)
 function deposit() external payable;
 function transferBalance(address to, uint256 amount) external;
 function withdraw() external;
 function balances(address) external view returns (uint256);
 
-// InflateAttacker (per user, owner = you)
+// Q17InflateAttacker (per user, owner = you)
 function attack() external payable;       // onlyOwner, bait > 0
 function drain() external;                // onlyOwner
 
-// InflateHelper (per user, owner = you)
+// Q17InflateHelper (per user, owner = you)
 function pull() external;                  // onlyOwner; calls vault.withdraw()
 function drain() external;                 // onlyOwner
 ```

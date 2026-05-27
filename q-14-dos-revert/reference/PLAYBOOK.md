@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `DosLab`.
+`LAB` = deployed `Q14DosLab`.
 `USER` = user's EOA (needs ≥ 0.03 ETH for the two bids).
 
 ## Steps

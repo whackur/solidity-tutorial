@@ -5,7 +5,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Minimal CEI-violating vault. Identical pattern to q-09 but with a
 ///         smaller seed so the demonstration fits in a beginner walkthrough.
-contract VulnerableMiniVault {
+contract Q19VulnerableMiniVault {
     mapping(address => uint256) public balances;
 
     function deposit() external payable {
@@ -30,15 +30,15 @@ contract VulnerableMiniVault {
 ///         by the lab with `BAIT`, so the user does not have to send ETH along
 ///         with `attack()`. This keeps the student call sequence to just two
 ///         transactions: createInstance, then attack.
-contract BasicAttacker {
-    VulnerableMiniVault public immutable vault;
+contract Q19BasicAttacker {
+    Q19VulnerableMiniVault public immutable vault;
     address public immutable owner;
     uint256 public immutable attackAmount;
 
     /// @dev `payable` so the lab can fund the bait at construction time.
     ///      Funding via a `call` would land in `receive()` and trigger the
     ///      re-entrant `vault.withdraw()` before the user even runs `attack()`.
-    constructor(VulnerableMiniVault v, address o, uint256 bait) payable {
+    constructor(Q19VulnerableMiniVault v, address o, uint256 bait) payable {
         require(msg.value == bait, "bait mismatch");
         vault = v;
         owner = o;
@@ -70,7 +70,7 @@ contract BasicAttacker {
 
 /// @notice Multi-tenant beginner reentrancy lab. Each user calls
 ///         `createInstance()` once; the lab deploys a fresh
-///         `(VulnerableMiniVault, BasicAttacker)` pair, pre-seeds the vault
+///         `(Q19VulnerableMiniVault, Q19BasicAttacker)` pair, pre-seeds the vault
 ///         with `SEED` ETH, and funds the attacker with `BAIT` ETH.
 ///
 ///         Compared to q-09:
@@ -81,10 +81,10 @@ contract BasicAttacker {
 ///
 ///         The lab itself must hold enough ETH at deploy time to seed every
 ///         expected instance — see the funded `receive()`.
-contract ReentrancyBasicLab is SolvableBase {
+contract Q19ReentrancyBasicLab is SolvableBase {
     struct Instance {
-        VulnerableMiniVault vault;
-        BasicAttacker attacker;
+        Q19VulnerableMiniVault vault;
+        Q19BasicAttacker attacker;
     }
 
     uint256 public constant SEED = 5 ether;
@@ -100,10 +100,10 @@ contract ReentrancyBasicLab is SolvableBase {
         require(address(_instances[msg.sender].vault) == address(0), "already created");
         require(address(this).balance >= SEED + BAIT, "lab underfunded");
 
-        VulnerableMiniVault v = new VulnerableMiniVault();
+        Q19VulnerableMiniVault v = new Q19VulnerableMiniVault();
         // Attacker receives the bait at construction time so the student does
         // not have to attach any ETH to their attack call.
-        BasicAttacker a = new BasicAttacker{value: BAIT}(v, msg.sender, BAIT);
+        Q19BasicAttacker a = new Q19BasicAttacker{value: BAIT}(v, msg.sender, BAIT);
 
         // Lab acts as the "victim depositor" — pre-funds the vault.
         v.deposit{value: SEED}();
@@ -113,11 +113,11 @@ contract ReentrancyBasicLab is SolvableBase {
         return (address(v), address(a));
     }
 
-    function vaultOf(address user) external view returns (VulnerableMiniVault) {
+    function vaultOf(address user) external view returns (Q19VulnerableMiniVault) {
         return _instances[user].vault;
     }
 
-    function attackerOf(address user) external view returns (BasicAttacker) {
+    function attackerOf(address user) external view returns (Q19BasicAttacker) {
         return _instances[user].attacker;
     }
 

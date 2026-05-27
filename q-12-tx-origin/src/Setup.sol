@@ -6,7 +6,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 /// @notice Personal vault whose `transferTo` checks `tx.origin == owner`
 ///         instead of `msg.sender == owner`. Any contract called within
 ///         the same tx by the owner can drain the vault.
-contract TxOriginVault {
+contract Q12TxOriginVault {
     address public immutable owner;
 
     constructor(address o) payable {
@@ -27,8 +27,8 @@ contract TxOriginVault {
 /// @notice A "free airdrop" lure. Calling its only function looks
 ///         harmless, but internally it drains the target vault using
 ///         the caller's tx.origin as authorization.
-contract Phisher {
-    TxOriginVault public immutable vault;
+contract Q12Phisher {
+    Q12TxOriginVault public immutable vault;
     address payable public immutable beneficiary;
     bool public airdropClaimed;
 
@@ -36,7 +36,7 @@ contract Phisher {
     /// @param b Where the drained ETH is forwarded. In a real attack this
     ///          would be the attacker's address. In this tutorial it points
     ///          back at the user so they observe their own funds returning.
-    constructor(TxOriginVault v, address payable b) {
+    constructor(Q12TxOriginVault v, address payable b) {
         vault = v;
         beneficiary = b;
     }
@@ -52,12 +52,12 @@ contract Phisher {
 /// @notice Multi-tenant tx.origin lab. Each user calls `createInstance()`
 ///         once; the lab deploys a fresh (vault, phisher) pair owned by
 ///         them and seeds the vault with `SEED` ETH.
-contract TxOriginLab is SolvableBase {
+contract Q12TxOriginLab is SolvableBase {
     uint256 public constant SEED = 5 ether;
 
     struct Instance {
-        TxOriginVault vault;
-        Phisher phisher;
+        Q12TxOriginVault vault;
+        Q12Phisher phisher;
     }
 
     mapping(address => Instance) private _instances;
@@ -70,19 +70,19 @@ contract TxOriginLab is SolvableBase {
         require(address(_instances[msg.sender].vault) == address(0), "already created");
         require(address(this).balance >= SEED, "lab underfunded");
 
-        TxOriginVault v = new TxOriginVault{value: SEED}(msg.sender);
-        Phisher p = new Phisher(v, payable(msg.sender));
+        Q12TxOriginVault v = new Q12TxOriginVault{value: SEED}(msg.sender);
+        Q12Phisher p = new Q12Phisher(v, payable(msg.sender));
 
         _instances[msg.sender] = Instance(v, p);
         emit InstanceCreated(msg.sender, address(v), address(p));
         return (address(v), address(p));
     }
 
-    function vaultOf(address user) external view returns (TxOriginVault) {
+    function vaultOf(address user) external view returns (Q12TxOriginVault) {
         return _instances[user].vault;
     }
 
-    function phisherOf(address user) external view returns (Phisher) {
+    function phisherOf(address user) external view returns (Q12Phisher) {
         return _instances[user].phisher;
     }
 

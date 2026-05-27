@@ -2,13 +2,13 @@
 
 > **Difficulty**: Intermediate ⭐⭐
 
-A `Vault` contract holds two secret 32-byte values in storage. Neither has
+A `Q23Vault` contract holds two secret 32-byte values in storage. Neither has
 a getter. Your job is to read both directly from the chain and submit them
 back — proving you understand that `private` does **not** mean private.
 
 ## Goal
 
-Call `Vault.submit(bytes32 a, bytes32 b)` with the values currently stored
+Call `Q23Vault.submit(bytes32 a, bytes32 b)` with the values currently stored
 in the two secret slots. On success, `isSolved(you)` flips to true and you
 can call `solve()` to record the on-chain proof.
 
@@ -32,7 +32,7 @@ Solidity assigns storage slots **in declaration order across the full
 inheritance chain**:
 
 1. The base contract (`SolvableBase`) declares `mapping(address => bool) solvedBy` first → slot **0**.
-2. The derived `Vault` declares `bytes32 private secretA` next → slot **1**.
+2. The derived `Q23Vault` declares `bytes32 private secretA` next → slot **1**.
 3. `bytes32 public constant SLOT_B` is `constant`, so it lives in code, not storage. It does **not** take a slot.
 4. `mapping(address => bool) public submitted` is the next storage variable → slot **2**.
 
@@ -67,7 +67,7 @@ cast storage <vault> "$SLOT_B" --rpc-url http://localhost:8545
 You can also dump the whole layout the compiler decided on:
 
 ```bash
-forge inspect Vault storage-layout
+forge inspect Q23Vault storage-layout
 ```
 
 ## Hints

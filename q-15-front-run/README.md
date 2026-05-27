@@ -2,25 +2,25 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A pre-funded `FrontRunLab` is deployed. Each user calls `createInstance()` to get a personal `FrontRunChallenge` holding `1 ETH` and a `bytes32 private _secret` that the designer mistakenly thought was hidden.
+A pre-funded `Q15FrontRunLab` is deployed. Each user calls `createInstance()` to get a personal `Q15FrontRunChallenge` holding `1 ETH` and a `bytes32 private _secret` that the designer mistakenly thought was hidden.
 
 Your task is to prove that "private" storage is not actually secret and use that knowledge to win your own challenge instance.
 
 ## Goal
 
-Make `FrontRunLab.isSolved(yourAddress)` return `true`: be the
-`winner` of your own `FrontRunChallenge`.
+Make `Q15FrontRunLab.isSolved(yourAddress)` return `true`: be the
+`winner` of your own `Q15FrontRunChallenge`.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address challenge);
-function challengeOf(address user) external view returns (FrontRunChallenge);
+function challengeOf(address user) external view returns (Q15FrontRunChallenge);
 function isSolved(address user) external view returns (bool);
 uint256 public constant PRIZE = 1 ether;
 
-// FrontRunChallenge (per user, prize seeded by lab)
+// Q15FrontRunChallenge (per user, prize seeded by lab)
 function claim(bytes32 guess) external;
 function owner() external view returns (address);
 function winner() external view returns (address);

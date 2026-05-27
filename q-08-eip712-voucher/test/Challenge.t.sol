@@ -2,11 +2,11 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {VoucherChallenge, VoucherToken} from "../src/Setup.sol";
+import {Q08VoucherChallenge, Q08VoucherToken} from "../src/Setup.sol";
 
 contract Q08VoucherTest is Test {
-    VoucherChallenge internal challenge;
-    VoucherToken internal token;
+    Q08VoucherChallenge internal challenge;
+    Q08VoucherToken internal token;
 
     address internal alice;
     uint256 internal alicePk;
@@ -16,7 +16,7 @@ contract Q08VoucherTest is Test {
     uint256 internal constant AMOUNT = 50e18;
 
     function setUp() public {
-        challenge = new VoucherChallenge();
+        challenge = new Q08VoucherChallenge();
         token = challenge.token();
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");

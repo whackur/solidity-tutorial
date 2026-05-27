@@ -2,14 +2,14 @@
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A single `EthSignChallenge` is deployed. You prove control of your EOA
+A single `Q07EthSignChallenge` is deployed. You prove control of your EOA
 to it twice: once by signing a per-user 32-byte challenge (eth_sign
 style) and once by signing an arbitrary byte string (personal_sign style).
 Both signatures must recover to *your own address*.
 
 ## Goal
 
-Make `EthSignChallenge.isSolved(yourAddress)` return `true`. Conditions:
+Make `Q07EthSignChallenge.isSolved(yourAddress)` return `true`. Conditions:
 
 - `solvedEthSign[you]` — `submitEthSign(signature)` succeeded against the
   contract's per-user `challengeOf[you]`.

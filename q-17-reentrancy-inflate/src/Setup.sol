@@ -13,7 +13,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///
 ///         The attacker is *paid twice* for a single deposit, inflating
 ///         their effective balance through cross-function reentrancy.
-contract YieldVault {
+contract Q17YieldVault {
     mapping(address => uint256) public balances;
 
     event Deposited(address indexed user, uint256 amount);
@@ -51,13 +51,13 @@ contract YieldVault {
 /// @notice Per-user attacker. During the vault's external call inside
 ///         `withdraw`, re-enters into `transferBalance(helper, bal)`
 ///         to ship the still-valid balance to the helper account.
-contract InflateAttacker {
-    YieldVault public immutable vault;
+contract Q17InflateAttacker {
+    Q17YieldVault public immutable vault;
     address public immutable owner;
     address public immutable helper;
     bool internal _attacking;
 
-    constructor(YieldVault v, address o, address h) {
+    constructor(Q17YieldVault v, address o, address h) {
         vault = v;
         owner = o;
         helper = h;
@@ -89,11 +89,11 @@ contract InflateAttacker {
 
 /// @notice Per-user helper. Holds the cross-function-transferred balance
 ///         and pulls a second payout via a clean `withdraw()`.
-contract InflateHelper {
-    YieldVault public immutable vault;
+contract Q17InflateHelper {
+    Q17YieldVault public immutable vault;
     address public immutable owner;
 
-    constructor(YieldVault v, address o) {
+    constructor(Q17YieldVault v, address o) {
         vault = v;
         owner = o;
     }
@@ -115,13 +115,13 @@ contract InflateHelper {
 /// @notice Multi-tenant inflate lab. Each user calls `createInstance()`
 ///         once; the lab deploys (vault, attacker, helper) and pre-funds
 ///         the vault with `SEED` ETH playing the role of victim deposit.
-contract InflateLab is SolvableBase {
+contract Q17InflateLab is SolvableBase {
     uint256 public constant SEED = 1 ether;
 
     struct Instance {
-        YieldVault vault;
-        InflateAttacker attacker;
-        InflateHelper helper;
+        Q17YieldVault vault;
+        Q17InflateAttacker attacker;
+        Q17InflateHelper helper;
     }
 
     mapping(address => Instance) private _instances;
@@ -134,9 +134,9 @@ contract InflateLab is SolvableBase {
         require(address(_instances[msg.sender].vault) == address(0), "already created");
         require(address(this).balance >= SEED, "lab underfunded");
 
-        YieldVault v = new YieldVault();
-        InflateHelper h = new InflateHelper(v, msg.sender);
-        InflateAttacker a = new InflateAttacker(v, msg.sender, address(h));
+        Q17YieldVault v = new Q17YieldVault();
+        Q17InflateHelper h = new Q17InflateHelper(v, msg.sender);
+        Q17InflateAttacker a = new Q17InflateAttacker(v, msg.sender, address(h));
 
         v.deposit{value: SEED}(); // Lab becomes the "victim depositor"
 
@@ -145,15 +145,15 @@ contract InflateLab is SolvableBase {
         return (address(v), address(a), address(h));
     }
 
-    function vaultOf(address user) external view returns (YieldVault) {
+    function vaultOf(address user) external view returns (Q17YieldVault) {
         return _instances[user].vault;
     }
 
-    function attackerOf(address user) external view returns (InflateAttacker) {
+    function attackerOf(address user) external view returns (Q17InflateAttacker) {
         return _instances[user].attacker;
     }
 
-    function helperOf(address user) external view returns (InflateHelper) {
+    function helperOf(address user) external view returns (Q17InflateHelper) {
         return _instances[user].helper;
     }
 

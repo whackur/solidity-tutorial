@@ -2,7 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {UupsLab} from "../src/Setup.sol";
+import {Q25UupsLab} from "../src/Setup.sol";
 
 /// @notice Deploys q-25-uups-upgrade. Lines prefixed `ADDR:<key>:` are parsed
 ///         by docker/entrypoint.sh and merged into addresses.json. The V2
@@ -11,7 +11,7 @@ import {UupsLab} from "../src/Setup.sol";
 contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
-        UupsLab lab = new UupsLab();
+        Q25UupsLab lab = new Q25UupsLab();
         vm.stopBroadcast();
 
         console2.log("=== q-25-uups-upgrade deployment ===");

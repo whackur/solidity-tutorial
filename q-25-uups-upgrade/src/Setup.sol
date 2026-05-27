@@ -9,7 +9,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 /// @notice V1 implementation behind each user's proxy. Has increment() only.
 ///         _authorizeUpgrade is gated by onlyOwner, so only the proxy owner
 ///         (the student) can upgrade.
-contract CounterV1 is Initializable, UUPSUpgradeable {
+contract Q25CounterV1 is Initializable, UUPSUpgradeable {
     uint256 public count;
     address public owner;
 
@@ -37,7 +37,7 @@ contract CounterV1 is Initializable, UUPSUpgradeable {
 /// @notice V2 implementation. Adds version() — its existence is how the lab
 ///         detects that a proxy has been upgraded. Inherits V1's storage
 ///         layout (count, owner) so the upgrade is storage-compatible.
-contract CounterV2 is CounterV1 {
+contract Q25CounterV2 is Q25CounterV1 {
     function decrement() public {
         count -= 1;
     }
@@ -48,31 +48,31 @@ contract CounterV2 is CounterV1 {
 }
 
 /// @notice Multi-tenant UUPS lab. Every user calls createInstance() once to
-///         get their own ERC1967 proxy pointing at CounterV1, with themselves
+///         get their own ERC1967 proxy pointing at Q25CounterV1, with themselves
 ///         as owner. The V1 and V2 implementations are deployed once and
 ///         shared.
 ///
 ///         Solve goal (per user):
-///           1. createInstance() — your proxy starts on CounterV1.
-///           2. CounterV1(proxy).upgradeToAndCall(v2Impl, "") — only you can,
+///           1. createInstance() — your proxy starts on Q25CounterV1.
+///           2. Q25CounterV1(proxy).upgradeToAndCall(v2Impl, "") — only you can,
 ///              because _authorizeUpgrade is onlyOwner.
 ///           After that version() exists on your proxy and isSolved flips true.
-contract UupsLab is SolvableBase {
-    CounterV1 public immutable v1Impl;
-    CounterV2 public immutable v2Impl;
+contract Q25UupsLab is SolvableBase {
+    Q25CounterV1 public immutable v1Impl;
+    Q25CounterV2 public immutable v2Impl;
 
     mapping(address => address) public proxyOf;
 
     event InstanceCreated(address indexed user, address proxy);
 
     constructor() {
-        v1Impl = new CounterV1();
-        v2Impl = new CounterV2();
+        v1Impl = new Q25CounterV1();
+        v2Impl = new Q25CounterV2();
     }
 
     function createInstance() external returns (address proxy) {
         require(proxyOf[msg.sender] == address(0), "already created");
-        bytes memory initData = abi.encodeCall(CounterV1.initialize, (msg.sender));
+        bytes memory initData = abi.encodeCall(Q25CounterV1.initialize, (msg.sender));
         ERC1967Proxy p = new ERC1967Proxy(address(v1Impl), initData);
         proxy = address(p);
         proxyOf[msg.sender] = proxy;
@@ -83,7 +83,7 @@ contract UupsLab is SolvableBase {
         address proxy = proxyOf[user];
         if (proxy == address(0)) return false;
         // version() only exists on V2 — a V1 proxy reverts and lands in catch.
-        try CounterV2(proxy).version() returns (string memory v) {
+        try Q25CounterV2(proxy).version() returns (string memory v) {
             return keccak256(bytes(v)) == keccak256(bytes("v2"));
         } catch {
             return false;

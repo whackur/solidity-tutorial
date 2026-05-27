@@ -10,7 +10,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///
 ///         No state mutator is re-entered, so single-function reentrancy
 ///         guards on `withdraw` do not save consumers reading `sharePrice`.
-contract ShareVault {
+contract Q18ShareVault {
     mapping(address => uint256) public shares;
     uint256 public totalShares;
 
@@ -56,12 +56,12 @@ contract ShareVault {
 ///         Stale price `0.1e18` → 10 credits per wei. Read-only reentry
 ///         lets an attacker observe this stale price and pocket the
 ///         inflated credits.
-contract PriceConsumer {
-    ShareVault public immutable vault;
+contract Q18PriceConsumer {
+    Q18ShareVault public immutable vault;
 
     mapping(address => uint256) public credits;
 
-    constructor(ShareVault v) {
+    constructor(Q18ShareVault v) {
         vault = v;
     }
 
@@ -76,14 +76,14 @@ contract PriceConsumer {
 /// @notice Per-user attacker that performs the deposit/withdraw and,
 ///         during the vault's external call, asks the consumer to mint
 ///         credits using the (now stale, deflated) share price.
-contract ReadOnlyAttacker {
-    ShareVault public immutable vault;
-    PriceConsumer public immutable consumer;
+contract Q18ReadOnlyAttacker {
+    Q18ShareVault public immutable vault;
+    Q18PriceConsumer public immutable consumer;
     address public immutable owner;
     bool internal _attacking;
     uint256 internal _depositShares;
 
-    constructor(ShareVault v, PriceConsumer c, address o) {
+    constructor(Q18ShareVault v, Q18PriceConsumer c, address o) {
         vault = v;
         consumer = c;
         owner = o;
@@ -119,7 +119,7 @@ contract ReadOnlyAttacker {
 ///         `(vault, consumer, attacker)` triple. The lab seeds the vault
 ///         with a small "innocent depositor" stake so the share price
 ///         drop during withdraw is large and observable.
-contract ReadOnlyLab is SolvableBase {
+contract Q18ReadOnlyLab is SolvableBase {
     uint256 public constant SEED_DEPOSIT = 0.1 ether;
     /// @notice credits threshold for solved. Honest single-tx interaction
     ///         (1 ETH at price 1e18) would only mint 1e18 credits. The
@@ -127,9 +127,9 @@ contract ReadOnlyLab is SolvableBase {
     uint256 public constant CREDIT_THRESHOLD = 5e18;
 
     struct Instance {
-        ShareVault vault;
-        PriceConsumer consumer;
-        ReadOnlyAttacker attacker;
+        Q18ShareVault vault;
+        Q18PriceConsumer consumer;
+        Q18ReadOnlyAttacker attacker;
     }
 
     mapping(address => Instance) private _instances;
@@ -142,9 +142,9 @@ contract ReadOnlyLab is SolvableBase {
         require(address(_instances[msg.sender].vault) == address(0), "already created");
         require(address(this).balance >= SEED_DEPOSIT, "lab underfunded");
 
-        ShareVault v = new ShareVault();
-        PriceConsumer c = new PriceConsumer(v);
-        ReadOnlyAttacker a = new ReadOnlyAttacker(v, c, msg.sender);
+        Q18ShareVault v = new Q18ShareVault();
+        Q18PriceConsumer c = new Q18PriceConsumer(v);
+        Q18ReadOnlyAttacker a = new Q18ReadOnlyAttacker(v, c, msg.sender);
 
         v.deposit{value: SEED_DEPOSIT}();   // innocent depositor
 
@@ -153,15 +153,15 @@ contract ReadOnlyLab is SolvableBase {
         return (address(v), address(c), address(a));
     }
 
-    function vaultOf(address user) external view returns (ShareVault) {
+    function vaultOf(address user) external view returns (Q18ShareVault) {
         return _instances[user].vault;
     }
 
-    function consumerOf(address user) external view returns (PriceConsumer) {
+    function consumerOf(address user) external view returns (Q18PriceConsumer) {
         return _instances[user].consumer;
     }
 
-    function attackerOf(address user) external view returns (ReadOnlyAttacker) {
+    function attackerOf(address user) external view returns (Q18ReadOnlyAttacker) {
         return _instances[user].attacker;
     }
 

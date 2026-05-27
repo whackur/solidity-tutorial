@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {DelegatecallLab, DelegateCaller, DelegateLogic} from "../src/Setup.sol";
+import {Q04DelegatecallLab, Q04DelegateCaller, Q04DelegateLogic} from "../src/Setup.sol";
 
 contract Q04DelegatecallTest is Test {
-    DelegatecallLab internal lab;
+    Q04DelegatecallLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new DelegatecallLab();
+        lab = new Q04DelegatecallLab();
         vm.deal(alice, 5 ether);
         vm.deal(bob, 5 ether);
     }
@@ -19,8 +19,8 @@ contract Q04DelegatecallTest is Test {
     function _solve(address user) internal {
         vm.startPrank(user);
         lab.createInstance();
-        DelegateCaller caller = lab.callerOf(user);
-        DelegateLogic logic = lab.logicOf(user);
+        Q04DelegateCaller caller = lab.callerOf(user);
+        Q04DelegateLogic logic = lab.logicOf(user);
 
         // call: writes to logic.storage
         caller.setVarsViaCall{value: 1 ether}(logic, 42);
@@ -40,8 +40,8 @@ contract Q04DelegatecallTest is Test {
     function test_SenderPreservedThroughDelegatecall() public {
         vm.prank(alice);
         lab.createInstance();
-        DelegateCaller caller = lab.callerOf(alice);
-        DelegateLogic logic = lab.logicOf(alice);
+        Q04DelegateCaller caller = lab.callerOf(alice);
+        Q04DelegateLogic logic = lab.logicOf(alice);
 
         vm.prank(alice);
         caller.setVarsViaDelegatecall(address(logic), 7);
@@ -65,8 +65,8 @@ contract Q04DelegatecallTest is Test {
     function test_PartialProgressDoesNotSolve() public {
         vm.startPrank(alice);
         lab.createInstance();
-        DelegateCaller caller = lab.callerOf(alice);
-        DelegateLogic logic = lab.logicOf(alice);
+        Q04DelegateCaller caller = lab.callerOf(alice);
+        Q04DelegateLogic logic = lab.logicOf(alice);
         caller.setVarsViaCall{value: 1 ether}(logic, 42);
         vm.stopPrank();
         assertFalse(lab.isSolved(alice), "needs delegatecall too");

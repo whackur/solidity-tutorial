@@ -1,15 +1,15 @@
-# Q-05. SimpleWallet — ETH + ERC-20 deposit / withdraw
+# Q-05. Q05SimpleWallet — ETH + ERC-20 deposit / withdraw
 
 > **Difficulty**: Beginner ⭐⭐
 
-A single `SimpleWallet` (and a shared `MockERC20` with public `mint`) is
+A single `Q05SimpleWallet` (and a shared `Q05MockERC20` with public `mint`) is
 deployed. Every user has their own ETH and per-token balance slots keyed
 by `msg.sender`. You complete the challenge by walking ETH and ERC-20
 through deposit → withdraw on your own address.
 
 ## Goal
 
-Make `SimpleWallet.isSolved(yourAddress)` return `true`. That requires
+Make `Q05SimpleWallet.isSolved(yourAddress)` return `true`. That requires
 all four flags to be set for *your* address:
 
 - `depositedEth[you]` — you sent value to `depositEth()` or to the wallet's `receive()`.
@@ -20,7 +20,7 @@ all four flags to be set for *your* address:
 ## Contract surface
 
 ```solidity
-// SimpleWallet
+// Q05SimpleWallet
 function depositEth() external payable;
 function withdrawEth(uint256 amount) external;
 function depositErc20(address token, uint256 amount) external;       // pull via transferFrom
@@ -31,7 +31,7 @@ function ethBalanceOf(address user) external view returns (uint256);
 function erc20BalanceOf(address user, address token) external view returns (uint256);
 function isSolved(address user) external view returns (bool);
 
-// MockERC20 (public faucet)
+// Q05MockERC20 (public faucet)
 function mint(address to, uint256 amount) external;
 ```
 

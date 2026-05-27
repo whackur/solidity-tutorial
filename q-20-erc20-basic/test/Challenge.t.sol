@@ -2,12 +2,12 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {Erc20BasicLab, Faucet, PullVault} from "../src/Setup.sol";
+import {Q20Erc20BasicLab, Q20Faucet, Q20PullVault} from "../src/Setup.sol";
 
 contract Q20Erc20BasicTest is Test {
-    Erc20BasicLab internal lab;
-    Faucet internal faucet;
-    PullVault internal vault;
+    Q20Erc20BasicLab internal lab;
+    Q20Faucet internal faucet;
+    Q20PullVault internal vault;
 
     // Cached so we never call `lab.TARGET()` while a `vm.prank` is active —
     // any external call before the prank target consumes the prank.
@@ -18,7 +18,7 @@ contract Q20Erc20BasicTest is Test {
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new Erc20BasicLab();
+        lab = new Q20Erc20BasicLab();
         faucet = lab.faucet();
         vault = lab.vault();
         TARGET = lab.TARGET();

@@ -5,7 +5,7 @@
 
 Assume:
 
-- `COUNTER` = deployed `Counter` address.
+- `COUNTER` = deployed `Q01Counter` address.
 - `USER` = user's EOA.
 
 ## Steps

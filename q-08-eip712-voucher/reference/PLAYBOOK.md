@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`C` = deployed `VoucherChallenge`. `T` = `C.token()` (`VoucherToken`).
+`C` = deployed `Q08VoucherChallenge`. `T` = `C.token()` (`Q08VoucherToken`).
 `USER` = user's EOA. `ID` = a globally-unique `uint256` voucher id.
 
 ## Steps

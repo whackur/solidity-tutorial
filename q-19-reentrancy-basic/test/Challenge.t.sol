@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {ReentrancyBasicLab, VulnerableMiniVault, BasicAttacker} from "../src/Setup.sol";
+import {Q19ReentrancyBasicLab, Q19VulnerableMiniVault, Q19BasicAttacker} from "../src/Setup.sol";
 
 contract Q19ReentrancyBasicTest is Test {
-    ReentrancyBasicLab internal lab;
+    Q19ReentrancyBasicLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new ReentrancyBasicLab();
+        lab = new Q19ReentrancyBasicLab();
         // Fund the lab so it can seed two vaults (Alice + Bob) plus bait.
         vm.deal(address(lab), 100 ether);
     }
@@ -20,7 +20,7 @@ contract Q19ReentrancyBasicTest is Test {
         vm.prank(user);
         lab.createInstance();
 
-        BasicAttacker attacker = lab.attackerOf(user);
+        Q19BasicAttacker attacker = lab.attackerOf(user);
 
         // Student call sequence is exactly two transactions: createInstance + attack.
         // attack() is non-payable in this beginner lab; bait was pre-funded by the lab.
@@ -31,8 +31,8 @@ contract Q19ReentrancyBasicTest is Test {
     function test_AliceDrainsWithTwoCalls() public {
         _solve(alice);
 
-        VulnerableMiniVault vault = lab.vaultOf(alice);
-        BasicAttacker attacker = lab.attackerOf(alice);
+        Q19VulnerableMiniVault vault = lab.vaultOf(alice);
+        Q19BasicAttacker attacker = lab.attackerOf(alice);
 
         assertEq(address(vault).balance, 0, "vault drained");
         assertGe(address(attacker).balance, 5 ether, "attacker holds at least the seed");
@@ -57,7 +57,7 @@ contract Q19ReentrancyBasicTest is Test {
 
     function test_AttackerDrainsToOwner() public {
         _solve(alice);
-        BasicAttacker attacker = lab.attackerOf(alice);
+        Q19BasicAttacker attacker = lab.attackerOf(alice);
         uint256 attackerBalance = address(attacker).balance;
         uint256 aliceBefore = alice.balance;
 
@@ -71,7 +71,7 @@ contract Q19ReentrancyBasicTest is Test {
     function test_NonOwnerAttackerCallReverts() public {
         vm.prank(alice);
         lab.createInstance();
-        BasicAttacker attacker = lab.attackerOf(alice);
+        Q19BasicAttacker attacker = lab.attackerOf(alice);
 
         vm.prank(bob);
         vm.expectRevert(bytes("only owner"));
@@ -87,7 +87,7 @@ contract Q19ReentrancyBasicTest is Test {
     }
 
     function test_LabUnderfundedReverts() public {
-        ReentrancyBasicLab freshLab = new ReentrancyBasicLab();
+        Q19ReentrancyBasicLab freshLab = new Q19ReentrancyBasicLab();
         // No vm.deal — lab has 0 balance.
         vm.prank(alice);
         vm.expectRevert(bytes("lab underfunded"));

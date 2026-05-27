@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {ReentrancyLab, VulnerableVault, ReentrancyAttacker} from "../src/Setup.sol";
+import {Q09ReentrancyLab, Q09VulnerableVault, Q09ReentrancyAttacker} from "../src/Setup.sol";
 
 contract Q09ReentrancyTest is Test {
-    ReentrancyLab internal lab;
+    Q09ReentrancyLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new ReentrancyLab();
+        lab = new Q09ReentrancyLab();
         // Fund the lab so it can seed two vaults (Alice + Bob).
         vm.deal(address(lab), 100 ether);
         vm.deal(alice, 5 ether);
@@ -21,7 +21,7 @@ contract Q09ReentrancyTest is Test {
     function _solve(address user) internal {
         vm.prank(user);
         lab.createInstance();
-        ReentrancyAttacker attacker = lab.attackerOf(user);
+        Q09ReentrancyAttacker attacker = lab.attackerOf(user);
 
         vm.prank(user);
         attacker.attack{value: 1 ether}();
@@ -30,8 +30,8 @@ contract Q09ReentrancyTest is Test {
     function test_AliceDrains() public {
         _solve(alice);
 
-        VulnerableVault vault = lab.vaultOf(alice);
-        ReentrancyAttacker attacker = lab.attackerOf(alice);
+        Q09VulnerableVault vault = lab.vaultOf(alice);
+        Q09ReentrancyAttacker attacker = lab.attackerOf(alice);
 
         assertEq(address(vault).balance, 0, "vault drained");
         assertGe(address(attacker).balance, 10 ether, "attacker holds bait + seed");
@@ -56,7 +56,7 @@ contract Q09ReentrancyTest is Test {
 
     function test_AttackerDrainsToOwner() public {
         _solve(alice);
-        ReentrancyAttacker attacker = lab.attackerOf(alice);
+        Q09ReentrancyAttacker attacker = lab.attackerOf(alice);
         uint256 attackerBalance = address(attacker).balance;
         uint256 aliceBefore = alice.balance;
 
@@ -70,7 +70,7 @@ contract Q09ReentrancyTest is Test {
     function test_NonOwnerAttackerCallReverts() public {
         vm.prank(alice);
         lab.createInstance();
-        ReentrancyAttacker attacker = lab.attackerOf(alice);
+        Q09ReentrancyAttacker attacker = lab.attackerOf(alice);
 
         vm.deal(bob, 5 ether);
         vm.prank(bob);

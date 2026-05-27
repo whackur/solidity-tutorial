@@ -2,36 +2,36 @@
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A pre-funded `OracleLab` is deployed. Each user gets a personal `(MockToken, SimplePool, SpotLender)` triple plus test tokens. The lender values collateral using the pool's *spot price* — a single read that can be distorted within the same transaction.
+A pre-funded `Q16OracleLab` is deployed. Each user gets a personal `(Q16MockToken, Q16SimplePool, Q16SpotLender)` triple plus test tokens. The lender values collateral using the pool's *spot price* — a single read that can be distorted within the same transaction.
 
 ## Goal
 
-Make `OracleLab.isSolved(yourAddress)` return `true` by exploiting only *your* lender instance.
+Make `Q16OracleLab.isSolved(yourAddress)` return `true` by exploiting only *your* lender instance.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address token, address pool, address lender);
-function tokenOf(address user) external view returns (MockToken);
-function poolOf(address user) external view returns (SimplePool);
-function lenderOf(address user) external view returns (SpotLender);
+function tokenOf(address user) external view returns (Q16MockToken);
+function poolOf(address user) external view returns (Q16SimplePool);
+function lenderOf(address user) external view returns (Q16SpotLender);
 function isSolved(address user) external view returns (bool);
 uint256 public constant POOL_ETH_SEED = 1 ether;
 uint256 public constant POOL_TKN_SEED = 100e18;
 uint256 public constant LENDER_SEED = 5 ether;
 uint256 public constant USER_TKN_FAUCET = 100e18;
 
-// SimplePool (x*y=k, no fees — per user)
+// Q16SimplePool (x*y=k, no fees — per user)
 function swapEthForToken() external payable returns (uint256 tokenOut);
 function swapTokenForEth(uint256 amountIn) external returns (uint256 ethOut);
 function spotPriceEthPerToken() external view returns (uint256);   // wei per 1e18 TKN
 
-// SpotLender (per user — DO NOT FIX)
+// Q16SpotLender (per user — DO NOT FIX)
 function borrow(uint256 collateral) external returns (uint256 loan);
 function collateralOf(address) external view returns (uint256);
 
-// MockToken (per user)
+// Q16MockToken (per user)
 function approve(address spender, uint256 amount) external returns (bool);
 function balanceOf(address) external view returns (uint256);
 ```

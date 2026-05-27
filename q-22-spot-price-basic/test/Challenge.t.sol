@@ -2,23 +2,23 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {SpotPriceBasicLab, MockPool} from "../src/Setup.sol";
+import {Q22SpotPriceBasicLab, Q22MockPool} from "../src/Setup.sol";
 
 contract Q22SpotPriceBasicTest is Test {
-    SpotPriceBasicLab internal lab;
+    Q22SpotPriceBasicLab internal lab;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        lab = new SpotPriceBasicLab();
+        lab = new Q22SpotPriceBasicLab();
     }
 
     function _solve(address user, uint256 amountIn) internal {
         vm.prank(user);
         lab.createInstance();
 
-        MockPool p = lab.poolOf(user);
+        Q22MockPool p = lab.poolOf(user);
 
         vm.prank(user);
         p.swapAForB(amountIn);
@@ -30,7 +30,7 @@ contract Q22SpotPriceBasicTest is Test {
         // with margin.
         _solve(alice, 500e18);
 
-        MockPool p = lab.poolOf(alice);
+        Q22MockPool p = lab.poolOf(alice);
         assertLe(p.getSpotPriceE18(), lab.TARGET_PRICE_E18());
         assertTrue(lab.isSolved(alice));
     }
@@ -38,7 +38,7 @@ contract Q22SpotPriceBasicTest is Test {
     function test_SmallSwapDoesNotSolve() public {
         _solve(alice, 10e18);
 
-        MockPool p = lab.poolOf(alice);
+        Q22MockPool p = lab.poolOf(alice);
         // Spot price moved (xy=k guarantees that), but not nearly enough.
         assertLt(p.getSpotPriceE18(), 1e18);
         assertGt(p.getSpotPriceE18(), lab.TARGET_PRICE_E18());
@@ -50,8 +50,8 @@ contract Q22SpotPriceBasicTest is Test {
         _solve(bob, 500e18);
 
         // Each user owns their own pool — swapping in one does not move the other.
-        MockPool pa = lab.poolOf(alice);
-        MockPool pb = lab.poolOf(bob);
+        Q22MockPool pa = lab.poolOf(alice);
+        Q22MockPool pb = lab.poolOf(bob);
         assertTrue(address(pa) != address(pb));
         assertLe(pa.getSpotPriceE18(), lab.TARGET_PRICE_E18());
         assertLe(pb.getSpotPriceE18(), lab.TARGET_PRICE_E18());
@@ -63,9 +63,9 @@ contract Q22SpotPriceBasicTest is Test {
         vm.prank(alice);
         lab.createInstance();
 
-        MockPool p = lab.poolOf(alice);
+        Q22MockPool p = lab.poolOf(alice);
         vm.prank(bob);
-        vm.expectRevert(MockPool.OnlyOwner.selector);
+        vm.expectRevert(Q22MockPool.OnlyOwner.selector);
         p.swapAForB(100e18);
     }
 
@@ -73,9 +73,9 @@ contract Q22SpotPriceBasicTest is Test {
         vm.prank(alice);
         lab.createInstance();
 
-        MockPool p = lab.poolOf(alice);
+        Q22MockPool p = lab.poolOf(alice);
         vm.prank(alice);
-        vm.expectRevert(MockPool.ZeroAmount.selector);
+        vm.expectRevert(Q22MockPool.ZeroAmount.selector);
         p.swapAForB(0);
     }
 
@@ -90,7 +90,7 @@ contract Q22SpotPriceBasicTest is Test {
     function test_AccumulatedSwapsAlsoWork() public {
         vm.prank(alice);
         lab.createInstance();
-        MockPool p = lab.poolOf(alice);
+        Q22MockPool p = lab.poolOf(alice);
 
         // Two smaller swaps reach the target — xy=k is path-independent on
         // reserves (the *combined* trade gives the same end state as one).

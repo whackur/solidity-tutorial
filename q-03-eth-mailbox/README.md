@@ -1,13 +1,13 @@
-# Q-03. EthMailbox — receive / fallback / payable routing
+# Q-03. Q03EthMailbox — receive / fallback / payable routing
 
 > **Difficulty**: Beginner ⭐⭐
 
-A single shared `EthMailbox` is deployed once. Every user must trigger
+A single shared `Q03EthMailbox` is deployed once. Every user must trigger
 each of its three ETH/calldata entry points from their own address.
 
 ## Goal
 
-Make `EthMailbox.isSolved(yourAddress)` return `true` by hitting all
+Make `Q03EthMailbox.isSolved(yourAddress)` return `true` by hitting all
 three routes for *your* address:
 
 | Hit | What to send |

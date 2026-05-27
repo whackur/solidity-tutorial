@@ -7,7 +7,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         beginner sees the raw allowance + transferFrom flow on a 60-line
 ///         contract. Solver's mental model: balances[] is the ledger and
 ///         allowance[owner][spender] is a per-spender spending budget.
-contract MiniERC20 {
+contract Q20MiniERC20 {
     string public name = "Mini Token";
     string public symbol = "MNT";
     uint8 public constant decimals = 18;
@@ -55,7 +55,7 @@ contract MiniERC20 {
 
 /// @notice Shared faucet — each user can call `claim()` exactly once to
 ///         receive CLAIM_AMOUNT of MNT. Per-user state via `claimed[]`.
-contract Faucet is MiniERC20 {
+contract Q20Faucet is Q20MiniERC20 {
     uint256 public constant CLAIM_AMOUNT = 100e18;
     mapping(address => bool) public claimed;
 
@@ -72,11 +72,11 @@ contract Faucet is MiniERC20 {
 ///         `deposited[]` tracks each user's pulled total so `isSolved`
 ///         can verify they really went through approve+pull rather than
 ///         a plain `transfer`.
-contract PullVault {
-    Faucet public immutable token;
+contract Q20PullVault {
+    Q20Faucet public immutable token;
     mapping(address => uint256) public deposited;
 
-    constructor(Faucet t) {
+    constructor(Q20Faucet t) {
         token = t;
     }
 
@@ -89,17 +89,17 @@ contract PullVault {
     }
 }
 
-/// @notice Multi-tenant beginner ERC-20 lab. A single Faucet + a single
-///         PullVault are deployed once; users solve in parallel because
+/// @notice Multi-tenant beginner ERC-20 lab. A single Q20Faucet + a single
+///         Q20PullVault are deployed once; users solve in parallel because
 ///         all per-user state lives in `claimed[]` and `deposited[]`.
-contract Erc20BasicLab is SolvableBase {
-    Faucet public immutable faucet;
-    PullVault public immutable vault;
+contract Q20Erc20BasicLab is SolvableBase {
+    Q20Faucet public immutable faucet;
+    Q20PullVault public immutable vault;
     uint256 public constant TARGET = 25e18;
 
     constructor() {
-        faucet = new Faucet();
-        vault = new PullVault(faucet);
+        faucet = new Q20Faucet();
+        vault = new Q20PullVault(faucet);
     }
 
     function isSolved(address user) public view override returns (bool) {

@@ -2,23 +2,23 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A single `DelegatecallLab` is deployed. Each user gets a personal `(DelegateCaller, DelegateLogic)` pair and explores how two external-call types affect different storage contexts.
+A single `Q04DelegatecallLab` is deployed. Each user gets a personal `(Q04DelegateCaller, Q04DelegateLogic)` pair and explores how two external-call types affect different storage contexts.
 
 ## Goal
 
-Make `DelegatecallLab.isSolved(yourAddress)` return `true` by demonstrating that a normal call updates one contract's storage while a delegated call updates another contract's storage.
+Make `Q04DelegatecallLab.isSolved(yourAddress)` return `true` by demonstrating that a normal call updates one contract's storage while a delegated call updates another contract's storage.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address caller, address logic);
-function callerOf(address user) external view returns (DelegateCaller);
-function logicOf(address user) external view returns (DelegateLogic);
+function callerOf(address user) external view returns (Q04DelegateCaller);
+function logicOf(address user) external view returns (Q04DelegateLogic);
 function isSolved(address user) external view returns (bool);
 
 // Caller (your personal instance)
-function setVarsViaCall(DelegateLogic logic, uint256 newNumber) external payable;
+function setVarsViaCall(Q04DelegateLogic logic, uint256 newNumber) external payable;
 function setVarsViaDelegatecall(address logic, uint256 newNumber) external payable;
 function number() external view returns (uint256);
 function sender() external view returns (address);

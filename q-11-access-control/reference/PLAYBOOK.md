@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`REG` = deployed `VulnerableRegistry`.
+`REG` = deployed `Q11VulnerableRegistry`.
 `USER` = user's EOA.
 
 ## Steps

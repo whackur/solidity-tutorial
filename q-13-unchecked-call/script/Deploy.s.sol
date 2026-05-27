@@ -2,14 +2,14 @@
 pragma solidity ^0.8.35;
 
 import {Script, console2} from "forge-std/Script.sol";
-import {UnsafePayout} from "../src/Setup.sol";
+import {Q13UnsafePayout} from "../src/Setup.sol";
 
 contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
-        // UnsafePayout's constructor internally deploys its RevertOnReceive
+        // Q13UnsafePayout's constructor internally deploys its Q13RevertOnReceive
         // trap, so we only need to surface the payout contract address.
-        UnsafePayout payout = new UnsafePayout();
+        Q13UnsafePayout payout = new Q13UnsafePayout();
         vm.stopBroadcast();
 
         console2.log("=== q-13-unchecked-call deployment ===");

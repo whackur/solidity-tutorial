@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `InflateLab` (pre-funded with at least `SEED * N` ETH).
+`LAB` = deployed `Q17InflateLab` (pre-funded with at least `SEED * N` ETH).
 `USER` = user's EOA (needs ≥ 1 ETH bait).
 
 ## Steps
@@ -57,7 +57,7 @@ up controlling 2 ETH across the two contracts — `+1 ETH = SEED`.
 
 - `attacker.attack` and `helper.pull` are `onlyOwner`. A third party
   can't trigger someone else's inflate.
-- `_attacking` flag inside `InflateAttacker.receive()` prevents the
+- `_attacking` flag inside `Q17InflateAttacker.receive()` prevents the
   re-entry from looping past one hop — we need exactly one cross-function
   transfer, not a recursion.
 - Each user's instance is isolated. Alice and Bob can both inflate

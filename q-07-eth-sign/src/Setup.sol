@@ -12,7 +12,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         caller's own address.
 ///
 ///         Progress is keyed by msg.sender (= recovered signer).
-contract EthSignChallenge is SolvableBase {
+contract Q07EthSignChallenge is SolvableBase {
     using MessageHashUtils for bytes32;
     using MessageHashUtils for bytes;
 

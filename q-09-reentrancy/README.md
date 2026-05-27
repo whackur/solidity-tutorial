@@ -1,29 +1,29 @@
-# Q-09. Reentrancy — drain your personal VulnerableVault
+# Q-09. Reentrancy — drain your personal Q09VulnerableVault
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A single `ReentrancyLab` is deployed and pre-funded with ETH. Every user gets a fresh `(VulnerableVault, ReentrancyAttacker)` pair belonging only to that user. The vault violates CEI by sending ETH before updating accounting, which creates a reentrancy window.
+A single `Q09ReentrancyLab` is deployed and pre-funded with ETH. Every user gets a fresh `(Q09VulnerableVault, Q09ReentrancyAttacker)` pair belonging only to that user. The vault violates CEI by sending ETH before updating accounting, which creates a reentrancy window.
 
 ## Goal
 
-Make `ReentrancyLab.isSolved(yourAddress)` return `true` by exploiting only *your* instance pair.
+Make `Q09ReentrancyLab.isSolved(yourAddress)` return `true` by exploiting only *your* instance pair.
 
 ## Contract surface
 
 ```solidity
 // Lab
 function createInstance() external returns (address vault, address attacker);
-function vaultOf(address user) external view returns (VulnerableVault);
-function attackerOf(address user) external view returns (ReentrancyAttacker);
+function vaultOf(address user) external view returns (Q09VulnerableVault);
+function attackerOf(address user) external view returns (Q09ReentrancyAttacker);
 function isSolved(address user) external view returns (bool);
 uint256 public constant SEED = 10 ether;
 
-// VulnerableVault (your personal instance — DO NOT FIX)
+// Q09VulnerableVault (your personal instance — DO NOT FIX)
 function deposit() external payable;
 function withdraw() external;       // CEI violation: external call before state update
 function balances(address) external view returns (uint256);
 
-// ReentrancyAttacker (your personal instance, owner = you)
+// Q09ReentrancyAttacker (your personal instance, owner = you)
 function attack() external payable;  // only owner; bait > 0
 function drain() external;           // only owner; forward ETH back to your EOA
 function attackAmount() external view returns (uint256);

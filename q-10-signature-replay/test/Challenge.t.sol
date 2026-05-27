@@ -3,10 +3,10 @@ pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
 import {MessageHashUtils} from "@openzeppelin/contracts/utils/cryptography/MessageHashUtils.sol";
-import {ReplayLab, VulnerableSigClaim} from "../src/Setup.sol";
+import {Q10ReplayLab, Q10VulnerableSigClaim} from "../src/Setup.sol";
 
 contract Q10ReplayTest is Test {
-    ReplayLab internal lab;
+    Q10ReplayLab internal lab;
 
     address internal alice;
     uint256 internal alicePk;
@@ -14,7 +14,7 @@ contract Q10ReplayTest is Test {
     uint256 internal bobPk;
 
     function setUp() public {
-        lab = new ReplayLab();
+        lab = new Q10ReplayLab();
         vm.deal(address(lab), 100 ether);
         (alice, alicePk) = makeAddrAndKey("alice");
         (bob, bobPk) = makeAddrAndKey("bob");
@@ -35,7 +35,7 @@ contract Q10ReplayTest is Test {
         vm.prank(user);
         lab.createInstance(user);
 
-        VulnerableSigClaim c = lab.claimOf(user);
+        Q10VulnerableSigClaim c = lab.claimOf(user);
 
         bytes memory sig = _signOnce(pk, payable(user), 1 ether);
         // Replay 5 times — same (to, amount, signature) — drains 5 ETH.
@@ -49,7 +49,7 @@ contract Q10ReplayTest is Test {
         uint256 aliceBefore = alice.balance;
         _solve(alice, alicePk);
 
-        VulnerableSigClaim c = lab.claimOf(alice);
+        Q10VulnerableSigClaim c = lab.claimOf(alice);
         assertEq(address(c).balance, 0, "claim drained");
         assertEq(alice.balance, aliceBefore + 5 ether, "alice keeps 5 ether");
         assertTrue(lab.isSolved(alice));
@@ -68,7 +68,7 @@ contract Q10ReplayTest is Test {
     function test_WrongSignerSignatureReverts() public {
         vm.prank(alice);
         lab.createInstance(alice);
-        VulnerableSigClaim c = lab.claimOf(alice);
+        Q10VulnerableSigClaim c = lab.claimOf(alice);
 
         bytes memory sig = _signOnce(bobPk, payable(alice), 1 ether);
 
@@ -87,7 +87,7 @@ contract Q10ReplayTest is Test {
 
     function test_SixthReplayReverts() public {
         _solve(alice, alicePk);
-        VulnerableSigClaim c = lab.claimOf(alice);
+        Q10VulnerableSigClaim c = lab.claimOf(alice);
         bytes memory sig = _signOnce(alicePk, payable(alice), 1 ether);
         // Vault is empty; the next replay still passes signature check
         // but fails on `to.call{value: 1 ether}("")` because there are no

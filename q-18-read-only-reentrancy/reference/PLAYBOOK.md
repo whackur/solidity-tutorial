@@ -2,7 +2,7 @@
 
 > Ordered transactions to reach `isSolved(user) == true`. Keep out of student materials.
 
-`LAB` = deployed `ReadOnlyLab` (pre-funded with at least `SEED_DEPOSIT * N` ETH).
+`LAB` = deployed `Q18ReadOnlyLab` (pre-funded with at least `SEED_DEPOSIT * N` ETH).
 `USER` = user's EOA (needs ≥ 0.9 ETH bait).
 
 ## Steps

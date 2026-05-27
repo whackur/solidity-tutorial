@@ -2,16 +2,16 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {UnsafePayout, RevertOnReceive} from "../src/Setup.sol";
+import {Q13UnsafePayout, Q13RevertOnReceive} from "../src/Setup.sol";
 
 contract Q13UncheckedCallTest is Test {
-    UnsafePayout internal escrow;
+    Q13UnsafePayout internal escrow;
 
     address internal alice = makeAddr("alice");
     address internal bob = makeAddr("bob");
 
     function setUp() public {
-        escrow = new UnsafePayout();
+        escrow = new Q13UnsafePayout();
         vm.deal(alice, 5 ether);
         vm.deal(bob, 5 ether);
     }
@@ -67,7 +67,7 @@ contract Q13UncheckedCallTest is Test {
     }
 
     function test_TrapAlwaysReverts() public {
-        RevertOnReceive trap = escrow.trap();
+        Q13RevertOnReceive trap = escrow.trap();
         vm.deal(address(this), 1 ether);
         (bool ok,) = address(trap).call{value: 1 ether}("");
         assertFalse(ok, "trap must reject ETH");

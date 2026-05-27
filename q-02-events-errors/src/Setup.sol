@@ -7,7 +7,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///         distinct revert flavours and submit their 4-byte selectors back.
 ///         A single instance is shared across users; progress is keyed by
 ///         msg.sender so users do not interfere.
-contract EventsAndErrors is SolvableBase {
+contract Q02EventsAndErrors is SolvableBase {
     error InsufficientBalance(uint256 available, uint256 required);
     error WrongSelector(bytes4 submitted, bytes4 expected);
 

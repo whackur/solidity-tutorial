@@ -13,7 +13,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 ///           slot 0  ─ address owner            (right-aligned in 32 bytes)
 ///           slot 1  ─ bytes32 _secret          (this is what you read)
 ///           slot 2  ─ address winner           (right-aligned in 32 bytes)
-contract FrontRunChallenge {
+contract Q15FrontRunChallenge {
     address public owner;
     bytes32 private _secret;
     address public winner;
@@ -45,12 +45,12 @@ contract FrontRunChallenge {
 }
 
 /// @notice Multi-tenant lab. `createInstance()` deploys a per-user
-///         `FrontRunChallenge` seeded with `PRIZE` ETH and a fresh
+///         `Q15FrontRunChallenge` seeded with `PRIZE` ETH and a fresh
 ///         secret derived from caller + tx context.
-contract FrontRunLab is SolvableBase {
+contract Q15FrontRunLab is SolvableBase {
     uint256 public constant PRIZE = 1 ether;
 
-    mapping(address => FrontRunChallenge) private _challenges;
+    mapping(address => Q15FrontRunChallenge) private _challenges;
     uint256 private _nonce;
 
     event InstanceCreated(address indexed user, address challenge);
@@ -63,19 +63,19 @@ contract FrontRunLab is SolvableBase {
 
         _nonce += 1;
         bytes32 secret = keccak256(abi.encode(msg.sender, block.timestamp, block.prevrandao, _nonce));
-        FrontRunChallenge c = new FrontRunChallenge{value: PRIZE}(msg.sender, secret);
+        Q15FrontRunChallenge c = new Q15FrontRunChallenge{value: PRIZE}(msg.sender, secret);
 
         _challenges[msg.sender] = c;
         emit InstanceCreated(msg.sender, address(c));
         return address(c);
     }
 
-    function challengeOf(address user) external view returns (FrontRunChallenge) {
+    function challengeOf(address user) external view returns (Q15FrontRunChallenge) {
         return _challenges[user];
     }
 
     function isSolved(address user) public view override returns (bool) {
-        FrontRunChallenge c = _challenges[user];
+        Q15FrontRunChallenge c = _challenges[user];
         if (address(c) == address(0)) return false;
         return c.winner() == user;
     }
