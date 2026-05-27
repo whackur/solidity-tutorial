@@ -1,10 +1,6 @@
 {
   "defaults": {
     "profile_default": {
-      "src": "src",
-      "out": "out",
-      "test": "test",
-      "script": "script",
       "libs": ["../dependencies"],
       "auto_detect_remappings": false,
       "solc": "0.8.35",
