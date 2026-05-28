@@ -1,6 +1,6 @@
 # vulnerabilities
 
-> Integrated lab directory for lecture *4-1 (attack exercises and secure coding for smart contract vulnerabilities)*.
+> Integrated lab directory for attack exercises and secure coding patterns around smart contract vulnerabilities.
 >
 > Each of the four classic vulnerabilities is presented as a *Vulnerable* / *Safe* pair, so each directory shows both *the attack working in practice* and *the defended version blocking it*.
 

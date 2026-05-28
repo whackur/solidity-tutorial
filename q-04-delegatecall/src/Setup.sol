@@ -50,9 +50,8 @@ contract Q04DelegateCaller {
 ///         user instances in a mapping keyed by msg.sender and exposes
 ///         isSolved(address) for the web UI to grade.
 ///
-///         Solve goal (per user):
-///         - logicOf(user).number() == 42  (set via `call`, target writes to logic storage)
-///         - callerOf(user).number() == 99 (set via `delegatecall`, logic code writes to caller storage)
+///         The exercise contrasts normal `call` storage writes with
+///         `delegatecall` storage writes in a per-user instance pair.
 contract Q04DelegatecallLab is SolvableBase {
     struct Instance {
         Q04DelegateCaller caller;

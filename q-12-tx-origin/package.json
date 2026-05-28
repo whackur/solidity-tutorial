@@ -1,7 +1,7 @@
 {
   "name": "@quiz/q-12-tx-origin",
   "version": "0.1.0",
-  "description": "Quiz 12 — tx.origin auth bypass via a phisher contract",
+  "description": "Quiz 12 — tx.origin authorization pitfall",
   "private": true,
   "scripts": { "build": "forge build", "test": "forge test -vv" },
   "license": "MIT"

@@ -7,8 +7,7 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Intentionally-broken signed claim. The signed payload is just
 ///         `keccak256(abi.encode(to, amount))` — no nonce, no deadline,
-///         no chainId, no verifyingContract. Same `(to, amount)` ⇒ same
-///         digest ⇒ same signature works forever.
+///         no chainId, no verifyingContract.
 contract Q10VulnerableSigClaim {
     address public immutable signer;
 
@@ -30,9 +29,8 @@ contract Q10VulnerableSigClaim {
 }
 
 /// @notice Multi-tenant lab. Each user calls `createInstance(signerAddr)`
-///         once to get their own pre-funded `Q10VulnerableSigClaim`. They
-///         then sign `(to, 1 ether)` *once* and replay the same signature
-///         on `claim(...)` until the contract is empty.
+///         once to get their own pre-funded `Q10VulnerableSigClaim` and
+///         study weak signing context.
 ///
 ///         The lab itself must hold ≥ `SEED * N` ETH at deploy time —
 ///         see the funded `receive()`.

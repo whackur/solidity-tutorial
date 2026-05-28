@@ -1,4 +1,4 @@
-# Q-10. Signature replay — drain your claim with one signature
+# Q-10. Signature replay — weak authorization context
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
@@ -6,8 +6,7 @@ A pre-funded `Q10ReplayLab` is deployed. Each user creates a personal `Q10Vulner
 
 ## Goal
 
-Make `Q10ReplayLab.isSolved(yourAddress)` return `true`: drain *your* claim
-contract to `0` ETH.
+Make `Q10ReplayLab.isSolved(yourAddress)` return `true` for your personal claim contract.
 
 ## Contract surface
 
@@ -37,7 +36,7 @@ If the contract cannot distinguish "first use" from "later use", the signature a
 ## Hints
 
 - Ask yourself which replay-protection fields are missing from the signed payload.
-- If the same signature remains valid after one successful claim, you have found the weakness.
+- Check whether a successful authorization changes the data that future authorization checks rely on.
 - The lesson is about message design, not about a special wallet feature.
 
 ## Constraints

@@ -4,7 +4,7 @@ pragma solidity ^0.8.35;
 import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Minimal CEI-violating vault. Identical pattern to q-09 but with a
-///         smaller seed so the demonstration fits in a beginner walkthrough.
+///         smaller seed so the scenario stays focused.
 contract Q19VulnerableMiniVault {
     mapping(address => uint256) public balances;
 
@@ -26,18 +26,14 @@ contract Q19VulnerableMiniVault {
     receive() external payable {}
 }
 
-/// @notice Per-user attacker contract. Unlike q-09 the attacker is pre-funded
-///         by the lab with `BAIT`, so the user does not have to send ETH along
-///         with `attack()`. This keeps the student call sequence to just two
-///         transactions: createInstance, then attack.
+/// @notice Per-user helper contract. Unlike q-09 this helper is pre-funded
+///         by the lab with `BAIT`.
 contract Q19BasicAttacker {
     Q19VulnerableMiniVault public immutable vault;
     address public immutable owner;
     uint256 public immutable attackAmount;
 
     /// @dev `payable` so the lab can fund the bait at construction time.
-    ///      Funding via a `call` would land in `receive()` and trigger the
-    ///      re-entrant `vault.withdraw()` before the user even runs `attack()`.
     constructor(Q19VulnerableMiniVault v, address o, uint256 bait) payable {
         require(msg.value == bait, "bait mismatch");
         vault = v;
@@ -45,8 +41,7 @@ contract Q19BasicAttacker {
         attackAmount = bait;
     }
 
-    /// @notice Triggers the re-entrant drain using the attacker's own balance.
-    ///         Caller is `owner` only; no value needs to be attached.
+    /// @notice Owner-only entry point for the helper scenario.
     function attack() external {
         require(msg.sender == owner, "only owner");
         require(address(this).balance >= attackAmount, "no bait funded");
@@ -60,7 +55,7 @@ contract Q19BasicAttacker {
         }
     }
 
-    /// @notice Forward all stolen ETH back to the owner. Optional.
+    /// @notice Forward this helper's ETH balance back to the owner.
     function drain() external {
         require(msg.sender == owner, "only owner");
         (bool ok,) = payable(owner).call{value: address(this).balance}("");
@@ -73,11 +68,8 @@ contract Q19BasicAttacker {
 ///         `(Q19VulnerableMiniVault, Q19BasicAttacker)` pair, pre-seeds the vault
 ///         with `SEED` ETH, and funds the attacker with `BAIT` ETH.
 ///
-///         Compared to q-09:
-///           - Smaller seed (5 ETH instead of 10).
-///           - Bait is funded by the lab, not by the student call.
-///           - `attack()` is non-payable — students only send two
-///             transactions total.
+///         Compared to q-09, this variant uses a smaller seed and lab-funded
+///         bait so the setup has fewer moving parts.
 ///
 ///         The lab itself must hold enough ETH at deploy time to seed every
 ///         expected instance — see the funded `receive()`.
@@ -101,8 +93,7 @@ contract Q19ReentrancyBasicLab is SolvableBase {
         require(address(this).balance >= SEED + BAIT, "lab underfunded");
 
         Q19VulnerableMiniVault v = new Q19VulnerableMiniVault();
-        // Attacker receives the bait at construction time so the student does
-        // not have to attach any ETH to their attack call.
+        // Helper receives the bait at construction time.
         Q19BasicAttacker a = new Q19BasicAttacker{value: BAIT}(v, msg.sender, BAIT);
 
         // Lab acts as the "victim depositor" — pre-funds the vault.

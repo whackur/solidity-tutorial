@@ -22,10 +22,8 @@ contract OracleManipulationTest is Test {
     function test_VulnerableLendingIsManipulated() public {
         uint256 fairBefore = vuln.maxBorrow(1 ether);
 
-        // Attacker: within the same tx, perform a large swap in the pool and then read maxBorrow right after the price swings
-        // Adding 1000 A causes reserveA to surge → priceOfA() *plummets*
-        // To borrow more in the *opposite direction*, combine the swap direction and lending model when constructing the scenario.
-        // Here we only demonstrate that the *price itself swings* — the key point is that the two results differ greatly within the same tx.
+        // Within the same tx, move pool reserves sharply and read maxBorrow right after the spot price changes.
+        // This sample demonstrates price instability; production protocols need a threat model for the market side they trust.
         pool.swapAforB(1_000 ether);
         uint256 manipulated = vuln.maxBorrow(1 ether);
 
@@ -37,7 +35,7 @@ contract OracleManipulationTest is Test {
     function test_SafeLendingIsStableWithinTx() public {
         uint256 before = safe.maxBorrow(1 ether);
 
-        // Even if the pool price moves within the same tx, SafeLending trusts only the *separate oracle* → no impact
+        // SafeLending trusts only the separate oracle, so pool reserve movement does not affect this read.
         pool.swapAforB(1_000 ether);
         uint256 after_ = safe.maxBorrow(1 ether);
         assertEq(before, after_);

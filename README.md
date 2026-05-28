@@ -1,6 +1,6 @@
 # Solidity Tutorial
 
-Hands-on Solidity course with a local anvil + auto-deployed challenges.
+Hands-on Solidity tutorial and challenge repository with a local anvil + auto-deployed challenges.
 
 ## Run
 
@@ -18,7 +18,7 @@ Override ports/mnemonic in `.env` if needed (`cp .env.sample .env`).
 
 | Service  | Port   | Role                                                |
 | -------- | ------ | --------------------------------------------------- |
-| `anvil`  | `8545` | Local EVM node, auto-runs every `q-XX/Deploy.s.sol` |
+| `anvil`  | `8545` | Local EVM node loaded from a build-time snapshot of every package `Deploy.s.sol` |
 | `faucet` | `8888` | Static UI that sends 1 ETH from anvil account #0    |
 
 Deployer account (anvil's well-known test key, **never use on mainnet**):
@@ -68,7 +68,7 @@ skipped. The output directory is gitignored.
 - **erc2771-meta-tx**: ERC-2771 meta-transaction forwarder + recipient.
 - **smart-account**: EIP-7702 smart account with ERC-7201 namespaced storage + ERC-1271.
 
-Graded challenges live under `q-01-…` to `q-23-…`, all inheriting the shared
+Graded challenges live under `q-01-…` to `q-26-…`, all inheriting the shared
 [`common/src/SolvableBase.sol`](./common/src/SolvableBase.sol) (provides
 `solve()` / `solvedBy(address)` / `Solved` event on top of each puzzle's
 `isSolved`). See [`q-INDEX.md`](./q-INDEX.md).

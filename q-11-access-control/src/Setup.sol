@@ -3,16 +3,9 @@ pragma solidity ^0.8.35;
 
 import {SolvableBase} from "@common/SolvableBase.sol";
 
-/// @notice Privileged registry whose admin setter is missing an `onlyOwner`
-///         modifier. Anyone can promote any address to admin.
-///
-///         Multi-tenant grading is split into two steps so a malicious
-///         caller cannot "force-solve" another user's slot:
-///           1. `grantAdmin(account)` — buggy setter, no auth.
-///           2. `claimAdmin()` — only the promoted user can flip the
-///              final `solved[user]` flag for themselves.
-///
-///         A web UI polls `isSolved(user)`.
+/// @notice Privileged registry used to study function-level authorization.
+///         Multi-tenant grading is split so a caller cannot force-complete
+///         another user's slot. A web UI polls `isSolved(user)`.
 contract Q11VulnerableRegistry is SolvableBase {
     address public immutable owner;
 
@@ -26,14 +19,13 @@ contract Q11VulnerableRegistry is SolvableBase {
         owner = msg.sender;
     }
 
-    /// @notice Intended to be admin-only (`require(msg.sender == owner)`),
-    ///         but the modifier is missing. Anyone can call.
+    /// @notice State-changing admin path used by the exercise.
     function grantAdmin(address account) external {
         adminPromoted[account] = true;
         emit AdminGranted(account, msg.sender);
     }
 
-    /// @notice Demonstrates proper auth — kept as contrast.
+    /// @notice Demonstrates an owner-guarded admin path.
     function revokeAdmin(address account) external {
         require(msg.sender == owner, "not owner");
         adminPromoted[account] = false;

@@ -1,4 +1,4 @@
-# Q-22. Spot Price Basic — move an xy=k pool with one swap
+# Q-22. Spot Price Basic — move an xy=k pool
 
 > **Difficulty**: Entry ⭐
 > **Companion to**: [`q-16-oracle-spot/`](../q-16-oracle-spot/README.md). This is the first contact with constant-product AMM mechanics; q-16 then weaponizes the exact same primitive against a lender that *trusts the spot price* as an oracle.
@@ -31,13 +31,12 @@ function reserveA() external view returns (uint256);
 function reserveB() external view returns (uint256);
 ```
 
-## Student call sequence
+## Hints
 
-1. `lab.createInstance()` — deploys your personal `Q22MockPool(1000e18, 1000e18, you)`.
-2. `pool.swapAForB(500e18)` — sends 500 A in; xy=k math leaves reserves at roughly `1500 A / 667 B`, so spot price ≈ `0.444e18`.
-3. `lab.isSolved(you)` → `true`.
-
-You can also reach the target with two smaller swaps — xy=k is **path-independent** on reserves, so two 250 swaps end at the same state as one 500.
+- Public challenge documents intentionally do not include the full transaction sequence.
+- Inspect the contract surface and the goal condition, then derive the calls needed to make `isSolved(yourAddress)` return `true`.
+- Use events, public getters, revert reasons, off-chain signatures, or RPC reads where the challenge topic suggests them.
+- The exact walkthrough is not stored in this repository.
 
 ## The math, in one breath
 
@@ -53,8 +52,8 @@ The spot price is just the *current ratio* of reserves — there is no history, 
 
 ## Hints
 
-- The starting spot price is exactly `1e18`. A *tiny* swap moves it a little; the target requires you to shift reserves substantially.
-- Try `swapAForB(10e18)` first. Read `getSpotPriceE18()`. Then try `swapAForB(500e18)`. Watch the price drop and the marginal price of further A getting worse (slippage).
+- The starting spot price is exactly `1e18`. A tiny swap moves it a little; the target requires a meaningful reserve shift.
+- Compare small and large `swapAForB` inputs while reading `getSpotPriceE18()`. Watch the marginal price of further A get worse (slippage).
 - The pool's `swapAForB` is `onlyOwner` — only *your* EOA can move *your* pool's reserves.
 
 ## Constraints
@@ -67,11 +66,11 @@ The spot price is just the *current ratio* of reserves — there is no history, 
 - **Constant-product AMM (xy=k)**: liquidity is two reserves multiplied; price is their ratio.
 - **Slippage**: bigger trades move price worse than smaller ones; the marginal price degrades along the curve.
 - **Why spot is a bad oracle**: there is no aggregation. A single trade *is* the price now.
-- **Path independence on reserves**: two swaps of 250 leave the pool in the same state as one swap of 500 (ignoring fees, which this mock has none of).
+- **Path independence on reserves**: with no fees, only the final reserve state matters.
 
 ## Where this leads
 
-- [`q-16-oracle-spot/`](../q-16-oracle-spot/README.md) — the same xy=k pool, but now there is a **lender** that quotes loan-to-value using `pool.getSpotPriceE18()`. By swapping into the pool *just before* you borrow, you make the collateral look more valuable than it is, drain the lender, then swap back. The drop in price is no longer an academic exercise.
+- [`q-16-oracle-spot/`](../q-16-oracle-spot/README.md) — the same xy=k pool becomes part of a lending decision, which turns spot-price movement into a security issue.
 - The 2021 **Cream Finance** ($130M) and many similar incidents map exactly onto this pattern. q-16 is the live-fire version of q-22.
 
 ## Defending it

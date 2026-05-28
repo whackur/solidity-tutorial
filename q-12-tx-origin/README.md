@@ -1,4 +1,4 @@
-# Q-12. tx.origin — drain your vault through a phisher lure
+# Q-12. tx.origin — phishing-shaped authorization
 
 > **Difficulty**: Beginner ⭐⭐
 

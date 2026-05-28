@@ -27,9 +27,9 @@ contract Q09VulnerableVault {
 }
 
 /// @notice Per-user attacker contract. Owned by the EOA that calls
-///         `attack(...)` after `Q09ReentrancyLab.createInstance()` deploys it.
-///         Re-enters the vault from `receive()` while the vault still
-///         shows the user's full deposit.
+///         `Q09ReentrancyLab.createInstance()`.
+///         Its receiver is intentionally stateful so learners can inspect
+///         callback-driven control flow.
 contract Q09ReentrancyAttacker {
     Q09VulnerableVault public immutable vault;
     address public immutable owner;
@@ -54,7 +54,7 @@ contract Q09ReentrancyAttacker {
         }
     }
 
-    /// @notice Forward all stolen ETH back to the owner.
+    /// @notice Forward this helper's ETH balance back to the owner.
     function drain() external {
         require(msg.sender == owner, "only owner");
         (bool ok,) = payable(owner).call{value: address(this).balance}("");
@@ -65,8 +65,6 @@ contract Q09ReentrancyAttacker {
 /// @notice Multi-tenant reentrancy lab. Each user calls `createInstance()`
 ///         once; the lab deploys a fresh (vault, attacker) pair for them
 ///         and pre-seeds the vault with `SEED` ETH as the "victim funds".
-///         The user then sends bait ETH to their attacker to trigger the
-///         re-entrant drain.
 ///
 ///         The lab itself must hold enough ETH at deploy time to seed
 ///         every expected instance — see the funded `receive()`.

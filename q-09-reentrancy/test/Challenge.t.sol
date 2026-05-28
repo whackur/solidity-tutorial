@@ -2,83 +2,27 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {Q09ReentrancyLab, Q09VulnerableVault, Q09ReentrancyAttacker} from "../src/Setup.sol";
+import {Q09ReentrancyLab} from "../src/Setup.sol";
 
-contract Q09ReentrancyTest is Test {
+contract Q09ReentrancyPublicTest is Test {
     Q09ReentrancyLab internal lab;
-
     address internal alice = makeAddr("alice");
-    address internal bob = makeAddr("bob");
 
     function setUp() public {
         lab = new Q09ReentrancyLab();
-        // Fund the lab so it can seed two vaults (Alice + Bob).
         vm.deal(address(lab), 100 ether);
-        vm.deal(alice, 5 ether);
-        vm.deal(bob, 5 ether);
     }
 
-    function _solve(address user) internal {
-        vm.prank(user);
-        lab.createInstance();
-        Q09ReentrancyAttacker attacker = lab.attackerOf(user);
-
-        vm.prank(user);
-        attacker.attack{value: 1 ether}();
-    }
-
-    function test_AliceDrains() public {
-        _solve(alice);
-
-        Q09VulnerableVault vault = lab.vaultOf(alice);
-        Q09ReentrancyAttacker attacker = lab.attackerOf(alice);
-
-        assertEq(address(vault).balance, 0, "vault drained");
-        assertGe(address(attacker).balance, 10 ether, "attacker holds bait + seed");
-        assertTrue(lab.isSolved(alice));
-    }
-
-    function test_TwoUsersIndependent() public {
-        _solve(alice);
-        _solve(bob);
-
-        assertTrue(lab.isSolved(alice));
-        assertTrue(lab.isSolved(bob));
-
-        // Each user got their own pair.
-        assertTrue(lab.vaultOf(alice) != lab.vaultOf(bob));
-        assertTrue(lab.attackerOf(alice) != lab.attackerOf(bob));
-
-        // One user draining their own vault must not touch the other's.
-        assertEq(address(lab.vaultOf(alice)).balance, 0);
-        assertEq(address(lab.vaultOf(bob)).balance, 0);
-    }
-
-    function test_AttackerDrainsToOwner() public {
-        _solve(alice);
-        Q09ReentrancyAttacker attacker = lab.attackerOf(alice);
-        uint256 attackerBalance = address(attacker).balance;
-        uint256 aliceBefore = alice.balance;
-
+    function test_CreateInstanceIsUnsolved() public {
         vm.prank(alice);
-        attacker.drain();
+        (address vault, address attacker) = lab.createInstance();
 
-        assertEq(address(attacker).balance, 0);
-        assertEq(alice.balance, aliceBefore + attackerBalance);
+        assertTrue(vault != address(0));
+        assertTrue(attacker != address(0));
+        assertFalse(lab.isSolved(alice));
     }
 
-    function test_NonOwnerAttackerCallReverts() public {
-        vm.prank(alice);
-        lab.createInstance();
-        Q09ReentrancyAttacker attacker = lab.attackerOf(alice);
-
-        vm.deal(bob, 5 ether);
-        vm.prank(bob);
-        vm.expectRevert(bytes("only owner"));
-        attacker.attack{value: 1 ether}();
-    }
-
-    function test_DoubleCreateReverts() public {
+    function test_DuplicateInstanceIsRejected() public {
         vm.startPrank(alice);
         lab.createInstance();
         vm.expectRevert(bytes("already created"));

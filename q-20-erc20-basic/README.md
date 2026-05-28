@@ -37,12 +37,12 @@ function pull(uint256 amount) external;             // calls transferFrom(msg.se
 function deposited(address user) external view returns (uint256);
 ```
 
-## Student call sequence
+## Hints
 
-1. `faucet.claim()` — your balance becomes `100 MNT`.
-2. `faucet.approve(vault, 25e18)` — you authorize the vault to spend up to 25 MNT *from your balance*.
-3. `vault.pull(25e18)` — the vault calls `transferFrom(you, vault, 25e18)` against the allowance you just set.
-4. `lab.isSolved(you)` → `true`.
+- Public challenge documents intentionally do not include the full transaction sequence.
+- Inspect the contract surface and the goal condition, then derive the calls needed to make `isSolved(yourAddress)` return `true`.
+- Use events, public getters, revert reasons, off-chain signatures, or RPC reads where the challenge topic suggests them.
+- The exact walkthrough is not stored in this repository.
 
 ## What you can interact with
 

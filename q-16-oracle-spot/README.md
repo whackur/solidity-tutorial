@@ -1,4 +1,4 @@
-# Q-16. Oracle manipulation — drain a spot-price lender
+# Q-16. Oracle manipulation — spot-price lender risk
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 

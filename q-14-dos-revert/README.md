@@ -1,12 +1,12 @@
-# Q-14. DoS by revert — lock the throne with a reverting receiver
+# Q-14. DoS by revert — push refund availability
 
 > **Difficulty**: Beginner ⭐⭐
 
 A `Q14DosLab` is deployed. Each user calls `createInstance()` to mint a
 personal `(Q14KingOfHill, Q14RevertKing)` pair. `Q14KingOfHill.bid()` refunds the
 previous king via `call` and *requires the refund to succeed*. The
-`Q14RevertKing` reverts on every receive — once it becomes king, the throne
-is permanently locked because no future bidder can refund it.
+`Q14RevertKing` reverts on every receive, which lets you study why push-based
+refunds can turn one recipient into an availability risk.
 
 ## Goal
 
@@ -23,12 +23,13 @@ function attackerOf(address user) external view returns (Q14RevertKing);
 function isSolved(address user) external view returns (bool);
 
 // Q14KingOfHill (per user — DO NOT FIX)
-function bid() external payable;             // require(ok) on push refund
+function bid() external payable;
 function currentKing() external view returns (address);
 function currentBid() external view returns (uint256);
 
 // Q14RevertKing (per user, owner = you)
-function takeThrone() external payable;       // onlyOwner, forwards bid
+function takeThrone() external payable;       // onlyOwner
+function target() external view returns (Q14KingOfHill);
 function owner() external view returns (address);
 // receive() / fallback() always revert
 ```
@@ -47,9 +48,8 @@ function bid() external payable {
 }
 ```
 
-When the previous king is a contract that reverts on receive, the
-refund call always fails → the entire `bid()` tx reverts → the throne
-sticks with the reverter forever.
+When the previous king is a contract that reverts on receive, the refund call
+can fail and make the whole `bid()` transaction revert.
 
 ## What you can interact with
 

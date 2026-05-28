@@ -88,8 +88,8 @@ contract Q16SimplePool {
 }
 
 /// @notice Buggy lender that prices collateral with a single-pool spot
-///         oracle. Inflate the pool's price → borrow far more ETH than
-///         the collateral is worth → drain the lender.
+///         oracle. The exercise shows why transaction-local pool prices are
+///         unsafe as lending inputs.
 contract Q16SpotLender {
     Q16SimplePool public immutable pool;
     Q16MockToken public immutable token;

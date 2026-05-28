@@ -1,7 +1,7 @@
 {
   "name": "@quiz/q-17-reentrancy-inflate",
   "version": "0.1.0",
-  "description": "Quiz 17 — Cross-function reentrancy that inflates balance, not drains by recursion",
+  "description": "Quiz 17 — Cross-function reentrancy accounting challenge",
   "private": true,
   "scripts": { "build": "forge build", "test": "forge test -vv" },
   "license": "MIT"

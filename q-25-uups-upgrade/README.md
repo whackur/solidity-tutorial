@@ -2,9 +2,7 @@
 
 > **Difficulty**: Intermediate ⭐⭐
 
-You get your own UUPS proxy pointing at `Q25CounterV1`. You are its owner. Upgrade
-it to `Q25CounterV2` — only the owner can, because `_authorizeUpgrade` is gated by
-`onlyOwner`. Once upgraded, the proxy gains `version()` and the challenge is solved.
+You get your own UUPS proxy pointing at `Q25CounterV1`. You are its owner. The exercise is about moving a proxy to a compatible implementation through the UUPS authorization gate.
 
 ## Goal
 
@@ -29,27 +27,13 @@ function count() external view returns (uint256);
 function owner() external view returns (address);
 ```
 
-## Solve sequence
-
-```bash
-LAB=<lab address>
-
-# 1. createInstance — your proxy starts on Q25CounterV1, owner = you
-cast send $LAB "createInstance()" --rpc-url http://localhost:8545 --private-key <yours>
-PROXY=$(cast call $LAB "proxyOf(address)(address)" <you> --rpc-url http://localhost:8545)
-V2=$(cast call $LAB "v2Impl()(address)" --rpc-url http://localhost:8545)
-
-# 2. upgrade your proxy to V2 (onlyOwner — that's you)
-cast send $PROXY "upgradeToAndCall(address,bytes)" $V2 0x --rpc-url http://localhost:8545 --private-key <yours>
-
-# 3. solve
-cast send $LAB "solve()" --rpc-url http://localhost:8545 --private-key <yours>
-```
-
 ## Hints
 
-- `upgradeToAndCall` with empty `data` (`0x`) just swaps the implementation,
-  no extra call.
+- Public challenge documents intentionally do not include the full transaction sequence.
+- Inspect the contract surface and the goal condition, then derive the calls needed to make `isSolved(yourAddress)` return `true`.
+- Use events, public getters, revert reasons, off-chain signatures, or RPC reads where the challenge topic suggests them.
+- The exact walkthrough is not stored in this repository.
+
 - Only the owner can upgrade. `createInstance` makes you the owner of your
   proxy, so the upgrade authorizes.
 - V2 inherits V1's storage layout (`count`, `owner`) — that is what makes the

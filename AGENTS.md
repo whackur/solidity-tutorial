@@ -14,7 +14,7 @@ Foundry-based monorepo of self-contained Solidity tutorials, managed with pnpm w
 ├── simple-uups/          — UUPS upgradeable proxy
 ├── simple-wallet/        — Minimal ETH/ERC20 deposit wallet
 ├── thirty-one-game/      — Baskin-Robbins 31 game with stake-based prizes
-├── q-01-counter/ ... q-18-read-only-reentrancy/ — CTF-style challenge set (see q-INDEX.md)
+├── q-01-counter/ ... q-26-meta-tx/ — CTF-style challenge set (see q-INDEX.md)
 ├── dependencies/         — Soldeer-managed dependencies (do not edit manually)
 ├── config/foundry/       — Centralized package config (packages.json)
 └── scripts/              — Shared Node.js helpers (generate-foundry-config, forge-fmt)
@@ -55,16 +55,19 @@ cd simple-uups && forge test -vvv
 ## Key Conventions
 
 - Solidity ^0.8.x, `solc = "0.8.35"`, `evm_version = "osaka"`.
-- Each package defines its own `remappings` in its `foundry.toml`. A matching per-package `remappings.txt` is allowed (and used in `q-*`) purely so external Solidity language servers (Cursor / VS Code) can resolve imports — `forge` itself reads `foundry.toml`. Keep the two in sync; do not introduce a *root* `remappings.txt`.
+- Each package defines its own `remappings` in its `foundry.toml`. Do not add per-package or root `remappings.txt`; `forge` and editor tooling should resolve imports from `foundry.toml`.
 - Tutorials are independent: do not introduce shared root-level Solidity code; copy patterns rather than abstract them.
 - **English only** in this repo. Every README, source-file comment, identifier, test message, and `q-*/README.md` is English.
 - User-facing replies in chat may be in Korean — but committed files must remain English.
+- This repository is independent. Do not link to or mention any external content repository from files in this repository. External materials may link here, but links must not point back the other way.
+- Public files must not include full challenge walkthroughs, ordered transaction sequences, or direct answer playbooks. Hints, contract surfaces, goals, and conceptual explanations are allowed.
+- Do not add `reference/PLAYBOOK.md`, `src/Solution.sol`, or `reference/Solution.ref.sol`. The full answer flow belongs outside this repository.
 - Errors: prefer custom errors for production, but tutorials may keep `require` strings for clarity — match the tutorial's existing style.
 - Markdown prose should not be hard-wrapped to a short column width. Keep one semantic paragraph or list item on one line; use line breaks only where the structure requires them, such as tables, lists, and code blocks.
 
 ## Challenge set (`q-*`) — multi-tenant web UI design
 
-The `q-01-counter/` ... `q-10-signature-replay/` directories host CTF-style challenges designed for a **shared, multi-tenant deployment**. A single contract instance is deployed once; many users interact with it through an external web UI (or any wallet), distinguished only by `msg.sender`.
+The `q-01-counter/` ... `q-26-meta-tx/` directories host CTF-style challenges designed for a **shared, multi-tenant deployment**. A single contract or Lab instance is deployed once; many users interact with it through an external web UI (or any wallet), distinguished only by `msg.sender`.
 
 Students do **not** write Solidity to solve. They send transactions / read state through the UI.
 
@@ -72,25 +75,22 @@ Students do **not** write Solidity to solve. They send transactions / read state
 
 - **Per-user state**: all progress is keyed by `msg.sender` in mappings. Never use a global flag/counter that one user could trip for another.
 - **`isSolved(address user) view returns (bool)`**: every challenge's main contract exposes this canonical check. The UI polls it to grade.
-- **No `src/Solution.sol`**: challenges are solved by transactions, not by student-written contracts.
-- **`vm.prank` multi-user tests**: `test/Challenge.t.sol` must simulate at least two distinct users solving in parallel and verify they do not interfere with each other's `isSolved` state.
-- **Factory pattern for per-user instances** (q-04, q-09, q-10, q-12, q-14, q-15, q-16, q-17, q-18): a single Lab contract exposes `createInstance()` which deploys the user's personal vulnerable / attacker contracts. The Lab tracks `mapping(address user => Instance)`.
-- **`reference/PLAYBOOK.md`**: instructor-only ordered call sequence (English). No `Solution.ref.sol` Solidity solution file.
+- **No answer files**: challenges are solved by transactions, but this repository must not publish ordered solve walkthroughs. Do not add `src/Solution.sol`, `reference/PLAYBOOK.md`, or `reference/Solution.ref.sol`.
+- **Public tests are smoke/interface tests**: `test/Challenge.t.sol` must not publish the end-to-end solve path. Prefer constructor checks, initial `isSolved == false`, duplicate-instance rejection, per-user isolation checks that stop before solving, and negative/revert cases.
+- **Factory pattern for per-user instances** (q-04, q-09, q-10, q-12, q-14, q-15, q-16, q-17, q-18, q-19, q-22, q-25): a single Lab contract exposes `createInstance(...)` which deploys the user's personal vulnerable / attacker / proxy contracts. The Lab tracks `mapping(address user => Instance)`.
 - All Setup contracts must be re-entrancy-safe across users — one user's transaction must never read or write another user's slot.
 
 ### Layout
 
 ```
 q-XX-{slug}/
-├── README.md            ← English brief: scenario + UI call sequence
+├── README.md            ← English brief: scenario + hints (no ordered solve sequence)
 ├── foundry.toml
 ├── package.json
 ├── src/
 │   └── Setup.sol        ← challenge environment + isSolved(address)
 ├── test/
-│   └── Challenge.t.sol  ← vm.prank multi-user grading
-└── reference/
-    └── PLAYBOOK.md      ← instructor-only ordered call list
+│   └── Challenge.t.sol  ← public smoke/interface tests, no ordered solve flow
 ```
 
 ## Tests

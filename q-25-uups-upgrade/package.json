@@ -1,7 +1,7 @@
 {
   "name": "@quiz/q-25-uups-upgrade",
   "version": "0.1.0",
-  "description": "Quiz 25 — UUPS proxy upgrade V1 to V2 (per-user instance, _authorizeUpgrade)",
+  "description": "Quiz 25 — UUPS proxy upgrade surface (per-user instance, _authorizeUpgrade)",
   "private": true,
   "scripts": {
     "build": "forge build",

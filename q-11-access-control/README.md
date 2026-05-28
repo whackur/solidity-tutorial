@@ -1,8 +1,8 @@
-# Q-11. Access control — promote yourself to admin
+# Q-11. Access control — authorization boundary
 
 > **Difficulty**: Beginner ⭐⭐
 
-A single `Q11VulnerableRegistry` is deployed and shared. One privileged-looking state-changing function is missing the guard that should restrict who can call it.
+A single `Q11VulnerableRegistry` is deployed and shared. Inspect the state-changing functions and find the authorization boundary that matters for your own progress.
 
 ## Goal
 
@@ -11,7 +11,7 @@ Make `Q11VulnerableRegistry.isSolved(yourAddress)` return `true`.
 ## Contract surface
 
 ```solidity
-function grantAdmin(address account) external;     // BUG: no onlyOwner
+function grantAdmin(address account) external;
 function revokeAdmin(address account) external;    // owner-only (contrast)
 function claimAdmin() external;                    // self-only, finalises solve
 function adminPromoted(address) external view returns (bool);
@@ -20,40 +20,21 @@ function isSolved(address user) external view returns (bool);
 function owner() external view returns (address);
 ```
 
-## The bug under attack
-
-```solidity
-// Intended to be onlyOwner. Missing modifier — anyone calls.
-function grantAdmin(address account) external {
-    adminPromoted[account] = true;
-}
-```
-
-Compare with the correctly-guarded `revokeAdmin`:
-
-```solidity
-function revokeAdmin(address account) external {
-    require(msg.sender == owner, "not owner");
-    adminPromoted[account] = false;
-}
-```
-
 ## What you can interact with
 
 - A public admin-related mutator and a self-finalising function.
 
 ## Hints
 
-- One mutator is intentionally missing its privilege check.
 - Compare which functions are guarded and which ones are not before deciding how to progress your own slot.
+- The finalising step is intentionally tied to `msg.sender`.
 
 ## Constraints
 
 - The exercise is about the missing guard, not about bypassing the finaliser.
 
-> The two-step (`grantAdmin` + `claimAdmin`) keeps the tutorial
-> multi-tenant safe: a malicious caller can `grantAdmin(victim)` but
-> only `victim` can finalise their slot — no force-solve from outside.
+> The two-step design keeps the tutorial multi-tenant safe: one caller
+> must not be able to force-complete another user's slot.
 
 ## Concepts exercised
 

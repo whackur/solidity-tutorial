@@ -52,11 +52,9 @@ contract Q25CounterV2 is Q25CounterV1 {
 ///         as owner. The V1 and V2 implementations are deployed once and
 ///         shared.
 ///
-///         Solve goal (per user):
-///           1. createInstance() — your proxy starts on Q25CounterV1.
-///           2. Q25CounterV1(proxy).upgradeToAndCall(v2Impl, "") — only you can,
-///              because _authorizeUpgrade is onlyOwner.
-///           After that version() exists on your proxy and isSolved flips true.
+///         Each user's proxy starts on Q25CounterV1. The exercise focuses on
+///         how a user-owned UUPS proxy changes implementation while keeping
+///         its storage.
 contract Q25UupsLab is SolvableBase {
     Q25CounterV1 public immutable v1Impl;
     Q25CounterV2 public immutable v2Impl;

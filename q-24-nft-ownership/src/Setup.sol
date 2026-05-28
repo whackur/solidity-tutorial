@@ -27,14 +27,8 @@ contract Q24ChallengeNFT is ERC721 {
 /// @notice Multi-tenant ERC-721 challenge. A single lab is shared by all
 ///         students; per-user state is keyed by msg.sender.
 ///
-///         Goal (per caller):
-///           1. claim() — mint yourself one NFT.
-///           2. approve(lab, tokenId) on the NFT — let the lab move it.
-///           3. deposit(tokenId) — the lab pulls your NFT via transferFrom.
-///
-///         Step 2 is the point: the lab is NOT the owner, so the pull in
-///         deposit() only succeeds if you approved the lab first. That is the
-///         ERC-721 approval flow, the same shape as ERC-20 approve/transferFrom.
+///         The lab is not the token owner, so this exercise focuses on
+///         ERC-721 approval semantics and third-party token movement.
 contract Q24NftLab is SolvableBase {
     Q24ChallengeNFT public immutable nft;
 
@@ -58,9 +52,8 @@ contract Q24NftLab is SolvableBase {
         emit Claimed(msg.sender, id);
     }
 
-    /// @notice The lab pulls your token. Requires a prior
-    ///         `nft.approve(lab, tokenId)` (or setApprovalForAll) because the
-    ///         lab is not the token owner.
+    /// @notice The lab attempts to move the user's claimed token through the
+    ///         standard ERC-721 transfer path.
     function deposit(uint256 tokenId) external {
         if (claimedToken[msg.sender] != tokenId) revert NotYourClaim();
         nft.transferFrom(msg.sender, address(this), tokenId);

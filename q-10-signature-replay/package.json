@@ -1,7 +1,7 @@
 {
   "name": "@quiz/q-10-signature-replay",
   "version": "0.1.0",
-  "description": "Quiz 10 — Signature replay against nonce-less claim contract",
+  "description": "Quiz 10 — Signature authorization context challenge",
   "private": true,
   "scripts": { "build": "forge build", "test": "forge test -vv" },
   "license": "MIT"

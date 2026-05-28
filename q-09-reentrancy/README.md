@@ -1,4 +1,4 @@
-# Q-09. Reentrancy — drain your personal Q09VulnerableVault
+# Q-09. Reentrancy — personal vault window
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
@@ -58,7 +58,7 @@ The important observation is that the external call gives the receiver control b
 ## Constraints
 
 - Use only your own instance pair.
-- The objective is to drain the vault, not to share state across users.
+- Keep all effects inside your own vault/attacker pair; other users' instances must remain untouched.
 
 ## Concepts exercised
 

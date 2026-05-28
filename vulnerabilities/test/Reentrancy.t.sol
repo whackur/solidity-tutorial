@@ -17,7 +17,7 @@ contract ReentrancyTest is Test {
     function test_VulnerableVaultIsDrained() public {
         VulnerableVault vault = new VulnerableVault();
 
-        // Two normal users deposit 5 ETH each
+        // Two normal users deposit funds.
         vm.deal(address(0xA1), 5 ether);
         vm.deal(address(0xA2), 5 ether);
         vm.prank(address(0xA1));
@@ -26,13 +26,13 @@ contract ReentrancyTest is Test {
         vault.deposit{value: 5 ether}();
         assertEq(address(vault).balance, 10 ether);
 
-        // Attack: drain the vault with only 1 ETH
+        // The vulnerable interaction allows repeated withdrawals before accounting is finalized.
         vm.prank(attackerEoa);
         ReentrancyAttacker atk = new ReentrancyAttacker(address(vault));
         vm.prank(attackerEoa);
         atk.attack{value: 1 ether}();
 
-        // The vault is drained to 0, and the attacker contract holds 11 ETH
+        // The accounting invariant is broken.
         assertEq(address(vault).balance, 0);
         assertEq(address(atk).balance, 11 ether);
     }

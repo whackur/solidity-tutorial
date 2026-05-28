@@ -15,18 +15,17 @@ contract TxOriginTest is Test {
     }
 
     function test_VulnerableWalletIsPhished() public {
-        // 1) The victim deploys their wallet + deposits funds
+        // The victim deploys their wallet and funds it.
         //    NOTE: vm.prank(addr, addr) with two arguments changes both *msg.sender + tx.origin*
         vm.prank(victim, victim);
         VulnerableWallet wallet = new VulnerableWallet();
         vm.deal(address(wallet), 5 ether);
 
-        // 2) The attacker deploys the phisher contract (targeting the victim's wallet)
+        // Another contract is deployed as an intermediate caller.
         vm.prank(attacker, attacker);
         Phisher phisher = new Phisher(address(wallet), 5 ether);
 
-        // 3) The victim calls phisher.claimAirdrop() (a social-engineering scenario)
-        //    → inside wallet.transfer, tx.origin == victim so it passes → 5 ETH goes to the attacker
+        // A social-engineering style call demonstrates why tx.origin is the wrong authorization primitive.
         vm.prank(victim, victim);
         phisher.claimAirdrop();
 

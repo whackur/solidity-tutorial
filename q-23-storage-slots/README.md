@@ -29,12 +29,8 @@ have to recover it from storage.
 ## What you need to know
 
 Solidity assigns storage slots **in declaration order across the full
-inheritance chain**:
-
-1. The base contract (`SolvableBase`) declares `mapping(address => bool) solvedBy` first → slot **0**.
-2. The derived `Q23Vault` declares `bytes32 private secretA` next → slot **1**.
-3. `bytes32 public constant SLOT_B` is `constant`, so it lives in code, not storage. It does **not** take a slot.
-4. `mapping(address => bool) public submitted` is the next storage variable → slot **2**.
+inheritance chain**. Base-contract state comes before derived-contract state,
+and `constant` values do not consume storage slots.
 
 For mappings the slot number stores nothing useful itself; per-key values
 live at `keccak256(abi.encode(key, slot))`. But that detail does not matter
@@ -50,21 +46,9 @@ This is the same pattern EIP-1967 uses for proxy storage: pick a slot far
 out of range of the sequential layout so it cannot collide with regular
 variables.
 
-## How to read storage off-chain
+## How to inspect storage layout
 
-The JSON-RPC method is `eth_getStorageAt(address, slot, block)`. From the
-Foundry toolbox:
-
-```bash
-# Read secretA (slot 1, sequential)
-cast storage <vault> 1 --rpc-url http://localhost:8545
-
-# Read secretB (arbitrary slot — fetch SLOT_B from the contract first)
-SLOT_B=$(cast call <vault> "SLOT_B()" --rpc-url http://localhost:8545)
-cast storage <vault> "$SLOT_B" --rpc-url http://localhost:8545
-```
-
-You can also dump the whole layout the compiler decided on:
+The JSON-RPC method for raw storage reads is `eth_getStorageAt(address, slot, block)`. You can also dump the layout the compiler decided on:
 
 ```bash
 forge inspect Q23Vault storage-layout
@@ -76,6 +60,8 @@ forge inspect Q23Vault storage-layout
   no access control.
 - `constant` variables never consume a storage slot — they are inlined into
   bytecode at compile time.
+- Inherited state affects where the first variable in the child contract lands.
+- `SLOT_B` is intentionally public; it reveals the location, not the stored value.
 - The "arbitrary slot" trick is everywhere in production: EIP-1967 proxies
   (`keccak256("eip1967.proxy.implementation") - 1`), ERC-7201 namespaced
   storage, Diamond Standard facet storage. Same idea.

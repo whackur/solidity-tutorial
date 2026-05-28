@@ -5,7 +5,7 @@
 # docker/build-snapshot.sh during `docker build`. At runtime we just:
 #   1. sanity-check the runtime mnemonic against the snapshot's deployer,
 #   2. publish /snapshot/addresses.json to /shared with the live RPC port,
-#   3. boot anvil with --load-state so all 36 packages are already deployed
+#   3. boot anvil with --load-state so all deployable packages are already deployed
 #      the moment RPC comes online.
 #
 # Boot time is ~1s instead of ~30s. To rebuild the snapshot after editing

@@ -51,6 +51,6 @@ function sender() external view returns (address);
 - `delegatecall`: target = caller's code seat, *storage = caller's*,
   `msg.sender` *preserved* from the outer call (your EOA).
 - Storage-layout alignment is the foundation of proxy patterns (transparent /
-  UUPS / Beacon — covered in upgradeable contract lectures).
+  UUPS / Beacon — covered in upgradeable contract material).
 - A storage-slot mismatch between caller and logic would silently corrupt
   the wrong slot — this is why proxies and implementations must mirror layouts.

@@ -7,9 +7,9 @@ interface IPool {
 
 /// @title VulnerableLending — uses a *single pool's spot price* directly as the oracle
 /// @notice Attacker: within the same tx
-///   1) perform a large swap in the pool → reserveA surges, reserveB drops → priceOfA() collapses
-///   2) use the same priceOfA() to calculate *inflated collateral value* → borrow more
-///   ※ This example lending contract is *reversed* — the higher the price, the more you can borrow. The swap direction is flipped only for demonstration.
+///   1) perform a large swap in the pool so reserves move sharply
+///   2) read priceOfA() immediately after the spot price has moved
+///   The test demonstrates spot-price instability; real lending systems must also model which side of the market the protocol trusts.
 contract VulnerableLending {
     IPool public immutable pool;
 

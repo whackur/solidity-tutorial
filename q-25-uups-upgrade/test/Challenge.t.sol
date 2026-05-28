@@ -2,23 +2,22 @@
 pragma solidity ^0.8.35;
 
 import {Test} from "forge-std/Test.sol";
-import {Q19ReentrancyBasicLab} from "../src/Setup.sol";
+import {Q25UupsLab} from "../src/Setup.sol";
 
-contract Q19ReentrancyBasicPublicTest is Test {
-    Q19ReentrancyBasicLab internal lab;
+contract Q25UupsUpgradePublicTest is Test {
+    Q25UupsLab internal lab;
     address internal alice = makeAddr("alice");
 
     function setUp() public {
-        lab = new Q19ReentrancyBasicLab();
-        vm.deal(address(lab), 100 ether);
+        lab = new Q25UupsLab();
     }
 
     function test_CreateInstanceIsUnsolved() public {
         vm.prank(alice);
-        (address vault, address attacker) = lab.createInstance();
+        address proxy = lab.createInstance();
 
-        assertTrue(vault != address(0));
-        assertTrue(attacker != address(0));
+        assertTrue(proxy != address(0));
+        assertTrue(address(lab.v2Impl()) != address(0));
         assertFalse(lab.isSolved(alice));
     }
 

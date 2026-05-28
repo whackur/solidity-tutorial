@@ -6,13 +6,9 @@ import {SolvableBase} from "@common/SolvableBase.sol";
 /// @notice Vault with cross-function CEI violations. `withdraw` performs
 ///         an external call before zeroing the caller's balance — the
 ///         classic shape. `transferBalance` is a *separate* mutator that
-///         reads the same balance. During `withdraw`'s external call, an
-///         attacker can call `transferBalance(helper, bal)` and ship
-///         their own (not-yet-zeroed) balance to a helper account.
-///         The helper then withdraws — second payout from the same deposit.
-///
-///         The attacker is *paid twice* for a single deposit, inflating
-///         their effective balance through cross-function reentrancy.
+///         reads the same balance. The bug is the missing contract-wide
+///         invariant around a shared accounting mapping while external
+///         control flow is still open.
 contract Q17YieldVault {
     mapping(address => uint256) public balances;
 
@@ -36,9 +32,7 @@ contract Q17YieldVault {
         uint256 bal = balances[msg.sender];
         require(bal > 0, "no balance");
         // BUG (cross-function CEI): external call before state update.
-        //      During this call the recipient's stored balance is still
-        //      readable as `bal`, and another mutator (`transferBalance`)
-        //      can ship it to a helper before we zero it here.
+        //      Other mutators touching the same mapping are not locked.
         (bool ok,) = msg.sender.call{value: bal}("");
         require(ok, "send failed");
         balances[msg.sender] = 0;
@@ -48,9 +42,8 @@ contract Q17YieldVault {
     receive() external payable {}
 }
 
-/// @notice Per-user attacker. During the vault's external call inside
-///         `withdraw`, re-enters into `transferBalance(helper, bal)`
-///         to ship the still-valid balance to the helper account.
+/// @notice Per-user attacker used by the lab to expose the cross-function
+///         accounting issue.
 contract Q17InflateAttacker {
     Q17YieldVault public immutable vault;
     address public immutable owner;
@@ -87,8 +80,7 @@ contract Q17InflateAttacker {
     }
 }
 
-/// @notice Per-user helper. Holds the cross-function-transferred balance
-///         and pulls a second payout via a clean `withdraw()`.
+/// @notice Per-user helper used by the lab scenario.
 contract Q17InflateHelper {
     Q17YieldVault public immutable vault;
     address public immutable owner;
@@ -157,8 +149,8 @@ contract Q17InflateLab is SolvableBase {
         return _instances[user].helper;
     }
 
-    /// @notice Solved when the vault is drained AND the user has been
-    ///         paid twice — once via the attacker, once via the helper.
+    /// @notice Solved when the cross-function accounting invariant has been broken
+    ///         for the user's instance.
     function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.vault) == address(0)) return false;

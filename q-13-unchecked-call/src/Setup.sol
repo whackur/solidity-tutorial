@@ -68,9 +68,7 @@ contract Q13UnsafePayout is SolvableBase {
     }
 
     function isSolved(address user) public view override returns (bool) {
-        // The user observably "paid out" yet the funds stayed in the contract
-        // (proved by stranded > 0). That's the exact failure mode that
-        // unchecked low-level calls hide in production.
+        // The grading condition observes a silent low-level-call failure.
         return paidOut[user] && stranded[user] > 0;
     }
 

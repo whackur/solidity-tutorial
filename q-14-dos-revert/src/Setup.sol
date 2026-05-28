@@ -4,10 +4,8 @@ pragma solidity ^0.8.35;
 import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice "King of the Hill" with the classic push-payment DoS shape.
-///         To dethrone the current king, you must refund their previous
-///         bid via a low-level call AND require the refund to succeed.
-///         If the king is a contract that reverts on receive, no one
-///         can ever outbid them — the throne is locked.
+///         The contract requires a pushed refund to succeed before moving
+///         to the next king.
 contract Q14KingOfHill {
     address public currentKing;
     uint256 public currentBid;
@@ -16,7 +14,7 @@ contract Q14KingOfHill {
 
     function bid() external payable {
         require(msg.value > currentBid, "bid too low");
-        // BUG: require(ok) on a push refund. A reverting receiver bricks the game.
+        // Push refund success is part of the state transition.
         if (currentKing != address(0)) {
             (bool ok,) = currentKing.call{value: currentBid}("");
             require(ok, "refund failed");
@@ -29,9 +27,7 @@ contract Q14KingOfHill {
     receive() external payable {}
 }
 
-/// @notice Per-user attacker. Refuses every refund. Once it becomes king,
-///         the throne is permanently locked because no future bidder can
-///         successfully refund it.
+/// @notice Per-user participant contract that refuses every refund.
 contract Q14RevertKing {
     Q14KingOfHill public immutable target;
     address public immutable owner;
@@ -58,9 +54,7 @@ contract Q14RevertKing {
 }
 
 /// @notice Multi-tenant DoS lab. Each user gets a personal (king-of-hill,
-///         attacker) pair via `createInstance()`. The user makes an
-///         opening bid from their EOA, then dethrones themselves via the
-///         attacker — at which point the throne is locked.
+///         participant) pair via `createInstance()`.
 contract Q14DosLab is SolvableBase {
     struct Instance {
         Q14KingOfHill king;
@@ -90,9 +84,7 @@ contract Q14DosLab is SolvableBase {
         return _instances[user].attacker;
     }
 
-    /// @notice Solved when the user's Q14RevertKing sits on the throne — at
-    ///         that point any third party calling `king.bid(...)` reverts
-    ///         with `"refund failed"`.
+    /// @notice Solved when the user's reverting participant sits on the throne.
     function isSolved(address user) public view override returns (bool) {
         Instance memory inst = _instances[user];
         if (address(inst.king) == address(0)) return false;

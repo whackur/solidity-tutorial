@@ -22,15 +22,12 @@ function submittedIndex(address user) external view returns (uint256);
 function isSolved(address user) external view returns (bool);
 ```
 
-## Student call sequence
+## Hints
 
-1. Read `trustedSigner()` and `candidateCount()`.
-2. For each index `i` in `0..candidateCount-1`:
-   - Read `candidate(i)` → `(hash, v, r, s)`.
-   - Compute `ecrecover(hash, v, r, s)` off-chain (web UI, `cast`, viem, ethers, anything).
-3. Pick the index whose recovered address equals `trustedSigner`.
-4. Call `submit(thatIndex)`.
-5. `isSolved(you)` → `true`.
+- Public challenge documents intentionally do not include the full transaction sequence.
+- Inspect the contract surface and the goal condition, then derive the calls needed to make `isSolved(yourAddress)` return `true`.
+- Use events, public getters, revert reasons, off-chain signatures, or RPC reads where the challenge topic suggests them.
+- The exact walkthrough is not stored in this repository.
 
 ## What you can interact with
 

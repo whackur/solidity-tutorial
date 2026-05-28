@@ -4,15 +4,9 @@ pragma solidity ^0.8.35;
 import {SolvableBase} from "@common/SolvableBase.sol";
 
 /// @notice A "guess the secret to win the prize" game whose designer
-///         thought `bytes32 private` was enough to hide the answer.
-///         Anyone can read the secret directly from chain storage via
-///         `eth_getStorageAt` and claim the prize before the legitimate
-///         owner — the canonical "secret on-chain" + front-running shape.
-///
-///         Storage layout:
-///           slot 0  ─ address owner            (right-aligned in 32 bytes)
-///           slot 1  ─ bytes32 _secret          (this is what you read)
-///           slot 2  ─ address winner           (right-aligned in 32 bytes)
+///         thought `bytes32 private` was enough to hide sensitive data.
+///         The exercise focuses on Solidity visibility versus on-chain
+///         observability.
 contract Q15FrontRunChallenge {
     address public owner;
     bytes32 private _secret;
@@ -35,8 +29,7 @@ contract Q15FrontRunChallenge {
         emit Claimed(msg.sender);
     }
 
-    /// @notice Documents where the secret lives. Off-chain tooling can
-    ///         read it with `eth_getStorageAt(address, secretSlot())`.
+    /// @notice Exposes layout metadata for off-chain inspection exercises.
     function secretSlot() external pure returns (uint256) {
         return 1;
     }

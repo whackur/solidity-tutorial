@@ -24,7 +24,7 @@ contract SignatureReplayTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, ethHash);
         bytes memory sig = abi.encodePacked(r, s, v);
 
-        // Use the same signature 3 times → 3 ETH is withdrawn (replay)
+        // Reusing the same authorization demonstrates the missing replay protection.
         claim.claim(recipient, 1 ether, sig);
         claim.claim(recipient, 1 ether, sig);
         claim.claim(recipient, 1 ether, sig);
@@ -48,11 +48,11 @@ contract SignatureReplayTest is Test {
         (uint8 v, bytes32 r, bytes32 s) = vm.sign(signerPk, digest);
         bytes memory sig = abi.encodePacked(r, s, v);
 
-        // First call succeeds
+        // First call succeeds.
         claim.claim(recipient, amount, nonce, deadline, sig);
         assertEq(recipient.balance, 1 ether);
 
-        // Second attempt — rejected with nonce used
+        // A repeated authorization is rejected because the nonce is already used.
         vm.expectRevert(bytes("nonce used"));
         claim.claim(recipient, amount, nonce, deadline, sig);
     }

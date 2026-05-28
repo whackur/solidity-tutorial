@@ -1,12 +1,8 @@
-# Q-26. Meta-transaction — ERC-2771 gasless increment
+# Q-26. Meta-transaction — ERC-2771 recovered sender
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-`Q26MetaCounter` trusts a `Q26MyForwarder` (ERC-2771). Instead of calling
-`increment()` directly, you **sign** a ForwardRequest off-chain and let the
-forwarder relay it. Because the counter trusts the forwarder, it reads
-`_msgSender()` as *you* (the signer) — even though the forwarder sent the
-actual transaction and paid the gas.
+`Q26MetaCounter` trusts a `Q26MyForwarder` (ERC-2771). The exercise is about separating the relayer that submits a transaction from the signer that the target contract treats as the authenticated sender.
 
 ## Goal
 
@@ -37,31 +33,20 @@ function isSolved(address user) external view returns (bool);
 function solve() external;
 ```
 
-## Solve sequence (conceptual)
+## Hints
 
-1. Build a `ForwardRequestData` with `from = you`, `to = counter`,
-   `data = increment()` selector (`0xd09de08a`), a future `deadline`, and a
-   `gas` large enough to run `increment`.
-2. Sign the EIP-712 `ForwardRequest` typed data using the forwarder's domain
-   (`name = "Q26MyForwarder"`, the forwarder address as `verifyingContract`,
-   current `nonces(you)`).
-3. Call `forwarder.execute(request)` — anyone can relay it (you, the faucet,
-   a sponsor). The forwarder appends `from` to the calldata; `Q26MetaCounter`
-   recovers it via `_msgSender()`.
-4. Call `Q26MetaCounter.solve()` directly to record the on-chain proof.
-
-> A wallet / viem / ethers script signs the typed data. The exact EIP-712
-> types match OpenZeppelin's `ERC2771Forwarder.ForwardRequest`.
+- Public challenge documents intentionally do not include the full transaction sequence.
+- Inspect the contract surface and the goal condition, then derive the calls needed to make `isSolved(yourAddress)` return `true`.
+- Use events, public getters, revert reasons, off-chain signatures, or RPC reads where the challenge topic suggests them.
+- The exact walkthrough is not stored in this repository.
 
 ## Hints
 
-- `_msgSender()` returns the appended `from` only when the caller is the
-  trusted forwarder — a direct `increment()` call would credit your EOA the
-  normal way too, but the point is to learn the relayed path.
-- The signature is over the forwarder's EIP-712 domain, **not** the counter's.
+- `_msgSender()` has special behavior only when the caller is the trusted forwarder.
+- The relevant EIP-712 domain belongs to the forwarder.
 - `nonces(you)` must match; it increments after each executed request.
-- `solve()` should be called directly (not through the forwarder), so
-  `msg.sender` is your EOA.
+- Be clear about which contract reads `_msgSender()` and which function still
+  uses ordinary `msg.sender`.
 
 ## Concepts exercised
 

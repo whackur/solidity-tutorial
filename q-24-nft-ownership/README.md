@@ -1,11 +1,8 @@
-# Q-24. NFT ownership — claim, approve, deposit
+# Q-24. NFT ownership — approval flow
 
 > **Difficulty**: Entry ⭐
 
-A shared `Q24NftLab` mints you an ERC-721 token, then asks you to hand it back.
-The catch: the lab is not the token owner, so it can only take your NFT if
-you **approve** it first. This is the ERC-721 approval flow — the same shape
-as ERC-20 `approve` / `transferFrom`.
+A shared `Q24NftLab` mints you an ERC-721 token, then asks you to reason about how a non-owner contract can move that token. This is the ERC-721 approval flow — the same shape as ERC-20 `approve` / `transferFrom`.
 
 ## Goal
 
@@ -16,7 +13,7 @@ Make `Q24NftLab.isSolved(you)` return `true`, which requires `deposited[you] == 
 ```solidity
 // Q24NftLab
 function claim() external returns (uint256 id);        // mint one NFT to you
-function deposit(uint256 tokenId) external;            // lab pulls it (needs approval)
+function deposit(uint256 tokenId) external;
 function claimedToken(address user) external view returns (uint256);
 function deposited(address user) external view returns (bool);
 function nft() external view returns (Q24ChallengeNFT);
@@ -30,33 +27,16 @@ function setApprovalForAll(address operator, bool approved) external;
 function ownerOf(uint256 tokenId) external view returns (address);
 ```
 
-## Solve sequence
-
-```bash
-LAB=<lab address>
-NFT=$(cast call $LAB "nft()(address)" --rpc-url http://localhost:8545)
-
-# 1. claim — mint yourself a token
-cast send $LAB "claim()" --rpc-url http://localhost:8545 --private-key <yours>
-ID=$(cast call $LAB "claimedToken(address)(uint256)" <you> --rpc-url http://localhost:8545)
-
-# 2. approve the lab to move your token
-cast send $NFT "approve(address,uint256)" $LAB $ID --rpc-url http://localhost:8545 --private-key <yours>
-
-# 3. deposit — the lab pulls it via transferFrom (only works because of step 2)
-cast send $LAB "deposit(uint256)" $ID --rpc-url http://localhost:8545 --private-key <yours>
-
-# 4. solve
-cast send $LAB "solve()" --rpc-url http://localhost:8545 --private-key <yours>
-```
-
 ## Hints
 
-- Skipping the `approve` step makes `deposit` revert — the lab is not the
-  owner, so `transferFrom` is unauthorized without approval.
-- `setApprovalForAll(lab, true)` also works and authorizes the lab for every
-  token you own, not just one.
-- `ownerOf(tokenId)` lets you confirm the token moved to the lab.
+- Public challenge documents intentionally do not include the full transaction sequence.
+- Inspect the contract surface and the goal condition, then derive the calls needed to make `isSolved(yourAddress)` return `true`.
+- Use events, public getters, revert reasons, off-chain signatures, or RPC reads where the challenge topic suggests them.
+- The exact walkthrough is not stored in this repository.
+
+- A contract that is not the current owner needs explicit approval before it can move an ERC-721 token.
+- Token-specific approval and operator-wide approval have different blast radii.
+- `ownerOf(tokenId)` lets you confirm where the token currently lives.
 
 ## Concepts exercised
 
