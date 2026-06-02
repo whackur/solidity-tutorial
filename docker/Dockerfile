@@ -1,18 +1,12 @@
 # syntax=docker/dockerfile:1
 #
-# Solidity Tutorial — anvil + pre-deployed state image.
-#
-# At build time we boot a transient anvil, run every q-XX/script/Deploy.s.sol
-# once, and snapshot the resulting state via anvil_dumpState. The runtime
-# entrypoint then only has to `anvil --load-state` and serve traffic —
-# container boot drops from ~30s (live deploy) to ~1s (state load).
-#
-# ANVIL_MNEMONIC / ANVIL_CHAIN_ID are build ARGs so Docker's layer cache
-# invalidates the snapshot when they change. Pass them via
-# `docker compose build --build-arg ANVIL_MNEMONIC=...` or rely on the
-# docker-compose.yml build.args block that forwards .env values.
+# anvil + pre-deployed state image (multi-stage).
+#   builder — deploy every q-XX/script/Deploy.s.sol once, snapshot the state.
+#   runtime — slim base with only anvil + cast + the baked /snapshot.
+# Boot drops from ~30s (live deploy) to ~1s (--load-state).
 
-FROM ghcr.io/foundry-rs/foundry:latest
+# --- stage 1: builder -------------------------------------------------------
+FROM ghcr.io/foundry-rs/foundry:latest AS builder
 
 USER root
 
@@ -37,14 +31,37 @@ RUN bash -c 'set -e; shopt -s nullglob; for f in /app/*/script/Deploy.s.sol; do 
 
 RUN chmod +x /app/docker/entrypoint.sh /app/docker/build-snapshot.sh
 
-# --- build-time deploy + state dump ----------------------------------------
-# ARG values participate in the layer cache key, so changing the mnemonic or
-# chain id triggers a fresh deploy + dump on the next `docker compose build`.
+# ARGs participate in the layer cache key, so changing either re-deploys + re-dumps.
 ARG ANVIL_MNEMONIC="test test test test test test test test test test test junk"
 ARG ANVIL_CHAIN_ID=31337
 ENV ANVIL_MNEMONIC=$ANVIL_MNEMONIC
 ENV ANVIL_CHAIN_ID=$ANVIL_CHAIN_ID
 RUN /app/docker/build-snapshot.sh
+
+# --- stage 2: runtime -------------------------------------------------------
+# glibc base: Foundry binaries are built on ubuntu:22.04 (glibc 2.35); bookworm
+# (2.36) is newer/backward-compatible. Bump to match if Foundry's base advances.
+FROM debian:bookworm-slim AS runtime
+
+# jq + awk + ca-certificates are all entrypoint.sh needs beyond the base.
+# cast eagerly loads the system cert store at startup, so it errors even on
+# plain-http RPC (healthcheck, log filter) without ca-certificates.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends jq gawk ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY --from=builder /usr/local/bin/anvil /usr/local/bin/anvil
+COPY --from=builder /usr/local/bin/cast  /usr/local/bin/cast
+COPY --from=builder /app/docker /app/docker
+COPY --from=builder /snapshot   /snapshot
+
+# Re-bake so standalone `docker run` matches its snapshot; compose still overrides.
+ARG ANVIL_MNEMONIC="test test test test test test test test test test test junk"
+ARG ANVIL_CHAIN_ID=31337
+ENV ANVIL_MNEMONIC=$ANVIL_MNEMONIC
+ENV ANVIL_CHAIN_ID=$ANVIL_CHAIN_ID
 
 EXPOSE 8545
 
