@@ -15,9 +15,12 @@ Foundry-based monorepo of self-contained Solidity tutorials, managed with pnpm w
 ├── simple-wallet/        — Minimal ETH/ERC20 deposit wallet
 ├── thirty-one-game/      — Baskin-Robbins 31 game with stake-based prizes
 ├── q-01-counter/ ... q-26-meta-tx/ — CTF-style challenge set (see q-INDEX.md)
+├── common/               — Shared challenge base (SolvableBase / ISolvable), via @common remapping
 ├── dependencies/         — Soldeer-managed dependencies (do not edit manually)
 ├── config/foundry/       — Centralized package config (packages.json)
-└── scripts/              — Shared Node.js helpers (generate-foundry-config, forge-fmt)
+├── docker/               — anvil + pre-deployed snapshot image (Dockerfile, entrypoint, build-snapshot)
+├── web/                  — Static faucet UI served by the faucet container
+└── scripts/              — Shared helpers (generate-foundry-config, check-foundry-config, forge-fmt, collect-abi)
 ```
 
 Each tutorial has its own `foundry.toml`, `src/`, `test/`, and `script/` directories and is independently buildable.
@@ -56,7 +59,7 @@ cd simple-uups && forge test -vvv
 
 - Solidity ^0.8.x, `solc = "0.8.35"`, `evm_version = "osaka"`.
 - Each package defines its own `remappings` in its `foundry.toml`. Do not add per-package or root `remappings.txt`; `forge` and editor tooling should resolve imports from `foundry.toml`.
-- Tutorials are independent: do not introduce shared root-level Solidity code; copy patterns rather than abstract them.
+- Tutorials are independent: copy patterns rather than abstract them. The one sanctioned shared module is `common/` (`SolvableBase` / `ISolvable`), referenced via the `@common` remapping; do not introduce other shared root-level Solidity code.
 - **English only** in this repo. Every README, source-file comment, identifier, test message, and `q-*/README.md` is English.
 - User-facing replies in chat may be in Korean — but committed files must remain English.
 - This repository is independent. Do not link to or mention any external content repository from files in this repository. External materials may link here, but links must not point back the other way.
@@ -74,7 +77,7 @@ Students do **not** write Solidity to solve. They send transactions / read state
 ### Hard rules
 
 - **Per-user state**: all progress is keyed by `msg.sender` in mappings. Never use a global flag/counter that one user could trip for another.
-- **`isSolved(address user) view returns (bool)`**: every challenge's main contract exposes this canonical check. The UI polls it to grade.
+- **`isSolved(address user) view returns (bool)`**: every challenge's main contract exposes this canonical check by inheriting `common/SolvableBase` (which layers `solve()` / `solvedBy(address)` / `Solved` on top). The UI polls `isSolved` to grade.
 - **No answer files**: challenges are solved by transactions, but this repository must not publish ordered solve walkthroughs. Do not add `src/Solution.sol`, `reference/PLAYBOOK.md`, or `reference/Solution.ref.sol`.
 - **Public tests are smoke/interface tests**: `test/Challenge.t.sol` must not publish the end-to-end solve path. Prefer constructor checks, initial `isSolved == false`, duplicate-instance rejection, per-user isolation checks that stop before solving, and negative/revert cases.
 - **Factory pattern for per-user instances** (q-04, q-09, q-10, q-12, q-14, q-15, q-16, q-17, q-18, q-19, q-22, q-25): a single Lab contract exposes `createInstance(...)` which deploys the user's personal vulnerable / attacker / proxy contracts. The Lab tracks `mapping(address user => Instance)`.
@@ -88,7 +91,7 @@ q-XX-{slug}/
 ├── foundry.toml
 ├── package.json
 ├── src/
-│   └── Setup.sol        ← challenge environment + isSolved(address)
+│   └── Setup.sol        ← challenge environment + isSolved(address), extends common/SolvableBase
 ├── test/
 │   └── Challenge.t.sol  ← public smoke/interface tests, no ordered solve flow
 ```
