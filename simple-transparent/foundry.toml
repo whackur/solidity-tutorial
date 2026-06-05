@@ -10,6 +10,8 @@ solc = "0.8.35"
 
 [rpc_endpoints]
 sepolia = "${SEPOLIA_RPC_URL}"
+hoodi = "${HOODI_RPC_URL}"
 
 [etherscan]
 sepolia = { chain = 11155111, key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.etherscan.io/api" }
+hoodi = { chain = 560048, key = "${ETHERSCAN_API_KEY}", url = "https://hoodi.etherscan.io/api" }

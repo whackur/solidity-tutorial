@@ -29,7 +29,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "default-erc-20": {
       "profile_default": {
@@ -53,6 +53,17 @@
       },
       "generator": {"networks": ["sepolia", "hoodi"]}
     },
+    "erc20-roles": {
+      "profile_default": {
+        "optimizer": true,
+        "optimizer_runs": 200,
+        "remappings": [
+          "@openzeppelin/contracts/=../dependencies/@openzeppelin-contracts-5.6.1/",
+          "forge-std/=../dependencies/forge-std-1.16.1/src/"
+        ]
+      },
+      "generator": {"networks": ["sepolia", "hoodi"]}
+    },
     "eip-712-voucher": {
       "profile_default": {
         "optimizer": true,
@@ -62,7 +73,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "erc2771-meta-tx": {
       "profile_default": {
@@ -73,7 +84,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "eth-sign": {
       "profile_default": {
@@ -84,7 +95,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "minimal-proxy": {
       "profile_default": {
@@ -95,7 +106,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "simple-transparent": {
       "profile_default": {
@@ -108,7 +119,7 @@
           "openzeppelin-foundry-upgrades/=../dependencies/openzeppelin-foundry-upgrades-0.4.0/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "simple-uups": {
       "profile_default": {
@@ -121,7 +132,7 @@
           "openzeppelin-foundry-upgrades/=../dependencies/openzeppelin-foundry-upgrades-0.4.0/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "simple-wallet": {
       "profile_default": {
@@ -144,7 +155,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia", "base-sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "tx-basics": {
       "profile_default": {
@@ -155,7 +166,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     },
     "thirty-one-game": {
       "profile_default": {
@@ -166,7 +177,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia"]}
+      "generator": {"networks": ["sepolia", "hoodi"]}
     }
   }
 }

@@ -11,8 +11,8 @@ via_ir = true
 
 [rpc_endpoints]
 sepolia = "${SEPOLIA_RPC_URL}"
-base-sepolia = "${BASE_SEPOLIA_RPC_URL}"
+hoodi = "${HOODI_RPC_URL}"
 
 [etherscan]
 sepolia = { chain = 11155111, key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.etherscan.io/api" }
-base-sepolia = { chain = 84532, key = "${ETHERSCAN_API_KEY}", url = "https://api-sepolia.basescan.org/api" }
+hoodi = { chain = 560048, key = "${ETHERSCAN_API_KEY}", url = "https://hoodi.etherscan.io/api" }
