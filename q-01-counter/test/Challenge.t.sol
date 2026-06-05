@@ -18,7 +18,7 @@ contract Q01CounterPublicTest is Test {
         assertFalse(counter.isSolved(alice));
     }
 
-    function test_BasicCounterStateIsPerUser() public {
+    function test_CounterStateIsPerUser() public {
         vm.prank(alice);
         counter.increment();
 
