@@ -126,8 +126,29 @@ fi
 IFS=$'\n' read -r -d '' -a packages < <(printf '%s\n' "${pkg_names[@]}" | sort && printf '\0')
 echo "[snapshot] discovered ${#packages[@]} packages"
 
+# default-erc-20 is the single shared token for the whole environment. Deploy
+# it first and export its address as SHARED_ERC20 so token-agnostic packages
+# (q-05-simple-wallet, thirty-one-game, ...) reuse it via vm.envOr instead of
+# deploying their own mock.
+SHARED_TOKEN_PKG="default-erc-20"
 challenges_json="{}"
+SHARED_ERC20=""
+
+if printf '%s\n' "${packages[@]}" | grep -qx "$SHARED_TOKEN_PKG"; then
+  pairs_json=$(deploy_one "$SHARED_TOKEN_PKG")
+  challenges_json=$(echo "$challenges_json" \
+    | jq --argjson p "$pairs_json" --arg name "$SHARED_TOKEN_PKG" '. + {($name): $p}')
+  SHARED_ERC20=$(echo "$pairs_json" | jq -r '.token // empty')
+  if [[ -z "$SHARED_ERC20" ]]; then
+    echo "[snapshot] ERROR: ${SHARED_TOKEN_PKG} did not emit ADDR:token:" >&2
+    exit 1
+  fi
+  export SHARED_ERC20
+  echo "[snapshot] shared ERC-20 token: ${SHARED_ERC20}"
+fi
+
 for pkg in "${packages[@]}"; do
+  [[ "$pkg" == "$SHARED_TOKEN_PKG" ]] && continue
   pairs_json=$(deploy_one "$pkg")
   challenges_json=$(echo "$challenges_json" \
     | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
@@ -135,11 +156,13 @@ done
 
 # addresses.json — rpcPort/rpcUrl are runtime concerns, left null here so the
 # entrypoint can fill them in based on the actual port the live anvil binds to.
+# sharedToken metadata mirrors default-erc-20/script/Deploy.s.sol.
 jq -n \
   --argjson chainId "$ANVIL_CHAIN_ID" \
   --arg deployer "$DEPLOYER_ADDR" \
   --arg faucetAddr "$FAUCET_ADDR" \
   --arg faucetKey "$FAUCET_KEY" \
+  --arg sharedToken "$SHARED_ERC20" \
   --argjson challenges "$challenges_json" \
   '{
      chainId: $chainId,
@@ -147,6 +170,8 @@ jq -n \
      rpcUrl: null,
      deployer: $deployer,
      faucet: {address: $faucetAddr, privateKey: $faucetKey},
+     sharedToken: (if $sharedToken == "" then null else
+       {address: $sharedToken, name: "MyERC20", symbol: "ME2", decimals: 18} end),
      challenges: $challenges
    }' \
   > "$SNAPSHOT_DIR/addresses.json"

@@ -15,21 +15,57 @@ import { privateKeyToAccount } from "https://esm.sh/viem@2/accounts";
 // picks account #9 to avoid nonce contention with the deployer) and exposed
 // via addresses.json. Valid only on the local anvil chain.
 const DROP = parseEther("1");
+// Shared ERC-20 (default-erc-20's MyERC20) — mint() is public on the local
+// anvil chain, so the faucet account mints fresh tokens instead of holding a
+// pre-funded balance.
+const TOKEN_DROP = parseEther("100");
+const TOKEN_ABI = [
+  {
+    type: "function",
+    name: "mint",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "account", type: "address" },
+      { name: "amount", type: "uint256" },
+    ],
+    outputs: [],
+  },
+];
 let rpcUrl = null;
 let chainId = null;
 let faucet = null;
+let sharedToken = null;
 
 const $addr = document.getElementById("addr");
 const $btn = document.getElementById("claim");
+const $btnToken = document.getElementById("claim-token");
 const $status = document.getElementById("status");
 const $infoRpc = document.getElementById("info-rpc");
 const $infoChain = document.getElementById("info-chain");
 const $infoDeployer = document.getElementById("info-deployer");
 const $infoFaucet = document.getElementById("info-faucet");
+const $infoToken = document.getElementById("info-token");
 
 function setStatus(text, cls = "") {
   $status.textContent = text;
   $status.className = cls;
+}
+
+function makeClients() {
+  const chain = defineChain({
+    id: chainId,
+    name: "Anvil",
+    nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
+    rpcUrls: { default: { http: [rpcUrl] } },
+  });
+  const account = privateKeyToAccount(faucet.privateKey);
+  const walletClient = createWalletClient({
+    account,
+    chain,
+    transport: http(rpcUrl),
+  });
+  const publicClient = createPublicClient({ chain, transport: http(rpcUrl) });
+  return { walletClient, publicClient };
 }
 
 $btn.addEventListener("click", async () => {
@@ -44,26 +80,11 @@ $btn.addEventListener("click", async () => {
   }
 
   $btn.disabled = true;
+  $btnToken.disabled = true;
   setStatus("Submitting transaction…");
 
   try {
-    const chain = defineChain({
-      id: chainId,
-      name: "Anvil",
-      nativeCurrency: { name: "Ether", symbol: "ETH", decimals: 18 },
-      rpcUrls: { default: { http: [rpcUrl] } },
-    });
-    const account = privateKeyToAccount(faucet.privateKey);
-    const walletClient = createWalletClient({
-      account,
-      chain,
-      transport: http(rpcUrl),
-    });
-    const publicClient = createPublicClient({
-      chain,
-      transport: http(rpcUrl),
-    });
-
+    const { walletClient, publicClient } = makeClients();
     const hash = await walletClient.sendTransaction({ to, value: DROP });
     setStatus(`Sent. Waiting for confirmation… ${hash}`);
     await publicClient.waitForTransactionReceipt({ hash });
@@ -72,6 +93,41 @@ $btn.addEventListener("click", async () => {
     setStatus(`Error: ${e?.shortMessage || e?.message || String(e)}`, "err");
   } finally {
     $btn.disabled = false;
+    $btnToken.disabled = false;
+  }
+});
+
+$btnToken.addEventListener("click", async () => {
+  const to = $addr.value.trim();
+  if (!isAddress(to)) {
+    setStatus("Invalid address — expected 0x followed by 40 hex chars.", "err");
+    return;
+  }
+  if (!rpcUrl || !chainId || !faucet?.privateKey || !sharedToken?.address) {
+    setStatus("Not ready yet — refresh after the deploy logs finish.", "err");
+    return;
+  }
+
+  $btn.disabled = true;
+  $btnToken.disabled = true;
+  setStatus("Submitting transaction…");
+
+  try {
+    const { walletClient, publicClient } = makeClients();
+    const hash = await walletClient.writeContract({
+      address: sharedToken.address,
+      abi: TOKEN_ABI,
+      functionName: "mint",
+      args: [to, TOKEN_DROP],
+    });
+    setStatus(`Sent. Waiting for confirmation… ${hash}`);
+    await publicClient.waitForTransactionReceipt({ hash });
+    setStatus(`Delivered 100 ${sharedToken.symbol} to ${to} (tx ${hash})`, "ok");
+  } catch (e) {
+    setStatus(`Error: ${e?.shortMessage || e?.message || String(e)}`, "err");
+  } finally {
+    $btn.disabled = false;
+    $btnToken.disabled = false;
   }
 });
 
@@ -97,6 +153,13 @@ async function loadChallenges() {
     if (data.deployer) $infoDeployer.textContent = data.deployer;
     if (data.faucet?.address) $infoFaucet.textContent = data.faucet.address;
     if (data.faucet?.privateKey) faucet = data.faucet;
+    if (data.sharedToken?.address) {
+      sharedToken = data.sharedToken;
+      $infoToken.textContent =
+        `${sharedToken.address} (${sharedToken.symbol})`;
+      $btnToken.textContent = `Send 100 ${sharedToken.symbol}`;
+      $btnToken.hidden = false;
+    }
     renderChallenges($container, data.challenges || {});
   } catch (e) {
     $container.textContent =

@@ -188,7 +188,7 @@
 <body>
   <main>
     <h1>Solidity Tutorial Faucet</h1>
-    <p class="lede">Drops <strong>1 ETH</strong> onto any address on the local anvil chain.</p>
+    <p class="lede">Drops <strong>1 ETH</strong> or <strong>100 tokens</strong> onto any address on the local anvil chain.</p>
 
     <section class="card">
       <dl class="chain-info">
@@ -196,6 +196,7 @@
         <dt>Chain ID</dt>     <dd id="info-chain">—</dd>
         <dt>Deployer</dt>     <dd id="info-deployer">—</dd>
         <dt>Faucet</dt>       <dd id="info-faucet">—</dd>
+        <dt>Token</dt>        <dd id="info-token">—</dd>
       </dl>
     </section>
 
@@ -203,6 +204,7 @@
       <label for="addr">Recipient address</label>
       <input id="addr" type="text" placeholder="0x..." spellcheck="false" autocomplete="off">
       <button id="claim">Send 1 ETH</button>
+      <button id="claim-token" hidden>Send 100 Tokens</button>
       <div id="status" aria-live="polite"></div>
     </section>
 

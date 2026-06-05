@@ -14,13 +14,19 @@ contract MockToken is ERC20 {
 contract Deploy is Script {
     function run() external {
         uint256 winnerPercentage = vm.envOr("THIRTYONE_WINNER_PERCENTAGE", uint256(80));
+        // SHARED_ERC20 points at the environment-wide default-erc-20 token
+        // (set by docker/build-snapshot.sh). Fall back to a local mock so the
+        // package stays independently deployable.
+        address token = vm.envOr("SHARED_ERC20", address(0));
 
         vm.startBroadcast();
-        MockToken token = new MockToken();
-        ThirtyOneGame game = new ThirtyOneGame(address(token), winnerPercentage);
+        if (token == address(0)) {
+            token = address(new MockToken());
+        }
+        ThirtyOneGame game = new ThirtyOneGame(token, winnerPercentage);
         vm.stopBroadcast();
 
-        console2.log("ADDR:token:", address(token));
+        console2.log("ADDR:token:", token);
         console2.log("ADDR:game:", address(game));
     }
 }
