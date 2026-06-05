@@ -5,6 +5,7 @@
   "description": "Solidity tutorial monorepo (Foundry + Soldeer)",
   "scripts": {
     "build": "pnpm -r build",
+    "collect:abi": "bash scripts/collect-abi.sh",
     "generate:foundry-config": "node scripts/generate-foundry-config.mjs",
     "check:foundry-config": "node scripts/check-foundry-config.mjs",
     "lint:js": "eslint \"**/*.{js,mjs}\"",
