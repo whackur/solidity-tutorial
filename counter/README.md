@@ -12,8 +12,7 @@
 
 | File | Topic |
 |---|---|
-| `src/BasicCounter.sol` | Bare minimum: single `uint256` + `add` / `sub` / `reset`. No events, no errors. Pure tx-flow practice. |
-| `src/Counter.sol` | Minimum combination of state variable + indexed event + custom error |
+| `src/Counter.sol` | Minimum combination of state variable + indexed event + custom error. Pairs a SHARED `count` with a PERSONAL `counts[msg.sender]` so a class can compare both state models on one deployment |
 | `src/SimpleStorage.sol` | Single storage slot + `ValueChanged(address indexed by, ...)` |
 | `src/EventsAndErrors.sol` | Events with 0~3 indexed args + anonymous; require / revert / custom / assert / auto-Panic; selectors exposed directly |
 

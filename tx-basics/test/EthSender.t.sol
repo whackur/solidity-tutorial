@@ -58,8 +58,8 @@ contract EthSenderTest is Test {
         bool ok = sender.sendViaCall(payable(address(mailbox)), 1 ether);
         assertTrue(ok);
         assertEq(address(mailbox).balance, 1 ether);
-        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.Receive));
-        assertEq(mailbox.lastValue(), 1 ether);
+        assertEq(uint256(mailbox.lastTrigger(address(sender))), uint256(EthMailbox.Trigger.Receive));
+        assertEq(mailbox.lastValue(address(sender)), 1 ether);
     }
 
     function test_sendViaSendValueToSink() public {
@@ -111,21 +111,21 @@ contract EthSenderTest is Test {
 
     function test_forwardToContractViaTypedInterface() public {
         sender.forwardToContract(IEthMailbox(address(mailbox)), 1 ether, bytes32("hello"));
-        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.ReceivePayable));
-        assertEq(mailbox.lastTag(), bytes32("hello"));
-        assertEq(mailbox.lastValue(), 1 ether);
+        assertEq(uint256(mailbox.lastTrigger(address(sender))), uint256(EthMailbox.Trigger.ReceivePayable));
+        assertEq(mailbox.lastTag(address(sender)), bytes32("hello"));
+        assertEq(mailbox.lastValue(address(sender)), 1 ether);
     }
 
     function test_forwardWithCallEmptyDataTriggersReceive() public {
         sender.forwardWithCall(payable(address(mailbox)), 1 ether, "");
-        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.Receive));
+        assertEq(uint256(mailbox.lastTrigger(address(sender))), uint256(EthMailbox.Trigger.Receive));
     }
 
     function test_forwardWithCallUnknownSelectorTriggersFallback() public {
         bytes memory data = abi.encodePacked(bytes4(0xdeadbeef));
         sender.forwardWithCall(payable(address(mailbox)), 1 ether, data);
-        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.Fallback));
-        assertEq(keccak256(mailbox.lastCalldata()), keccak256(data));
+        assertEq(uint256(mailbox.lastTrigger(address(sender))), uint256(EthMailbox.Trigger.Fallback));
+        assertEq(keccak256(mailbox.lastCalldata(address(sender))), keccak256(data));
     }
 
     function test_forwardWithCallFallbackCanDecodePayloadCommand() public {
@@ -134,10 +134,10 @@ contract EthSenderTest is Test {
 
         sender.forwardWithCall(payable(address(mailbox)), 1 ether, data);
 
-        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.Fallback));
-        assertEq(mailbox.lastTag(), tag);
-        assertEq(mailbox.lastValue(), 1 ether);
-        assertEq(keccak256(mailbox.lastCalldata()), keccak256(data));
+        assertEq(uint256(mailbox.lastTrigger(address(sender))), uint256(EthMailbox.Trigger.Fallback));
+        assertEq(mailbox.lastTag(address(sender)), tag);
+        assertEq(mailbox.lastValue(address(sender)), 1 ether);
+        assertEq(keccak256(mailbox.lastCalldata(address(sender))), keccak256(data));
     }
 
     function test_forwardWithCallFallbackCanRouteToCounterCommand() public {
@@ -146,16 +146,16 @@ contract EthSenderTest is Test {
         sender.forwardWithCall(payable(address(mailbox)), 1 ether, data);
         sender.forwardWithCall(payable(address(mailbox)), 0, data);
 
-        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.Fallback));
-        assertEq(mailbox.lastValue(), 0);
-        assertEq(mailbox.fallbackHits(), 2);
+        assertEq(uint256(mailbox.lastTrigger(address(sender))), uint256(EthMailbox.Trigger.Fallback));
+        assertEq(mailbox.lastValue(address(sender)), 0);
+        assertEq(mailbox.fallbackHits(address(sender)), 2);
     }
 
     function test_forwardWithCallNamedSelectorTriggersThatFunction() public {
         bytes memory data = abi.encodeCall(EthMailbox.receivePayable, (bytes32("named")));
         sender.forwardWithCall(payable(address(mailbox)), 1 ether, data);
-        assertEq(uint256(mailbox.lastTrigger()), uint256(EthMailbox.Trigger.ReceivePayable));
-        assertEq(mailbox.lastTag(), bytes32("named"));
+        assertEq(uint256(mailbox.lastTrigger(address(sender))), uint256(EthMailbox.Trigger.ReceivePayable));
+        assertEq(mailbox.lastTag(address(sender)), bytes32("named"));
     }
 
     /*//////////////////////////////////////////////////////////////

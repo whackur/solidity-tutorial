@@ -10,6 +10,7 @@ contract CounterTest is Test {
 
     event Incremented(address indexed by, uint256 newCount);
     event Reset(address indexed by);
+    event PersonalIncremented(address indexed by, uint256 newCount);
 
     function setUp() public {
         counter = new Counter();
@@ -40,5 +41,55 @@ contract CounterTest is Test {
         emit Reset(user);
         counter.reset();
         assertEq(counter.count(), 0);
+    }
+
+    /*//////////////////////////////////////////////////////////////
+                    PERSONAL COUNTER (per msg.sender)
+    //////////////////////////////////////////////////////////////*/
+
+    function test_PersonalCountsAreIsolatedPerCaller() public {
+        vm.prank(user);
+        counter.incrementPersonal();
+
+        assertEq(counter.counts(user), 1);
+        assertEq(counter.counts(address(this)), 0);
+        // personal ops never touch the shared slot
+        assertEq(counter.count(), 0);
+    }
+
+    function test_PersonalIncrementEmitsEvent() public {
+        vm.prank(user);
+        vm.expectEmit(true, false, false, true);
+        emit PersonalIncremented(user, 1);
+        counter.incrementPersonal();
+    }
+
+    function test_PersonalDecrementRevertsOnUnderflow() public {
+        // another caller's balance does not save msg.sender from underflow
+        vm.prank(user);
+        counter.incrementPersonal();
+
+        vm.expectRevert(Counter.CounterUnderflow.selector);
+        counter.decrementPersonal();
+    }
+
+    function test_PersonalResetOnlyClearsCallerSlot() public {
+        vm.prank(user);
+        counter.incrementPersonal();
+        counter.incrementPersonal(); // address(this)
+
+        counter.resetPersonal(); // resets address(this) only
+        assertEq(counter.counts(address(this)), 0);
+        assertEq(counter.counts(user), 1);
+    }
+
+    function test_SharedResetWipesEveryone() public {
+        vm.prank(user);
+        counter.increment();
+        counter.increment(); // address(this) — same shared slot
+
+        assertEq(counter.count(), 2);
+        counter.reset();
+        assertEq(counter.count(), 0); // user's contribution is gone too
     }
 }

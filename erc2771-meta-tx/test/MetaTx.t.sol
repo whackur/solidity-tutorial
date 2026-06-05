@@ -37,7 +37,6 @@ contract MetaTxTest is Test {
 
         assertEq(counter.counterOf(user.addr), 1);
         assertEq(counter.counterOf(relayer), 0);
-        assertEq(counter.lastCaller(), user.addr);
         assertEq(forwarder.nonces(user.addr), 1);
     }
 
@@ -81,7 +80,6 @@ contract MetaTxTest is Test {
         counter.increment();
 
         assertEq(counter.counterOf(user.addr), 1);
-        assertEq(counter.lastCaller(), user.addr);
     }
 
     /*//////////////////////////////////////////////////////////////

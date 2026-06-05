@@ -8,15 +8,12 @@ import {ERC2771Context} from "@openzeppelin/contracts/metatx/ERC2771Context.sol"
 ///         normal contract.
 contract MetaCounter is ERC2771Context {
     mapping(address account => uint256 count) public counterOf;
-    address public lastCaller;
 
     constructor(address trustedForwarder_) ERC2771Context(trustedForwarder_) {}
 
     function increment() external {
-        address user = _msgSender();
         unchecked {
-            counterOf[user] += 1;
+            counterOf[_msgSender()] += 1;
         }
-        lastCaller = user;
     }
 }
