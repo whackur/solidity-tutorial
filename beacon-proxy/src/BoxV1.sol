@@ -10,6 +10,11 @@ import {Initializable} from "@openzeppelin/contracts/proxy/utils/Initializable.s
 contract BoxV1 is Initializable {
     uint256 internal _value;
 
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor() {
+        _disableInitializers();
+    }
+
     function initialize(uint256 initialValue) external initializer {
         _value = initialValue;
     }

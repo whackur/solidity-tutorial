@@ -54,6 +54,23 @@ contract BeaconProxyTest is Test {
         assertEq(upgradedB.value(), 21);
     }
 
+    function test_appendedStorageStartsZeroThenTracksSetter() public {
+        boxA.set(111); // written while still on V1
+
+        beacon.upgradeTo(address(new BoxV2()));
+        BoxV2 upgradedA = BoxV2(address(boxA));
+
+        // V1 slot survived the upgrade; appended slot was never written.
+        assertEq(upgradedA.value(), 111);
+        assertEq(upgradedA.lastSetter(), address(0));
+
+        vm.prank(stranger);
+        upgradedA.set(222);
+
+        assertEq(upgradedA.value(), 222);
+        assertEq(upgradedA.lastSetter(), stranger);
+    }
+
     function test_upgradeOnlyByBeaconOwner() public {
         BoxV2 implV2 = new BoxV2();
         vm.prank(stranger);
