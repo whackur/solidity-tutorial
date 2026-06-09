@@ -34,6 +34,30 @@ docker compose down -v && docker compose up -d --build   # reset chain
 docker compose down                    # stop
 ```
 
+## Deploy to a live network (Sepolia / Hoodi / …)
+
+The local docker stack covers day-to-day work; to publish initialized contracts to a real network use `scripts/deploy.sh <network> <package|all>`. It signs with `DEPLOYER_MNEMONIC` account 0 (the same convention as the docker snapshot) and runs each package's `script/Deploy.s.sol` against the live RPC.
+
+The network is just an alias from `foundry.toml` `[rpc_endpoints]`. Its RPC URL env var is derived from the name — uppercase and `-`→`_`, then `_RPC_URL` (`base-sepolia` → `BASE_SEPOLIA_RPC_URL`). Set what you need in `.env` (copy from `.env.sample`):
+
+```
+DEPLOYER_MNEMONIC="test test test ... junk"   # account 0 is the deployer & gas payer
+SEPOLIA_RPC_URL="https://..."                 # for sepolia
+HOODI_RPC_URL="https://..."                   # for hoodi
+ETHERSCAN_API_KEY="..."                        # only when verifying
+```
+
+Then deploy:
+
+```bash
+pnpm deploy:sepolia default-erc-20      # one package
+pnpm deploy:hoodi   all                 # every package — costs real testnet ETH
+VERIFY=1 pnpm deploy:sepolia all        # also verify on the block explorer
+scripts/deploy.sh ethereum default-erc-20   # any configured network; mainnets have no pnpm shortcut on purpose
+```
+
+`default-erc-20` is always deployed first and exported as `SHARED_ERC20`, so token-agnostic packages reuse it. Resulting addresses are merged into `deployments/<network>.json`. `.env` is gitignored — never commit your mnemonic.
+
 ## Collect ABIs
 
 Build every package and aggregate project-owned ABIs into one tree:
