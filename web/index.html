@@ -183,12 +183,39 @@
       margin-top: 1.5rem;
       text-align: center;
     }
+    .tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .tabs button {
+      width: auto;
+      margin: 0;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      background: var(--card);
+      color: var(--fg);
+      border: 1px solid var(--border);
+    }
+    .tabs button.active {
+      background: #6366f1;
+      color: white;
+      border-color: #6366f1;
+    }
+    #ext-faucet {
+      margin: 0.75rem 0 0 0;
+      font-size: 0.875rem;
+      color: var(--muted);
+    }
+    #ext-faucet a { color: #6366f1; }
   </style>
 </head>
 <body>
   <main>
     <h1>Solidity Tutorial Faucet</h1>
-    <p class="lede">Drops <strong>1 ETH</strong> or <strong>100 tokens</strong> onto any address on the local anvil chain.</p>
+    <p class="lede">Drops <strong>ETH</strong> or <strong>tokens</strong> onto any address on the selected network.</p>
+
+    <nav id="networks" class="tabs" hidden></nav>
 
     <section class="card">
       <dl class="chain-info">
@@ -205,6 +232,7 @@
       <input id="addr" type="text" placeholder="0x..." spellcheck="false" autocomplete="off">
       <button id="claim">Send 1 ETH</button>
       <button id="claim-token" hidden>Send 100 Tokens</button>
+      <p id="ext-faucet" hidden>Need more gas? <a id="ext-faucet-link" href="#" target="_blank" rel="noopener noreferrer"></a></p>
       <div id="status" aria-live="polite"></div>
     </section>
 
