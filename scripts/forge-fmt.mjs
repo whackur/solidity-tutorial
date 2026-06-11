@@ -42,5 +42,9 @@ const args = [
   ...(process.argv.includes('--check') ? ['--check'] : []),
   ...TARGETS,
 ];
-const child = spawn('forge', args, { cwd: ROOT, stdio: 'inherit', shell: process.platform === 'win32' });
+const child = spawn('forge', args, {
+  cwd: ROOT,
+  stdio: 'inherit',
+  shell: process.platform === 'win32',
+});
 child.on('exit', (code) => process.exit(code ?? 1));
