@@ -223,7 +223,8 @@ coverage.json
 **/*-lock.yaml
 .env
 
-# Agents
+# Editors
+.vscode/
 .idea
 .deps
 .agent
@@ -248,3 +249,6 @@ crytic-export/
 
 # Docker — local-only deployment artifacts (addresses.json etc.)
 docker/shared/
+
+# Live-network deployment records (scripts/deploy.sh output)
+deployments/
