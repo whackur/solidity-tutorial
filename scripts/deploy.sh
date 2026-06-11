@@ -21,13 +21,24 @@
 #
 #   pnpm deploy:sepolia default-erc-20      # one package
 #   pnpm deploy:hoodi   all                 # every package (costs real testnet ETH)
-#   VERIFY=1 pnpm deploy:sepolia all        # also verify on the block explorer
+#   pnpm deploy:hoodi:verify all            # deploy everything and verify on the explorer
+#   VERIFY=1 pnpm deploy:sepolia all        # verify works on any network the same way
 #   scripts/deploy.sh ethereum default-erc-20   # mainnets have no pnpm shortcut on purpose
 #
 # Required env (loaded from .env at the repo root if present):
 #   DEPLOYER_MNEMONIC       BIP-39 phrase; account 0 is the deployer and gas payer
 #   <NETWORK>_RPC_URL       RPC endpoint for the chosen network (see derivation above)
 #   ETHERSCAN_API_KEY       only when VERIFY=1
+#
+# Optional env:
+#   DEPLOYER_ADDRESS        if set, must match the address derived from
+#                           DEPLOYER_MNEMONIC account 0 — aborts on mismatch
+#   SKIP_DEPLOYED=1         resume mode — skip packages already present in
+#                           deployments/<network>.json instead of redeploying
+#   SKIP_PACKAGES           space-separated packages to skip; defaults to the
+#                           anvil-only ETH-heavy labs (set "" to force all)
+#   <NETWORK>_PUBLIC_RPC_URL  student-facing RPC written into the faucet UI
+#                           config (docker/shared/<network>.json)
 
 set -euo pipefail
 
@@ -56,11 +67,16 @@ if [[ -z "$TARGET" ]]; then
 fi
 
 # Load .env so RPC URLs, the mnemonic, and the explorer key reach forge/cast.
+# .env provides defaults only: variables already set in the environment win, so
+# explicit overrides like `HOODI_RPC_URL=... scripts/deploy.sh ...` are honored.
 if [[ -f .env ]]; then
+  _pre_env=$(export -p)
   set -a
   # shellcheck disable=SC1091
   source .env
   set +a
+  eval "$_pre_env"
+  unset _pre_env
 fi
 
 : "${DEPLOYER_MNEMONIC:?set DEPLOYER_MNEMONIC in .env}"
@@ -83,6 +99,19 @@ fi
 
 DEPLOYER_KEY=$(cast wallet private-key "$DEPLOYER_MNEMONIC" 0)
 DEPLOYER_ADDR=$(cast wallet address --private-key "$DEPLOYER_KEY")
+
+# Guard against signing with the wrong key: when DEPLOYER_ADDRESS is set it must
+# match the address derived from the mnemonic (compare case-insensitively, the
+# derived address is EIP-55 checksummed).
+if [[ -n "${DEPLOYER_ADDRESS:-}" ]]; then
+  expected=$(printf '%s' "$DEPLOYER_ADDRESS" | tr '[:upper:]' '[:lower:]')
+  derived=$(printf '%s' "$DEPLOYER_ADDR" | tr '[:upper:]' '[:lower:]')
+  if [[ "$expected" != "$derived" ]]; then
+    echo "[deploy] ERROR: DEPLOYER_ADDRESS (${DEPLOYER_ADDRESS}) does not match mnemonic account 0 (${DEPLOYER_ADDR})" >&2
+    exit 1
+  fi
+fi
+
 CHAIN_ID=$(cast chain-id --rpc-url "$RPC_URL")
 
 echo "[deploy] network:  $NETWORK (chainId=$CHAIN_ID)"
@@ -99,8 +128,11 @@ deploy_one() {
   local outfile
   outfile=$(mktemp)
   set +e
+  # Pass the resolved URL, not the network alias: alias resolution would
+  # require [rpc_endpoints] in every package's foundry.toml, which the q-*
+  # challenge packages intentionally do not generate.
   forge script script/Deploy.s.sol:Deploy \
-    --rpc-url "$NETWORK" \
+    --rpc-url "$RPC_URL" \
     --broadcast \
     --private-key "$DEPLOYER_KEY" \
     "${verify_flags[@]+"${verify_flags[@]}"}" \
@@ -129,7 +161,8 @@ deploy_one() {
     exit 1
   fi
 
-  echo "{$(echo "$pairs" | paste -sd,)}"
+  # BSD paste needs the explicit '-' stdin operand (GNU tolerates omitting it).
+  echo "{$(echo "$pairs" | paste -sd, -)}"
 }
 
 # Resolve the package list: a single named package, or every package that has a
@@ -159,48 +192,123 @@ echo "[deploy] packages: ${packages[*]}"
 SHARED_TOKEN_PKG="default-erc-20"
 deployments_json="{}"
 
-# Deploy the shared ERC-20 first (if requested) and export SHARED_ERC20 so the
-# token-agnostic packages pick it up via vm.envOr.
-if printf '%s\n' "${packages[@]}" | grep -qx "$SHARED_TOKEN_PKG"; then
-  pairs_json=$(deploy_one "$SHARED_TOKEN_PKG")
-  deployments_json=$(echo "$deployments_json" \
-    | jq --argjson p "$pairs_json" --arg name "$SHARED_TOKEN_PKG" '. + {($name): $p}')
-  tok=$(echo "$pairs_json" | jq -r '.token // empty')
-  if [[ -n "$tok" ]]; then
-    export SHARED_ERC20="$tok"
-    echo "[deploy] shared ERC-20 token: ${SHARED_ERC20}"
-  fi
-fi
-
-for pkg in "${packages[@]}"; do
-  [[ "$pkg" == "$SHARED_TOKEN_PKG" ]] && continue
-  pairs_json=$(deploy_one "$pkg")
-  deployments_json=$(echo "$deployments_json" \
-    | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
-done
-
-# Merge into deployments/<network>.json so a single-package run does not wipe
-# addresses recorded by earlier runs on the same network.
+# The record file is rewritten after every package so a mid-run failure (one
+# broken deploy out of many) never loses the addresses already broadcast.
 mkdir -p "$ROOT_DIR/deployments"
 OUT="$ROOT_DIR/deployments/${NETWORK}.json"
 existing="{}"
 [[ -f "$OUT" ]] && existing=$(cat "$OUT")
 
-jq -n \
-  --arg network "$NETWORK" \
-  --argjson chainId "$CHAIN_ID" \
-  --arg deployer "$DEPLOYER_ADDR" \
-  --arg sharedToken "${SHARED_ERC20:-}" \
-  --argjson existing "$existing" \
-  --argjson new "$deployments_json" \
-  '{
-     network: $network,
-     chainId: $chainId,
-     deployer: $deployer,
-     sharedToken: (if $sharedToken == "" then ($existing.sharedToken // null) else $sharedToken end),
-     packages: (($existing.packages // {}) + $new)
-   }' \
-  >"$OUT"
+# SKIP_DEPLOYED=1 resumes a partial run: packages already present in the
+# record are skipped instead of redeployed (and re-paid for).
+skip_deployed="${SKIP_DEPLOYED:-0}"
 
+already_deployed() {
+  jq -e --arg p "$1" '.packages | has($p)' <<<"$existing" >/dev/null 2>&1
+}
+
+# Challenge labs that seed user instances with multi-ETH amounts (SEED is a
+# contract constant, 5-10 ETH per instance) are economically anvil-only —
+# no live-network faucet budget can sustain them. Skipped by default on this
+# live-RPC path; override the list via SKIP_PACKAGES (set it empty to force).
+DEFAULT_LIVE_SKIP="q-09-reentrancy q-10-signature-replay q-12-tx-origin q-15-front-run q-16-oracle-spot q-17-reentrancy-inflate q-18-read-only-reentrancy q-19-reentrancy-basic"
+skip_packages="${SKIP_PACKAGES-$DEFAULT_LIVE_SKIP}"
+
+is_live_skipped() {
+  case " ${skip_packages} " in
+    *" $1 "*) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
+# Faucet UI mirror (docker/shared is mounted at /data in the faucet
+# container) uses the addresses.json schema from docker/build-snapshot.sh.
+# The faucet account follows the same convention: mnemonic account #9 — fund
+# it on the live network for drops to work. <NETWORK>_PUBLIC_RPC_URL (e.g.
+# HOODI_PUBLIC_RPC_URL) sets the student-facing RPC; when unset the web app
+# falls back to its built-in public default.
+FAUCET_KEY=$(cast wallet private-key "$DEPLOYER_MNEMONIC" 9)
+FAUCET_ADDR=$(cast wallet address --private-key "$FAUCET_KEY")
+PUBLIC_RPC_ENV="$(printf '%s' "$NETWORK" | tr 'a-z-' 'A-Z_')_PUBLIC_RPC_URL"
+PUBLIC_RPC="${!PUBLIC_RPC_ENV:-}"
+mkdir -p "$ROOT_DIR/docker/shared"
+WEB_OUT="$ROOT_DIR/docker/shared/${NETWORK}.json"
+
+flush_record() {
+  jq -n \
+    --arg network "$NETWORK" \
+    --argjson chainId "$CHAIN_ID" \
+    --arg deployer "$DEPLOYER_ADDR" \
+    --arg sharedToken "${SHARED_ERC20:-}" \
+    --argjson existing "$existing" \
+    --argjson new "$deployments_json" \
+    '{
+       network: $network,
+       chainId: $chainId,
+       deployer: $deployer,
+       sharedToken: (if $sharedToken == "" then ($existing.sharedToken // null) else $sharedToken end),
+       packages: (($existing.packages // {}) + $new)
+     }' \
+    >"$OUT"
+
+  # Mirror into the faucet UI data dir on every flush so the web page tracks
+  # a long `all` run package-by-package.
+  jq \
+    --arg rpcUrl "$PUBLIC_RPC" \
+    --arg faucetAddr "$FAUCET_ADDR" \
+    --arg faucetKey "$FAUCET_KEY" \
+    '{
+       network: .network,
+       chainId: .chainId,
+       rpcUrl: (if $rpcUrl == "" then null else $rpcUrl end),
+       dropEth: 0.002,
+       maxRecipientBalanceEth: 0.01,
+       deployer: .deployer,
+       faucet: {address: $faucetAddr, privateKey: $faucetKey},
+       sharedToken: (if .sharedToken == null then null else
+         {address: .sharedToken, name: "MyERC20", symbol: "ME2", decimals: 18} end),
+       challenges: .packages
+     }' \
+    "$OUT" >"$WEB_OUT"
+}
+
+# Deploy the shared ERC-20 first (if requested) and export SHARED_ERC20 so the
+# token-agnostic packages pick it up via vm.envOr.
+if printf '%s\n' "${packages[@]}" | grep -qx "$SHARED_TOKEN_PKG"; then
+  if [[ "$skip_deployed" == "1" ]] && already_deployed "$SHARED_TOKEN_PKG"; then
+    tok=$(jq -r '.sharedToken // empty' <<<"$existing")
+    [[ -n "$tok" ]] && export SHARED_ERC20="$tok"
+    echo "[deploy] skipping ${SHARED_TOKEN_PKG} (already in record); shared token: ${SHARED_ERC20:-none}"
+  else
+    pairs_json=$(deploy_one "$SHARED_TOKEN_PKG")
+    deployments_json=$(echo "$deployments_json" \
+      | jq --argjson p "$pairs_json" --arg name "$SHARED_TOKEN_PKG" '. + {($name): $p}')
+    tok=$(echo "$pairs_json" | jq -r '.token // empty')
+    if [[ -n "$tok" ]]; then
+      export SHARED_ERC20="$tok"
+      echo "[deploy] shared ERC-20 token: ${SHARED_ERC20}"
+    fi
+    flush_record
+  fi
+fi
+
+for pkg in "${packages[@]}"; do
+  [[ "$pkg" == "$SHARED_TOKEN_PKG" ]] && continue
+  if is_live_skipped "$pkg"; then
+    echo "[deploy] skipping ${pkg} (anvil-only lab — see DEFAULT_LIVE_SKIP)"
+    continue
+  fi
+  if [[ "$skip_deployed" == "1" ]] && already_deployed "$pkg"; then
+    echo "[deploy] skipping ${pkg} (already in record)"
+    continue
+  fi
+  pairs_json=$(deploy_one "$pkg")
+  deployments_json=$(echo "$deployments_json" \
+    | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
+  flush_record
+done
+
+flush_record
 echo "[deploy] wrote ${OUT}"
+echo "[deploy] wrote ${WEB_OUT} (faucet ${FAUCET_ADDR} — fund it for live ETH drops)"
 echo "[deploy] done"
