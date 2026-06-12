@@ -6,8 +6,8 @@ import {Q19ReentrancyBasicLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user instances
-    /// (SEED 5 ether + BAIT 0.05 ether per user).
-    uint256 internal constant LAB_FUNDING = 100 ether;
+    /// (SEED 0.005 ether + BAIT 0.00005 ether per user).
+    uint256 internal constant LAB_FUNDING = 0.1 ether;
 
     function run() external {
         vm.startBroadcast();

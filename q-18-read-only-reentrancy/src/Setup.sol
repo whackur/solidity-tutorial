@@ -120,7 +120,7 @@ contract Q18ReadOnlyAttacker {
 ///         with a small "innocent depositor" stake so the share price
 ///         drop during withdraw is large and observable.
 contract Q18ReadOnlyLab is SolvableBase {
-    uint256 public constant SEED_DEPOSIT = 0.1 ether;
+    uint256 public constant SEED_DEPOSIT = 0.001 ether;
     /// @notice credits threshold for solved. Honest single-tx interaction
     ///         (1 ETH at price 1e18) would only mint 1e18 credits. The
     ///         exploit inflates that by ~10×.

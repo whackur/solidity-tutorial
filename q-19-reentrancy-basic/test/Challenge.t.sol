@@ -10,7 +10,7 @@ contract Q19ReentrancyBasicPublicTest is Test {
 
     function setUp() public {
         lab = new Q19ReentrancyBasicLab();
-        vm.deal(address(lab), 100 ether);
+        vm.deal(address(lab), 0.1 ether);
     }
 
     function test_CreateInstanceIsUnsolved() public {

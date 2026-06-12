@@ -2,7 +2,7 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A pre-funded `Q12TxOriginLab` is deployed. Each user gets a personal `(Q12TxOriginVault, Q12Phisher)` pair. The vault authenticates with `tx.origin == owner` instead of `msg.sender == owner`, so an intermediate contract can abuse a transaction that the owner willingly starts.
+A `Q12TxOriginLab` is deployed. Each user gets a personal `(Q12TxOriginVault, Q12Phisher)` pair, and the lab mints `SEED` mock ERC-20 tokens (`TKN`) into the vault — no ETH funding is required, only gas. The vault authenticates with `tx.origin == owner` instead of `msg.sender == owner`, so an intermediate contract can abuse a transaction that the owner willingly starts.
 
 ## Goal
 
@@ -15,12 +15,14 @@ Make `Q12TxOriginLab.isSolved(yourAddress)` return `true` by demonstrating the p
 function createInstance() external returns (address vault, address phisher);
 function vaultOf(address user) external view returns (Q12TxOriginVault);
 function phisherOf(address user) external view returns (Q12Phisher);
+function tokenOf(address user) external view returns (Q12MockToken);
 function isSolved(address user) external view returns (bool);
-uint256 public constant SEED = 5 ether;
+uint256 public constant SEED = 5e18; // 5 TKN
 
 // Q12TxOriginVault (your personal instance — DO NOT FIX)
-function transferTo(address payable to, uint256 amount) external;
+function transferTo(address to, uint256 amount) external;
 function owner() external view returns (address);
+function token() external view returns (Q12MockToken);
 
 // Q12Phisher (your personal instance, beneficiary = you)
 function claimFreeAirdrop() external;
@@ -30,12 +32,11 @@ function airdropClaimed() external view returns (bool);
 ## The bug under attack
 
 ```solidity
-function transferTo(address payable to, uint256 amount) external {
+function transferTo(address to, uint256 amount) external {
     // BUG: tx.origin authentication trusts the originating EOA,
     //      regardless of which intermediate contract called us.
     require(tx.origin == owner, "not owner");
-    (bool ok,) = to.call{value: amount}("");
-    require(ok, "send failed");
+    token.transfer(to, amount);
 }
 ```
 
@@ -73,10 +74,9 @@ The dangerous part is not a complex cryptographic bypass. It is the call stack: 
 ## Defending it
 
 ```solidity
-function transferTo(address payable to, uint256 amount) external {
+function transferTo(address to, uint256 amount) external {
     require(msg.sender == owner, "not owner");   // ← msg.sender, not tx.origin
-    (bool ok,) = to.call{value: amount}("");
-    require(ok, "send failed");
+    token.transfer(to, amount);
 }
 ```
 

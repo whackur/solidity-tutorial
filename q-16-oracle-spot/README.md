@@ -17,10 +17,10 @@ function tokenOf(address user) external view returns (Q16MockToken);
 function poolOf(address user) external view returns (Q16SimplePool);
 function lenderOf(address user) external view returns (Q16SpotLender);
 function isSolved(address user) external view returns (bool);
-uint256 public constant POOL_ETH_SEED = 1 ether;
-uint256 public constant POOL_TKN_SEED = 100e18;
-uint256 public constant LENDER_SEED = 5 ether;
-uint256 public constant USER_TKN_FAUCET = 100e18;
+uint256 public constant POOL_ETH_SEED = 0.01 ether;
+uint256 public constant POOL_TKN_SEED = 1e18;
+uint256 public constant LENDER_SEED = 0.05 ether;
+uint256 public constant USER_TKN_FAUCET = 1e18;
 
 // Q16SimplePool (x*y=k, no fees — per user)
 function swapEthForToken() external payable returns (uint256 tokenOut);

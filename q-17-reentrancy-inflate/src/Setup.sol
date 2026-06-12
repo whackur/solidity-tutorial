@@ -108,7 +108,7 @@ contract Q17InflateHelper {
 ///         once; the lab deploys (vault, attacker, helper) and pre-funds
 ///         the vault with `SEED` ETH playing the role of victim deposit.
 contract Q17InflateLab is SolvableBase {
-    uint256 public constant SEED = 1 ether;
+    uint256 public constant SEED = 0.001 ether;
 
     struct Instance {
         Q17YieldVault vault;
@@ -155,7 +155,7 @@ contract Q17InflateLab is SolvableBase {
         Instance memory inst = _instances[user];
         if (address(inst.vault) == address(0)) return false;
         return address(inst.vault).balance == 0
-            && address(inst.attacker).balance >= 1 ether
-            && address(inst.helper).balance >= 1 ether;
+            && address(inst.attacker).balance >= 0.001 ether
+            && address(inst.helper).balance >= 0.001 ether;
     }
 }

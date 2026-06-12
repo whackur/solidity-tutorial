@@ -19,7 +19,7 @@ function vaultOf(address user) external view returns (Q17YieldVault);
 function attackerOf(address user) external view returns (Q17InflateAttacker);
 function helperOf(address user) external view returns (Q17InflateHelper);
 function isSolved(address user) external view returns (bool);
-uint256 public constant SEED = 1 ether;
+uint256 public constant SEED = 0.001 ether;
 
 // Q17YieldVault (per user — DO NOT FIX)
 function deposit() external payable;

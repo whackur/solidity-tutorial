@@ -79,8 +79,8 @@ contract Q19ReentrancyBasicLab is SolvableBase {
         Q19BasicAttacker attacker;
     }
 
-    uint256 public constant SEED = 5 ether;
-    uint256 public constant BAIT = 0.05 ether;
+    uint256 public constant SEED = 0.005 ether;
+    uint256 public constant BAIT = 0.00005 ether;
 
     mapping(address => Instance) private _instances;
 

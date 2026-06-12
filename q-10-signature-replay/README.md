@@ -2,7 +2,7 @@
 
 > **Difficulty**: Intermediate ⭐⭐⭐
 
-A pre-funded `Q10ReplayLab` is deployed. Each user creates a personal `Q10VulnerableSigClaim` seeded with ETH. The claim contract verifies a signature over too little context: it is missing the fields that normally make an authorization one-time, time-bounded, chain-specific, and contract-specific.
+A `Q10ReplayLab` is deployed. Each user creates a personal `Q10VulnerableSigClaim` seeded with a dedicated mock ERC-20 token (`TKN`) that the lab mints — no ETH funding is required, only gas. The claim contract verifies a signature over too little context: it is missing the fields that normally make an authorization one-time, time-bounded, chain-specific, and contract-specific.
 
 ## Goal
 
@@ -14,12 +14,14 @@ Make `Q10ReplayLab.isSolved(yourAddress)` return `true` for your personal claim 
 // Lab
 function createInstance(address signer) external returns (address claim);
 function claimOf(address user) external view returns (Q10VulnerableSigClaim);
+function tokenOf(address user) external view returns (Q10MockToken);
 function isSolved(address user) external view returns (bool);
-uint256 public constant SEED = 5 ether;
+uint256 public constant SEED = 5e18; // 5 TKN
 
 // Q10VulnerableSigClaim (your personal instance, signer = the addr you passed)
-function claim(address payable to, uint256 amount, bytes calldata signature) external;
+function claim(address to, uint256 amount, bytes calldata signature) external;
 function signer() external view returns (address);
+function token() external view returns (Q10MockToken);
 ```
 
 ## The bug under attack
@@ -31,7 +33,7 @@ If the contract cannot distinguish "first use" from "later use", the signature a
 ## What you can interact with
 
 - A claim contract that checks a signature over a narrow set of fields.
-- A personal instance seeded with ETH.
+- A personal instance seeded with mock ERC-20 tokens (`TKN`).
 
 ## Hints
 
@@ -59,7 +61,7 @@ If the contract cannot distinguish "first use" from "later use", the signature a
 
 ```solidity
 mapping(uint256 => bool) public used;
-function claim(address payable to, uint256 amount, uint256 nonce, uint256 deadline,
+function claim(address to, uint256 amount, uint256 nonce, uint256 deadline,
                bytes calldata signature) external {
     require(block.timestamp <= deadline, "expired");
     require(!used[nonce], "replay");
@@ -67,7 +69,6 @@ function claim(address payable to, uint256 amount, uint256 nonce, uint256 deadli
     bytes32 raw = keccak256(abi.encode(block.chainid, address(this), to, amount, nonce, deadline));
     bytes32 ethHash = MessageHashUtils.toEthSignedMessageHash(raw);
     require(ECDSA.recover(ethHash, signature) == signer, "bad sig");
-    (bool ok,) = to.call{value: amount}("");
-    require(ok, "send failed");
+    token.transfer(to, amount);
 }
 ```

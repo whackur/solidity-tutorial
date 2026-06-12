@@ -10,8 +10,8 @@ contract Q18ReadOnlyReentrancyPublicTest is Test {
 
     function setUp() public {
         lab = new Q18ReadOnlyLab();
-        vm.deal(address(lab), 10 ether);
-        vm.deal(alice, 5 ether);
+        vm.deal(address(lab), 0.1 ether);
+        vm.deal(alice, 0.05 ether);
     }
 
     function test_CreateInstanceIsUnsolved() public {

@@ -16,7 +16,7 @@ function createInstance() external returns (address vault, address attacker);
 function vaultOf(address user) external view returns (Q09VulnerableVault);
 function attackerOf(address user) external view returns (Q09ReentrancyAttacker);
 function isSolved(address user) external view returns (bool);
-uint256 public constant SEED = 10 ether;
+uint256 public constant SEED = 0.01 ether;
 
 // Q09VulnerableVault (your personal instance — DO NOT FIX)
 function deposit() external payable;

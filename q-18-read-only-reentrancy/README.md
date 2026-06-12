@@ -17,7 +17,7 @@ function vaultOf(address) external view returns (Q18ShareVault);
 function consumerOf(address) external view returns (Q18PriceConsumer);
 function attackerOf(address) external view returns (Q18ReadOnlyAttacker);
 function isSolved(address user) external view returns (bool);
-uint256 public constant SEED_DEPOSIT = 0.1 ether;
+uint256 public constant SEED_DEPOSIT = 0.001 ether;
 
 // Q18ShareVault (per user — DO NOT FIX)
 function deposit() external payable;

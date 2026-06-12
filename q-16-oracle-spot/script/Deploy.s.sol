@@ -6,8 +6,8 @@ import {Q16OracleLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user instances
-    /// (POOL_ETH_SEED 1 ether + LENDER_SEED 5 ether per user).
-    uint256 internal constant LAB_FUNDING = 100 ether;
+    /// (POOL_ETH_SEED 0.01 ether + LENDER_SEED 0.05 ether per user).
+    uint256 internal constant LAB_FUNDING = 1 ether;
 
     function run() external {
         vm.startBroadcast();

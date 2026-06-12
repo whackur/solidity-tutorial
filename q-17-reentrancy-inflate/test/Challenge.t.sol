@@ -10,8 +10,8 @@ contract Q17ReentrancyInflatePublicTest is Test {
 
     function setUp() public {
         lab = new Q17InflateLab();
-        vm.deal(address(lab), 100 ether);
-        vm.deal(alice, 5 ether);
+        vm.deal(address(lab), 0.1 ether);
+        vm.deal(alice, 0.005 ether);
     }
 
     function test_CreateInstanceIsUnsolved() public {

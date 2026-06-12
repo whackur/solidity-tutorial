@@ -2,7 +2,7 @@
 
 > **Difficulty**: Beginner ⭐⭐
 
-A pre-funded `Q15FrontRunLab` is deployed. Each user calls `createInstance()` to get a personal `Q15FrontRunChallenge` holding `1 ETH` and a `bytes32 private _secret` that the designer mistakenly thought was hidden.
+A `Q15FrontRunLab` is deployed. Each user calls `createInstance()` to get a personal `Q15FrontRunChallenge` holding `PRIZE` mock ERC-20 tokens (`TKN`) — minted by the lab, so only gas is needed — and a `bytes32 private _secret` that the designer mistakenly thought was hidden.
 
 Your task is to prove that "private" storage is not actually secret and use that knowledge to win your own challenge instance.
 
@@ -17,13 +17,16 @@ Make `Q15FrontRunLab.isSolved(yourAddress)` return `true`: be the
 // Lab
 function createInstance() external returns (address challenge);
 function challengeOf(address user) external view returns (Q15FrontRunChallenge);
+function tokenOf(address user) external view returns (Q15MockToken);
 function isSolved(address user) external view returns (bool);
-uint256 public constant PRIZE = 1 ether;
+uint256 public constant PRIZE = 1e18; // 1 TKN
 
-// Q15FrontRunChallenge (per user, prize seeded by lab)
+// Q15FrontRunChallenge (per user, prize tokens minted by lab)
 function claim(bytes32 guess) external;
 function owner() external view returns (address);
 function winner() external view returns (address);
+function secretSlot() external pure returns (uint256);
+function token() external view returns (Q15MockToken);
 ```
 
 ## The bug under attack

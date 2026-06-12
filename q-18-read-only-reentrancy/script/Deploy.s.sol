@@ -5,8 +5,8 @@ import {Script, console2} from "forge-std/Script.sol";
 import {Q18ReadOnlyLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
-    /// Funds the lab so it can seed many per-user vaults (SEED_DEPOSIT = 0.1 ether each).
-    uint256 internal constant LAB_FUNDING = 10 ether;
+    /// Funds the lab so it can seed many per-user vaults (SEED_DEPOSIT = 0.001 ether each).
+    uint256 internal constant LAB_FUNDING = 0.1 ether;
 
     function run() external {
         vm.startBroadcast();

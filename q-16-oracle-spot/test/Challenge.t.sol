@@ -10,8 +10,8 @@ contract Q16OracleSpotPublicTest is Test {
 
     function setUp() public {
         lab = new Q16OracleLab();
-        vm.deal(address(lab), 100 ether);
-        vm.deal(alice, 5 ether);
+        vm.deal(address(lab), 1 ether);
+        vm.deal(alice, 0.1 ether);
     }
 
     function test_CreateInstanceIsUnsolved() public {
