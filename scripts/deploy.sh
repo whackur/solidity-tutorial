@@ -207,11 +207,13 @@ already_deployed() {
   jq -e --arg p "$1" '.packages | has($p)' <<<"$existing" >/dev/null 2>&1
 }
 
-# Challenge labs that seed user instances with multi-ETH amounts (SEED is a
-# contract constant, 5-10 ETH per instance) are economically anvil-only —
-# no live-network faucet budget can sustain them. Skipped by default on this
-# live-RPC path; override the list via SKIP_PACKAGES (set it empty to force).
-DEFAULT_LIVE_SKIP="q-09-reentrancy q-10-signature-replay q-12-tx-origin q-15-front-run q-16-oracle-spot q-17-reentrancy-inflate q-18-read-only-reentrancy q-19-reentrancy-basic"
+# Previously the value-heavy challenge labs were anvil-only — q-09/16/17/18/19
+# seeded 5-10 ETH per instance and q-10/12/15 paid out ETH, so no live faucet
+# budget could sustain them. They have since been scaled down (≤1 ETH lab
+# funding total) and the value-only ones tokenized to a free-mint ERC-20, so all
+# are now affordable on live networks. Nothing is skipped by default; override
+# via SKIP_PACKAGES (e.g. SKIP_PACKAGES="q-16-oracle-spot") to exclude any.
+DEFAULT_LIVE_SKIP=""
 skip_packages="${SKIP_PACKAGES-$DEFAULT_LIVE_SKIP}"
 
 is_live_skipped() {
