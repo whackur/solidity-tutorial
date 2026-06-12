@@ -54,7 +54,9 @@ function deposited(address user) external view returns (uint256);
 
 - The vault never *takes* tokens — it *pulls* them. The pull only succeeds if you already gave it permission.
 - Try calling `vault.pull(25e18)` *before* approving — read the revert reason. Then approve and try again.
+- After `approve`, call `faucet.allowance(yourAddress, vaultAddress)` and note the number. After `pull()` succeeds, call `allowance` again — watch the remaining budget decrease by exactly the pulled amount.
 - A *direct* `transfer(vault, 25e18)` does not change `deposited[you]`. The vault only updates its bookkeeping when it pulls via `transferFrom`.
+- Want a guided Solidity walkthrough of the same flow before attempting this challenge? See [`erc20-allowance/`](../erc20-allowance/) for a step-by-step tutorial.
 
 ## Constraints
 
