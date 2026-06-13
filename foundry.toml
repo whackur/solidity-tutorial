@@ -13,6 +13,30 @@ remappings = [
     "@common/=common/src/",
 ]
 
+# Dedicated profile for script/DeployAll.s.sol — the single-broadcast fast path
+# that compiles and deploys every package at once. It needs via_ir (the
+# smart-account package requires it) and the optimizer, neither of which the
+# default profile enables. Compile/run with FOUNDRY_PROFILE=deployall.
+# Profiles inherit [profile.default], so libs/solc/evm_version/remappings carry
+# over; they are restated here so the profile stays self-describing.
+[profile.deployall]
+libs = ["dependencies"]
+auto_detect_remappings = false
+solc = "0.8.35"
+evm_version = "osaka"
+via_ir = true
+optimizer = true
+optimizer_runs = 200
+ignored_warnings_from = ["dependencies"]
+ignored_error_codes = [2424]
+remappings = [
+    "@openzeppelin/contracts/=dependencies/@openzeppelin-contracts-5.6.1/",
+    "@openzeppelin/contracts-upgradeable/=dependencies/@openzeppelin-contracts-upgradeable-5.6.1/",
+    "forge-std/=dependencies/forge-std-1.16.1/src/",
+    "openzeppelin-foundry-upgrades/=dependencies/openzeppelin-foundry-upgrades-0.4.0/src/",
+    "@common/=common/src/",
+]
+
 [soldeer]
 remappings_generate = false
 remappings_regenerate = false
