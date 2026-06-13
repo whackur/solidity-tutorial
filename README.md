@@ -56,7 +56,30 @@ VERIFY=1 pnpm deploy:sepolia all        # also verify on the block explorer
 scripts/deploy.sh ethereum default-erc-20   # any configured network; mainnets have no pnpm shortcut on purpose
 ```
 
-`default-erc-20` is always deployed first and exported as `SHARED_ERC20`, so token-agnostic packages reuse it. Resulting addresses are merged into `deployments/<network>.json`. `.env` is gitignored — never commit your mnemonic.
+`default-erc-20` is always deployed first and exported as `SHARED_ERC20`, so token-agnostic packages reuse it. Resulting addresses are merged into `deployments/<network>.json` and mirrored to `docker/shared/<network>.json` so the faucet UI shows a tab for that network. `.env` is gitignored — never commit your mnemonic.
+
+### Fast path: one broadcast
+
+`pnpm deploy:hoodi all` runs each package's `Deploy.s.sol` as a separate broadcast, so every package pays its own on-chain confirmation (~45 sequential round-trips). To deploy every package in a **single** broadcast — one confirmation cycle, much faster — use the combined script:
+
+```bash
+pnpm deploy:hoodi:fast      # bash scripts/deploy-all.sh hoodi
+```
+
+It runs the root `script/DeployAll.s.sol` under the `deployall` Foundry profile and writes the same `deployments/<network>.json` / `docker/shared/<network>.json`. Because all lab funding happens in one tx batch, the deployer must hold the full funding up front.
+
+### Funding and resuming
+
+A full `all` run costs real testnet ETH — fund the deployer (mnemonic account 0) with **~1.5 ETH** before starting. Most of that is lab seeding: `q-16-oracle-spot` alone injects 1 ETH (it seeds many per-user instances), and `q-09 / q-17 / q-18 / q-19` add `0.1 / 0.05 / 0.1 / 0.1`.
+
+If a run stops partway (e.g. the deployer runs low on gas), resume without re-paying for what already landed:
+
+```bash
+SKIP_DEPLOYED=1 pnpm deploy:hoodi all                    # skip packages already in deployments/<network>.json
+SKIP_PACKAGES="q-16-oracle-spot" pnpm deploy:hoodi all   # skip specific expensive labs
+```
+
+`SKIP_DEPLOYED=1` reuses the recorded `sharedToken`, so token-agnostic packages still wire up to the existing `default-erc-20`.
 
 ## Collect ABIs
 
