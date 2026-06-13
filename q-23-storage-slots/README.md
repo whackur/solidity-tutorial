@@ -1,6 +1,6 @@
 # Q-23. Storage slots — reading "private" state
 
-> **Difficulty**: Intermediate ⭐⭐
+> **Difficulty**: Entry ⭐
 
 A `Q23Vault` contract holds two secret 32-byte values in storage. Neither has
 a getter. Your job is to read both directly from the chain and submit them
