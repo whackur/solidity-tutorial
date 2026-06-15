@@ -203,6 +203,7 @@ $RECYCLE.BIN/
 **/cache/
 **/broadcast/
 combined-out/
+combined-out.zip
 **/lib/
 dependencies/
 **/dependencies/**
