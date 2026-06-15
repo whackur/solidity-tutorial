@@ -19,16 +19,15 @@ import { privateKeyToAccount } from 'https://esm.sh/viem@2/accounts';
 // faucet) — fund it sparingly and only with testnet ETH.
 const NETWORKS = [
   {
-    id: 'hoodi',
-    label: 'Hoodi Testnet',
-    chainName: 'Hoodi',
-    file: './data/hoodi.json',
-    // Student-facing default; an rpcUrl in hoodi.json overrides it.
-    // publicnode has wildcard CORS and proved steadier than ethpandaops.
-    defaultRpcUrl: 'https://ethereum-hoodi-rpc.publicnode.com',
+    id: 'base-sepolia',
+    label: 'Base Sepolia',
+    chainName: 'Base Sepolia',
+    file: './data/base-sepolia.json',
+    // Student-facing default; an rpcUrl in base-sepolia.json overrides it.
+    defaultRpcUrl: 'https://sepolia.base.org',
     externalFaucet: {
-      label: 'Google Cloud Web3 Faucet (free hoodi ETH)',
-      url: 'https://cloud.google.com/application/web3/faucet/ethereum/hoodi',
+      label: 'Alchemy Base Sepolia Faucet (free testnet ETH)',
+      url: 'https://www.alchemy.com/faucets/base-sepolia',
     },
   },
   {
