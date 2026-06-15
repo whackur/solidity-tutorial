@@ -74,7 +74,7 @@ contract Q09ReentrancyLab is SolvableBase {
         Q09ReentrancyAttacker attacker;
     }
 
-    uint256 public constant SEED = 0.01 ether;
+    uint256 public constant SEED = 0.0005 ether;
 
     mapping(address => Instance) private _instances;
 

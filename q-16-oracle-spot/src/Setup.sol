@@ -128,9 +128,9 @@ contract Q16SpotLender {
 ///         some TKN for the manipulation.
 contract Q16OracleLab is SolvableBase {
     /// Pool seed: small reserves so a few ETH of swap moves spot a lot.
-    uint256 public constant POOL_ETH_SEED = 0.01 ether;
+    uint256 public constant POOL_ETH_SEED = 0.0001 ether;
     uint256 public constant POOL_TKN_SEED = 1e18;
-    uint256 public constant LENDER_SEED = 0.05 ether;
+    uint256 public constant LENDER_SEED = 0.0005 ether;
     uint256 public constant USER_TKN_FAUCET = 1e18;
 
     struct Instance {

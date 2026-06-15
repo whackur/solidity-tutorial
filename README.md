@@ -19,12 +19,19 @@ Override ports/mnemonic in `.env` if needed (`cp .env.sample .env`).
 | Service  | Port   | Role                                                |
 | -------- | ------ | --------------------------------------------------- |
 | `anvil`  | `8545` | Local EVM node loaded from a build-time snapshot of every package `Deploy.s.sol` |
-| `faucet` | `8888` | Static UI that sends 1 ETH from anvil account #0    |
+| `faucet` | `8888` | Static UI that sends 1 ETH from the faucet wallet (mnemonic account #9) |
 
 Deployer account (anvil's well-known test key, **never use on mainnet**):
 
 - `0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266`
 - `0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80`
+
+Faucet account — the wallet the UI drips ETH from, always **mnemonic account #9**:
+
+- Local anvil: `0xa0Ee7A142d267C1f36714E4a8F75612F20a79720` (anvil's well-known account #9)
+- Live networks: account #9 of your `DEPLOYER_MNEMONIC`, mirrored into `docker/shared/<network>.json`
+
+The index is the same everywhere; only the mnemonic differs — the local stack uses `ANVIL_MNEMONIC`, live networks use `DEPLOYER_MNEMONIC`. On a live network fund this account sparingly and only with testnet ETH: its private key sits in the faucet config so the UI can sign drops.
 
 ## Common commands
 

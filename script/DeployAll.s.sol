@@ -309,11 +309,13 @@ contract DeployAll is Script {
             console2.log("ADDR:token:", address(challenge.token()));
         }
 
-        // ---- q-09-reentrancy (lab is seeded with 0.1 ether) ----
+        // ---- q-09-reentrancy (lab is seeded with 0.01 ether) ----
         {
             Q09ReentrancyLab lab = new Q09ReentrancyLab();
-            (bool ok,) = address(lab).call{value: 0.1 ether}("");
-            require(ok, "q-09 lab funding failed");
+            if (vm.envOr("SEED_LABS", false)) {
+                (bool ok,) = address(lab).call{value: 0.01 ether}("");
+                require(ok, "q-09 lab funding failed");
+            }
             console2.log("PKG:q-09-reentrancy");
             console2.log("ADDR:lab:", address(lab));
         }
@@ -361,38 +363,46 @@ contract DeployAll is Script {
             console2.log("ADDR:lab:", address(lab));
         }
 
-        // ---- q-16-oracle-spot (lab is seeded with 1 ether) ----
+        // ---- q-16-oracle-spot (lab is seeded with 0.01 ether) ----
         {
             Q16OracleLab lab = new Q16OracleLab();
-            (bool ok,) = address(lab).call{value: 1 ether}("");
-            require(ok, "q-16 lab funding failed");
+            if (vm.envOr("SEED_LABS", false)) {
+                (bool ok,) = address(lab).call{value: 0.01 ether}("");
+                require(ok, "q-16 lab funding failed");
+            }
             console2.log("PKG:q-16-oracle-spot");
             console2.log("ADDR:lab:", address(lab));
         }
 
-        // ---- q-17-reentrancy-inflate (lab is seeded with 0.05 ether) ----
+        // ---- q-17-reentrancy-inflate (lab is seeded with 0.01 ether) ----
         {
             Q17InflateLab lab = new Q17InflateLab();
-            (bool ok,) = address(lab).call{value: 0.05 ether}("");
-            require(ok, "q-17 lab funding failed");
+            if (vm.envOr("SEED_LABS", false)) {
+                (bool ok,) = address(lab).call{value: 0.01 ether}("");
+                require(ok, "q-17 lab funding failed");
+            }
             console2.log("PKG:q-17-reentrancy-inflate");
             console2.log("ADDR:lab:", address(lab));
         }
 
-        // ---- q-18-read-only-reentrancy (lab is seeded with 0.1 ether) ----
+        // ---- q-18-read-only-reentrancy (lab is seeded with 0.01 ether) ----
         {
             Q18ReadOnlyLab lab = new Q18ReadOnlyLab();
-            (bool ok,) = address(lab).call{value: 0.1 ether}("");
-            require(ok, "q-18 lab funding failed");
+            if (vm.envOr("SEED_LABS", false)) {
+                (bool ok,) = address(lab).call{value: 0.01 ether}("");
+                require(ok, "q-18 lab funding failed");
+            }
             console2.log("PKG:q-18-read-only-reentrancy");
             console2.log("ADDR:lab:", address(lab));
         }
 
-        // ---- q-19-reentrancy-basic (lab is seeded with 0.1 ether) ----
+        // ---- q-19-reentrancy-basic (lab is seeded with 0.01 ether) ----
         {
             Q19ReentrancyBasicLab lab = new Q19ReentrancyBasicLab();
-            (bool ok,) = address(lab).call{value: 0.1 ether}("");
-            require(ok, "q-19 lab funding failed");
+            if (vm.envOr("SEED_LABS", false)) {
+                (bool ok,) = address(lab).call{value: 0.01 ether}("");
+                require(ok, "q-19 lab funding failed");
+            }
             console2.log("PKG:q-19-reentrancy-basic");
             console2.log("ADDR:lab:", address(lab));
         }

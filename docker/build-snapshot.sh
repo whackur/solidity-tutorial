@@ -69,6 +69,11 @@ FAUCET_ADDR=$(cast wallet address --private-key "$FAUCET_KEY")
 echo "[snapshot] deployer: ${DEPLOYER_ADDR}"
 echo "[snapshot] faucet:   ${FAUCET_ADDR}"
 
+# Local anvil has free ETH, so seed the value-funded challenge labs here
+# (q-09/16/17/18/19) — Deploy scripts gate funding behind SEED_LABS. Live
+# deploys leave it unset and ship contract-only.
+export SEED_LABS=true
+
 # deploy_one <package-name> — runs one Deploy.s.sol, returns a JSON object of
 # its ADDR:<key>: <0x...> emissions on stdout.
 deploy_one() {

@@ -6,14 +6,19 @@ import {Q16OracleLab} from "../src/Setup.sol";
 
 contract Deploy is Script {
     /// Funds the lab so it can seed many per-user instances
-    /// (POOL_ETH_SEED 0.01 ether + LENDER_SEED 0.05 ether per user).
-    uint256 internal constant LAB_FUNDING = 1 ether;
+    /// (POOL_ETH_SEED 0.0001 ether + LENDER_SEED 0.0005 ether per user).
+    uint256 internal constant LAB_FUNDING = 0.01 ether;
 
     function run() external {
         vm.startBroadcast();
         Q16OracleLab lab = new Q16OracleLab();
-        (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
-        require(ok, "lab funding failed");
+        // Lab seeding is opt-in via SEED_LABS=true. Live deploys ship the
+        // contract only (no ETH out); fund the lab separately when the
+        // challenge must be playable. Local anvil (build-snapshot) sets it.
+        if (vm.envOr("SEED_LABS", false)) {
+            (bool ok,) = address(lab).call{value: LAB_FUNDING}("");
+            require(ok, "lab funding failed");
+        }
         vm.stopBroadcast();
 
         console2.log("=== q-16-oracle-spot deployment ===");

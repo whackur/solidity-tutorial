@@ -97,6 +97,12 @@ if [[ "${VERIFY:-0}" == "1" ]]; then
   verify_flags=(--verify)
 fi
 
+# SLOW=1 sends one tx at a time, waiting for each receipt — required when the
+# deployer is an EIP-7702 delegated account (which rejects gapped-nonce txs) or
+# on RPCs with laggy nonce propagation.
+slow_flags=()
+[[ "${SLOW:-0}" == "1" ]] && slow_flags=(--slow)
+
 DEPLOYER_KEY=$(cast wallet private-key "$DEPLOYER_MNEMONIC" 0)
 DEPLOYER_ADDR=$(cast wallet address --private-key "$DEPLOYER_KEY")
 
@@ -136,6 +142,7 @@ deploy_one() {
     --broadcast \
     --private-key "$DEPLOYER_KEY" \
     "${verify_flags[@]+"${verify_flags[@]}"}" \
+    "${slow_flags[@]+"${slow_flags[@]}"}" \
     >"$outfile" 2>&1
   local rc=$?
   set -e

@@ -121,7 +121,7 @@ The docker stack (`docker compose up`) is a local anvil snapshot. To publish to 
 
 Conventions shared by both: sign with `DEPLOYER_MNEMONIC` account 0 (gas payer); the classroom faucet is account 9; `default-erc-20` deploys first and its address is reused via the `SHARED_ERC20` env var by token-agnostic packages.
 
-Funding: a full `all` run needs **~1.5 ETH** on the deployer — most is lab seeding (`q-16-oracle-spot` injects 1 ETH on its own; `q-09 / q-17 / q-18 / q-19` add `0.1 / 0.05 / 0.1 / 0.1`). The combined fast path needs the whole amount up front (single batch); the per-package path can be resumed with `SKIP_DEPLOYED=1` if it runs out mid-way.
+Lab seeding is **opt-in** via `SEED_LABS=true`. By default both deploy paths ship **contract-only** — no ETH leaves the deployer. The value-funded challenge labs (`q-09 / q-16 / q-17 / q-18 / q-19`) still deploy, but stay **unfunded**: their `createInstance(...)` reverts (`lab underfunded`) until the recorded `lab` address is topped up. Set `SEED_LABS=true` to fund at deploy time (`q-16` 1 ETH; `q-09 / q-18 / q-19` 0.1; `q-17` 0.05 — a full seeded `all` run is then **~1.5 ETH**). The local docker/anvil snapshot (`docker/build-snapshot.sh`) sets `SEED_LABS=true` automatically since anvil ETH is free. To fund a lab after a contract-only live deploy, just send ETH to its recorded `lab` address. The combined fast path needs the seeding amount up front (single batch); the per-package path can be resumed with `SKIP_DEPLOYED=1` if it runs out mid-way.
 
 `.env` gotchas: `DEPLOYER_MNEMONIC` must be **quoted** (`"word1 word2 ..."`) — an unquoted multi-word value silently breaks `source .env` and the deploy aborts. `scripts/deploy.sh` requires `jq` on `PATH`.
 
@@ -130,3 +130,4 @@ Funding: a full `all` run needs **~1.5 ETH** on the deployer — most is lab see
 - Each subtree carries its own generated `foundry.toml`. Do not hand-edit; modify `config/foundry/packages.json` and regenerate.
 - `dependencies/` is gitignored. Run `forge soldeer install` after a fresh clone.
 - Hardhat/Ignition are no longer used. Any leftover `contracts/`, `ignition/`, `types/`, `artifacts/` directories should be removed.
+- The live deployer must be a **plain EOA**, not an EIP-7702 delegated account (e.g. a ChainOS / smart-account wallet). Delegated accounts reject gapped-nonce txs (`gapped-nonce tx from delegated accounts`), which desyncs forge's multi-tx broadcast — causing `CreateCollision` and, when `SEED_LABS=true`, lab-funding ETH landing at empty predicted CREATE addresses (unrecoverable). Check with `cast code <deployer>`: a `0xef0100…` prefix means it is delegated — de-delegate (send an empty 7702 authorization) or use a different key.
