@@ -83,7 +83,7 @@ contract MerkleAllowlist is Ownable {
         emit Revoked(account);
     }
 
-    function isAllowed(address account) external view returns (bool) {
+    function isAllowed(address account) public view returns (bool) {
         return _registered[account];
     }
 

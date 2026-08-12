@@ -37,6 +37,8 @@ interface IThirtyOneGame {
 
     function winners(uint256 _round) external view returns (address);
 
+    function lastSubmitter(uint256 _round) external view returns (address);
+
     function winnerPercentage() external view returns (uint256);
 
     function submit(uint256 _round, uint256 _number, uint256 _amount) external;

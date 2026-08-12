@@ -106,7 +106,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia", "hoodi"]}
+      "generator": {"networks": ["base-sepolia"]}
     },
     "minimal-proxy": {
       "profile_default": {
@@ -188,7 +188,7 @@
           "forge-std/=../dependencies/forge-std-1.16.1/src/"
         ]
       },
-      "generator": {"networks": ["sepolia", "hoodi"]}
+      "generator": {"networks": ["base-sepolia"]}
     }
   }
 }

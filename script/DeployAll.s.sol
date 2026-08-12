@@ -22,6 +22,7 @@ pragma solidity ^0.8.35;
 // the smart-account package, and the optimizer).
 
 import {Script, console2} from "forge-std/Script.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 // ---- default-erc-20 (shared token — deployed first) ----
 import {MyERC20} from "../default-erc-20/src/MyERC20.sol";
@@ -67,7 +68,7 @@ import {SignatureVerifier} from "../eth-sign/src/SignatureVerifier.sol";
 import {Implementation} from "../minimal-proxy/src/Implementation.sol";
 import {Factory} from "../minimal-proxy/src/Factory.sol";
 
-// ---- q-01 .. q-26 (all isolate their contracts under Q## names) ----
+// ---- q-01 .. q-27 (all isolate their contracts under Q## names) ----
 import {Q01Counter} from "../q-01-counter/src/Setup.sol";
 import {Q02EventsAndErrors} from "../q-02-events-errors/src/Setup.sol";
 import {Q03EthMailbox} from "../q-03-eth-mailbox/src/Setup.sol";
@@ -94,6 +95,7 @@ import {Q23Vault} from "../q-23-storage-slots/src/Setup.sol";
 import {Q24NftLab} from "../q-24-nft-ownership/src/Setup.sol";
 import {Q25UupsLab} from "../q-25-uups-upgrade/src/Setup.sol";
 import {Q26MyForwarder, Q26MetaCounter} from "../q-26-meta-tx/src/Setup.sol";
+import {Q27MerkleAllowlistLab} from "../q-27-merkle-allowlist/src/Setup.sol";
 
 // ---- simple-transparent ----
 import {Box} from "../simple-transparent/src/Box.sol";
@@ -111,8 +113,11 @@ import {SimpleWallet} from "../simple-wallet/src/SimpleWallet.sol";
 // ---- smart-account ----
 import {SmartAccount} from "../smart-account/src/SmartAccount.sol";
 
-// ---- thirty-one-game ----
+// ---- thirty-one-game and merkle tutorials ----
 import {ThirtyOneGame} from "../thirty-one-game/src/ThirtyOneGame.sol";
+import {MerkleAllowlist} from "../merkle-allowlist/src/MerkleAllowlist.sol";
+import {AllowlistRestrictedToken} from "../merkle-allowlist/src/AllowlistRestrictedToken.sol";
+import {MerkleDistributor} from "../merkle-allowlist/src/MerkleDistributor.sol";
 
 // ---- tx-basics ----
 import {DelegateCaller, DelegateLogic} from "../tx-basics/src/DelegatecallDemo.sol";
@@ -159,7 +164,8 @@ contract DeployAll is Script {
         {
             BoxV1 impl = new BoxV1();
             UpgradeableBeacon beacon = new UpgradeableBeacon(address(impl), msg.sender);
-            BeaconProxy proxy = new BeaconProxy(address(beacon), abi.encodeCall(BoxV1.initialize, (42)));
+            BeaconProxy proxy =
+                new BeaconProxy(address(beacon), abi.encodeCall(BoxV1.initialize, (42)));
             console2.log("PKG:beacon-proxy");
             console2.log("ADDR:implementation:", address(impl));
             console2.log("ADDR:beacon:", address(beacon));
@@ -419,13 +425,16 @@ contract DeployAll is Script {
         // ---- q-21-ecrecover-basic (three signed candidates; one trusted) ----
         {
             uint256 trustedPk = vm.envOr(
-                "TRUSTED_SIGNER_PK", uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
+                "TRUSTED_SIGNER_PK",
+                uint256(0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80)
             );
             uint256 impostorAPk = vm.envOr(
-                "IMPOSTOR_A_PK", uint256(0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d)
+                "IMPOSTOR_A_PK",
+                uint256(0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d)
             );
             uint256 impostorBPk = vm.envOr(
-                "IMPOSTOR_B_PK", uint256(0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a)
+                "IMPOSTOR_B_PK",
+                uint256(0x5de4111afa1a4b94908f83103eb1f1706367c2e68ca870fc3fb9a804cdab365a)
             );
 
             address trustedSigner = vm.addr(trustedPk);
@@ -449,8 +458,10 @@ contract DeployAll is Script {
 
         // ---- q-23-storage-slots (secrets seeded from block context) ----
         {
-            bytes32 a = keccak256(abi.encodePacked("q23.A", block.timestamp, blockhash(block.number - 1)));
-            bytes32 b = keccak256(abi.encodePacked("q23.B", block.timestamp, blockhash(block.number - 1)));
+            bytes32 a =
+                keccak256(abi.encodePacked("q23.A", block.timestamp, blockhash(block.number - 1)));
+            bytes32 b =
+                keccak256(abi.encodePacked("q23.B", block.timestamp, blockhash(block.number - 1)));
             Q23Vault vault = new Q23Vault(a, b);
             console2.log("PKG:q-23-storage-slots");
             console2.log("ADDR:vault:", address(vault));
@@ -528,6 +539,27 @@ contract DeployAll is Script {
             console2.log("PKG:thirty-one-game");
             console2.log("ADDR:token:", token);
             console2.log("ADDR:game:", address(game));
+        }
+
+        // ---- merkle-allowlist ----
+        {
+            bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
+            bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
+            MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
+            AllowlistRestrictedToken restrictedToken =
+                new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
+            MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);
+            console2.log("PKG:merkle-allowlist");
+            console2.log("ADDR:allowlist:", address(allowlist));
+            console2.log("ADDR:restrictedToken:", address(restrictedToken));
+            console2.log("ADDR:distributor:", address(distributor));
+        }
+
+        // ---- q-27-merkle-allowlist ----
+        {
+            Q27MerkleAllowlistLab lab = new Q27MerkleAllowlistLab();
+            console2.log("PKG:q-27-merkle-allowlist");
+            console2.log("ADDR:lab:", address(lab));
         }
 
         // ---- tx-basics ----

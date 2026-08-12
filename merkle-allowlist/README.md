@@ -2,6 +2,8 @@
 
 Two production patterns built on merkle proofs: gating access from a committed allowlist root, and distributing tokens by pull-claim instead of a push loop.
 
+The package also includes `AllowlistRestrictedToken`, a classroom-sized ERC-20 that asks the gate about both sender and recipient on every transfer. It makes the movement restriction visible, but it is intentionally not a complete security-token or ERC-3643 implementation.
+
 The idea in one line: instead of writing one storage slot per allowed address, publish the list off-chain and store a single 32-byte fingerprint of it on-chain. Anyone can then prove they are in the list; nobody has to pay to put the list there.
 
 ## Why a root instead of a list
@@ -40,6 +42,12 @@ Two details worth reading the code for:
 A push distribution loops over recipients inside one transaction. If the token is allowed to refuse a transfer — and a compliance-gated token is *built* to refuse transfers — then one recipient who is no longer allowed to receive makes the whole call revert. Every other recipient is held hostage by that one address, and the distribution cannot complete at all.
 
 With pull, the blocked recipient fails their own claim and nobody else notices. The unclaimed allocation stays visible on-chain as an unset bit rather than being silently skipped. `test_BlockedRecipientDoesNotStopOthers` demonstrates it against a token that blocks one address.
+
+## `AllowlistRestrictedToken`
+
+The token checks `isAllowed(from)` and `isAllowed(to)` before a normal transfer. A learner can therefore compare three observable cases: an unregistered recipient is rejected, two registered addresses can transfer, and an explicit revocation blocks the next movement.
+
+This is a teaching bridge from an address list to a transfer gate. Real regulated-token systems also need identity claims, expiry, jurisdiction rules, roles, recovery, forced transfer, evidence, and off-chain operating procedures. A Merkle root does not provide those controls by itself.
 
 ## Why the security-token standards do not do this
 

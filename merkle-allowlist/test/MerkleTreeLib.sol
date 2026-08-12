@@ -28,7 +28,11 @@ library MerkleTreeLib {
     }
 
     /// @dev Collects the sibling at each level on the path from `index` up.
-    function proof(bytes32[] memory leaves, uint256 index) internal pure returns (bytes32[] memory) {
+    function proof(bytes32[] memory leaves, uint256 index)
+        internal
+        pure
+        returns (bytes32[] memory)
+    {
         require(index < leaves.length, "index out of range");
 
         bytes32[] memory buffer = new bytes32[](_depth(leaves.length));

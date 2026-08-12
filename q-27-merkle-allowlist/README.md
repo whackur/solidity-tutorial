@@ -46,7 +46,7 @@ function isSolved(address user) external view returns (bool);
 - A balanced tree of 8 leaves has depth 3, which is why exactly 3 proof elements are required — one sibling per level.
 - **The other seven leaves are never inspected.** Fill them with whatever you like. This lab checks that you can compute a path, not that you belong to any real allowlist. That is deliberate, not an oversight.
 - Verification here is **index/direction based**, not sorted-pair based. Bit `i` of your index decides the order at level `i`: when the bit is `0` your running node is the left child, when it is `1` it is the right child. Hash the two in the wrong order and you get a different root.
-- Everyone gets a different index, so `0` is not a safe guess and a neighbour's path shape will not fit yours.
+- Your index is derived from your address, so `0` is not a safe guess. Two users can share one of the eight positions, but their leaves differ and a neighbour's proof cannot be copied unchanged.
 - Getting the sibling order right is the whole exercise. If your computed root is stable but wrong, suspect direction before you suspect your hashing.
 
 ## Why index order matters here

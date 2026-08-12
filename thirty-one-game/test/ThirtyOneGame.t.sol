@@ -55,6 +55,32 @@ contract ThirtyOneGameTest is Test {
         assertEq(idx, 2);
         assertEq(pool, 20 ether);
         assertFalse(over);
+        assertEq(game.lastSubmitter(1), alice);
+    }
+
+    function test_RevertWhen_SamePlayerSubmitsTwiceInARow() public {
+        vm.startPrank(alice);
+        game.submit(1, 2, 20 ether);
+        vm.expectRevert(bytes("The same player cannot submit twice in a row."));
+        game.submit(1, 1, 10 ether);
+        vm.stopPrank();
+
+        (uint256 idx, uint256 pool,,) = game.getRoundInfo(1);
+        assertEq(idx, 2);
+        assertEq(pool, 20 ether);
+    }
+
+    function test_AllowsAlternatingPlayers() public {
+        vm.prank(alice);
+        game.submit(1, 2, 20 ether);
+
+        vm.prank(bob);
+        game.submit(1, 3, 10 ether);
+
+        (uint256 idx, uint256 pool,,) = game.getRoundInfo(1);
+        assertEq(idx, 5);
+        assertEq(pool, 30 ether);
+        assertEq(game.lastSubmitter(1), bob);
     }
 
     function test_RevertWhen_NumberOutOfRange() public {
@@ -74,40 +100,37 @@ contract ThirtyOneGameTest is Test {
     }
 
     function test_GameEndsAndDistributesPrize() public {
-        // Push currentIndex to 30 with alice
-        vm.startPrank(alice);
+        // Push currentIndex to 30 while alternating players.
         for (uint256 i = 0; i < 10; i++) {
+            vm.prank(i % 2 == 0 ? alice : bob);
             game.submit(1, 3, 10 ether);
         }
-        vm.stopPrank();
 
         (uint256 idx,, bool over,) = game.getRoundInfo(1);
         assertEq(idx, 30);
         assertFalse(over);
 
-        // Bob submits 1 to push to 31 -> bob wins
-        vm.prank(bob);
+        // Alice submits 1 to push to 31 -> alice wins.
+        vm.prank(alice);
         game.submit(1, 1, 10 ether);
 
         (,, bool overAfter,) = game.getRoundInfo(1);
         assertTrue(overAfter);
-        assertEq(game.winners(1), bob);
+        assertEq(game.winners(1), alice);
 
-        // Total pool = 110 ether; bob's stake = 10 ether
-        // Winner gets 80% of 110 = 88 ether
-        // Remaining 22 ether distributed to losers (only alice has 100 ether stake) -> alice gets 22 ether
-        assertEq(token.balanceOf(bob), 10_000 ether - 10 ether + 88 ether);
-        assertEq(token.balanceOf(alice), 10_000 ether - 100 ether + 22 ether);
+        // Total pool = 110 ether; alice staked 60 and bob staked 50.
+        // The winner receives 88 and the only loser receives the remaining 22.
+        assertEq(token.balanceOf(alice), 10_000 ether - 60 ether + 88 ether);
+        assertEq(token.balanceOf(bob), 10_000 ether - 50 ether + 22 ether);
     }
 
     function test_StartNewRoundAfterGameOver() public {
         // End round 1
-        vm.startPrank(alice);
         for (uint256 i = 0; i < 10; i++) {
+            vm.prank(i % 2 == 0 ? alice : bob);
             game.submit(1, 3, 10 ether);
         }
-        vm.stopPrank();
-        vm.prank(bob);
+        vm.prank(alice);
         game.submit(1, 1, 10 ether);
 
         game.startNewRound();
@@ -116,6 +139,7 @@ contract ThirtyOneGameTest is Test {
         (,, bool over, uint256 pct) = game.getRoundInfo(2);
         assertFalse(over);
         assertEq(pct, WINNER_PERCENTAGE);
+        assertEq(game.lastSubmitter(2), address(0));
     }
 
     function test_OwnerCanUpdateWinnerPercentage() public {

@@ -14,6 +14,7 @@ contract ThirtyOneGame is IThirtyOneGame {
     mapping(uint256 => Round) public override rounds;
     uint256 public override currentRound;
     mapping(uint256 => address) public override winners;
+    mapping(uint256 => address) public override lastSubmitter;
     uint256 public override winnerPercentage;
 
     address public owner;
@@ -40,6 +41,9 @@ contract ThirtyOneGame is IThirtyOneGame {
         require(_round == currentRound, "This round is not active.");
         Round storage round = rounds[_round];
         require(!round.gameOver, "Game is already over.");
+        require(
+            lastSubmitter[_round] != msg.sender, "The same player cannot submit twice in a row."
+        );
         require(_number >= 1 && _number <= 3, "You can only submit numbers 1, 2, or 3.");
         require(
             _amount >= 10 * 10 ** 18 && _amount <= 50 * 10 ** 18,
@@ -57,6 +61,7 @@ contract ThirtyOneGame is IThirtyOneGame {
         round.playerStakes[msg.sender] += _amount;
         round.prizePool += _amount;
         round.currentIndex += _number;
+        lastSubmitter[_round] = msg.sender;
 
         emit NumberSubmitted(_round, msg.sender, _number, round.currentIndex);
 

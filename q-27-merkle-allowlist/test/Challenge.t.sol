@@ -108,7 +108,9 @@ contract ChallengeTest is Test {
 
         vm.startPrank(userA);
         lab.commitRoot(bytes32(uint256(0x1234)));
-        vm.expectRevert(abi.encodeWithSelector(Q27MerkleAllowlistLab.WrongIndex.selector, wrong, expected));
+        vm.expectRevert(
+            abi.encodeWithSelector(Q27MerkleAllowlistLab.WrongIndex.selector, wrong, expected)
+        );
         lab.claim(wrong, amount, proof);
         vm.stopPrank();
     }
@@ -120,7 +122,9 @@ contract ChallengeTest is Test {
 
         vm.startPrank(userA);
         lab.commitRoot(bytes32(uint256(0x1234)));
-        vm.expectRevert(abi.encodeWithSelector(Q27MerkleAllowlistLab.WrongAmount.selector, 1 ether, required));
+        vm.expectRevert(
+            abi.encodeWithSelector(Q27MerkleAllowlistLab.WrongAmount.selector, 1 ether, required)
+        );
         lab.claim(index, 1 ether, proof);
         vm.stopPrank();
     }
@@ -134,7 +138,9 @@ contract ChallengeTest is Test {
 
         vm.startPrank(userA);
         lab.commitRoot(committed);
-        vm.expectRevert(abi.encodeWithSelector(Q27MerkleAllowlistLab.RootMismatch.selector, computed, committed));
+        vm.expectRevert(
+            abi.encodeWithSelector(Q27MerkleAllowlistLab.RootMismatch.selector, computed, committed)
+        );
         lab.claim(index, amount, bogus);
         vm.stopPrank();
     }
@@ -147,7 +153,10 @@ contract ChallengeTest is Test {
 
         // Index 0 (all-left) and index 7 (all-right) must not agree, or the
         // sibling ordering is not actually being enforced.
-        assertTrue(lab.computeRoot(leaf, 0, proof) != lab.computeRoot(leaf, 7, proof), "direction bits must matter");
+        assertTrue(
+            lab.computeRoot(leaf, 0, proof) != lab.computeRoot(leaf, 7, proof),
+            "direction bits must matter"
+        );
     }
 
     // --- per-user isolation -----------------------------------------------

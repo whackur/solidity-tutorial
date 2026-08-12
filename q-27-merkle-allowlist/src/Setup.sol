@@ -7,9 +7,10 @@ import {SolvableBase} from "@common/SolvableBase.sol";
  * @notice Beginner merkle-proof lab. The student builds a merkle tree by hand
  *         and proves that their own leaf sits at a specific position in it.
  *
- *         Each user is assigned a different leaf index derived from their
- *         address, so no two learners have the same path shape and a proof
- *         cannot be copied from a neighbour. Index 0 is not a safe guess.
+ *         Each user is assigned a leaf index derived from their address.
+ *         There are only eight positions, so different users may share a path
+ *         shape, but their leaves still differ and a neighbour's proof cannot
+ *         be copied unchanged. Index 0 is not a safe guess.
  *
  *         Verification here is index/direction based, NOT sorted-pair based.
  *         At each level the current position bit decides whether the running
@@ -92,11 +93,17 @@ contract Q27MerkleAllowlistLab is SolvableBase {
      *      Public so a student can check their path arithmetic without sending
      *      a transaction.
      */
-    function computeRoot(bytes32 leaf, uint256 index, bytes32[] calldata proof) public pure returns (bytes32) {
+    function computeRoot(bytes32 leaf, uint256 index, bytes32[] calldata proof)
+        public
+        pure
+        returns (bytes32)
+    {
         bytes32 node = leaf;
         uint256 position = index;
         for (uint256 i = 0; i < proof.length; i++) {
-            node = position & 1 == 0 ? keccak256(abi.encode(node, proof[i])) : keccak256(abi.encode(proof[i], node));
+            node = position & 1 == 0
+                ? keccak256(abi.encode(node, proof[i]))
+                : keccak256(abi.encode(proof[i], node));
             position >>= 1;
         }
         return node;

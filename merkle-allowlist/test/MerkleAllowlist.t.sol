@@ -126,7 +126,9 @@ contract MerkleAllowlistTest is Test {
 
     function test_RevertWhen_NonOwnerRotatesRoot() public {
         vm.prank(mallory);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, mallory));
+        vm.expectRevert(
+            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, mallory)
+        );
         allowlist.setAllowlistRoot(bytes32(uint256(1)));
     }
 
@@ -135,7 +137,9 @@ contract MerkleAllowlistTest is Test {
         allowlist.register(leaves.proof(0));
 
         vm.prank(mallory);
-        vm.expectRevert(abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, mallory));
+        vm.expectRevert(
+            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, mallory)
+        );
         allowlist.revoke(alice);
     }
 

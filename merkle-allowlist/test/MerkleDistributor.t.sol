@@ -127,7 +127,8 @@ contract MerkleDistributorTest is Test {
         wide[0] = _leaf(0, alice, ALICE_AMOUNT);
         wide[1] = _leaf(300, bob, BOB_AMOUNT);
 
-        MerkleDistributor d = new MerkleDistributor(IERC20(address(token)), MerkleTreeLib.root(wide));
+        MerkleDistributor d =
+            new MerkleDistributor(IERC20(address(token)), MerkleTreeLib.root(wide));
         token.transfer(address(d), ALICE_AMOUNT + BOB_AMOUNT);
 
         assertFalse(d.isClaimed(0));
@@ -152,7 +153,8 @@ contract MerkleDistributorTest is Test {
         set[0] = _leaf(0, alice, ALICE_AMOUNT);
         set[1] = _leaf(1, bob, BOB_AMOUNT);
 
-        MerkleDistributor d = new MerkleDistributor(IERC20(address(blocking)), MerkleTreeLib.root(set));
+        MerkleDistributor d =
+            new MerkleDistributor(IERC20(address(blocking)), MerkleTreeLib.root(set));
         blocking.transfer(address(d), ALICE_AMOUNT + BOB_AMOUNT);
 
         blocking.setBlocked(alice);

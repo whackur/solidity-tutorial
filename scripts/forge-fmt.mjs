@@ -24,6 +24,9 @@ const TARGETS = [
   'minimal-proxy/src',
   'minimal-proxy/test',
   'minimal-proxy/script',
+  'merkle-allowlist/src',
+  'merkle-allowlist/test',
+  'merkle-allowlist/script',
   'simple-transparent/src',
   'simple-transparent/test',
   'simple-transparent/script',
@@ -36,6 +39,9 @@ const TARGETS = [
   'thirty-one-game/src',
   'thirty-one-game/test',
   'thirty-one-game/script',
+  'q-27-merkle-allowlist/src',
+  'q-27-merkle-allowlist/test',
+  'q-27-merkle-allowlist/script',
 ];
 
 const args = [

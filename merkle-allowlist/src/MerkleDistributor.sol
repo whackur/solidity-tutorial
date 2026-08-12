@@ -59,7 +59,9 @@ contract MerkleDistributor {
      *      operator batch-submit claims on behalf of recipients without ever
      *      being able to redirect the funds.
      */
-    function claim(uint256 index, address account, uint256 amount, bytes32[] calldata proof) external {
+    function claim(uint256 index, address account, uint256 amount, bytes32[] calldata proof)
+        external
+    {
         if (isClaimed(index)) revert AlreadyClaimed();
 
         bytes32 leaf = leafOf(index, account, amount);

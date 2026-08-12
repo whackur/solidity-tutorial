@@ -6,6 +6,9 @@
   "scripts": {
     "build": "pnpm -r build",
     "collect:abi": "bash scripts/collect-abi.sh",
+    "deploy:base-sepolia": "bash scripts/deploy.sh base-sepolia",
+    "deploy:base-sepolia:fast": "bash scripts/deploy-all.sh base-sepolia",
+    "deploy:base-sepolia:verify": "VERIFY=1 bash scripts/deploy.sh base-sepolia",
     "deploy:sepolia": "bash scripts/deploy.sh sepolia",
     "deploy:hoodi": "bash scripts/deploy.sh hoodi",
     "deploy:hoodi:fast": "bash scripts/deploy-all.sh hoodi",

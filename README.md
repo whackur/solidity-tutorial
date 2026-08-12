@@ -57,6 +57,8 @@ ETHERSCAN_API_KEY="..."                        # only when verifying
 Then deploy:
 
 ```bash
+pnpm deploy:base-sepolia default-erc-20 # one package on Base Sepolia
+pnpm deploy:base-sepolia:fast           # every package, one broadcast
 pnpm deploy:sepolia default-erc-20      # one package
 pnpm deploy:hoodi   all                 # every package — costs real testnet ETH
 VERIFY=1 pnpm deploy:sepolia all        # also verify on the block explorer
