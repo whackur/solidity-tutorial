@@ -1,0 +1,8 @@
+{
+  "name": "@quiz/q-27-merkle-allowlist",
+  "version": "0.1.0",
+  "description": "Quiz 27 — Beginner merkle lab: build a tree and prove your assigned leaf position",
+  "private": true,
+  "scripts": { "build": "forge build", "test": "forge test -vv" },
+  "license": "MIT"
+}

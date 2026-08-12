@@ -14,7 +14,8 @@ Foundry-based monorepo of self-contained Solidity tutorials, managed with pnpm w
 ├── simple-uups/          — UUPS upgradeable proxy
 ├── simple-wallet/        — Minimal ETH/ERC20 deposit wallet
 ├── thirty-one-game/      — Baskin-Robbins 31 game with stake-based prizes
-├── q-01-counter/ ... q-26-meta-tx/ — CTF-style challenge set (see q-INDEX.md)
+├── merkle-allowlist/     — Merkle-root allowlist gate and pull-based merkle distributor
+├── q-01-counter/ ... q-27-merkle-allowlist/ — CTF-style challenge set (see q-INDEX.md)
 ├── common/               — Shared challenge base (SolvableBase / ISolvable), via @common remapping
 ├── dependencies/         — Soldeer-managed dependencies (do not edit manually)
 ├── config/foundry/       — Centralized package config (packages.json)
@@ -70,7 +71,7 @@ cd simple-uups && forge test -vvv
 
 ## Challenge set (`q-*`) — multi-tenant web UI design
 
-The `q-01-counter/` ... `q-26-meta-tx/` directories host CTF-style challenges designed for a **shared, multi-tenant deployment**. A single contract or Lab instance is deployed once; many users interact with it through an external web UI (or any wallet), distinguished only by `msg.sender`.
+The `q-01-counter/` ... `q-27-merkle-allowlist/` directories host CTF-style challenges designed for a **shared, multi-tenant deployment**. A single contract or Lab instance is deployed once; many users interact with it through an external web UI (or any wallet), distinguished only by `msg.sender`.
 
 Students do **not** write Solidity to solve. They send transactions / read state through the UI.
 

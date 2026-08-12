@@ -121,8 +121,9 @@ skipped. The output directory is gitignored.
 - **beacon-proxy**: Beacon Proxy upgrade pattern.
 - **erc2771-meta-tx**: ERC-2771 meta-transaction forwarder + recipient.
 - **smart-account**: EIP-7702 smart account with ERC-7201 namespaced storage + ERC-1271.
+- **merkle-allowlist**: Merkle-root allowlist gate + pull-based merkle distributor (root commitment, proof verification, claim bitmap).
 
-Graded challenges live under `q-01-…` to `q-26-…`, all inheriting the shared
+Graded challenges live under `q-01-…` to `q-27-…`, all inheriting the shared
 [`common/src/SolvableBase.sol`](./common/src/SolvableBase.sol) (provides
 `solve()` / `solvedBy(address)` / `Solved` event on top of each puzzle's
 `isSolved`). See [`q-INDEX.md`](./q-INDEX.md).

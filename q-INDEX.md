@@ -84,6 +84,7 @@ verify per-user state isolation.
 | q-24 | nft-ownership | Entry ⭐ | ERC-721 ownership and approval flow |
 | q-25 | uups-upgrade | Beginner ⭐⭐ | per-user UUPS proxy and owner-gated upgrade surface |
 | q-26 | meta-tx | Intermediate ⭐⭐⭐ | ERC-2771 forwarder and recovered sender context |
+| q-27 | merkle-allowlist | Entry ⭐ | build an 8-leaf merkle tree and prove your assigned leaf position |
 
 ## Recommended path
 
@@ -93,6 +94,7 @@ verify per-user state isolation.
 - **Track D (vulnerability categories, intermediate)**: q-16 → q-17 → q-18
 - **Track E (DeFi hacks playthrough)**: q-19 (warm-up) → q-09 (The DAO) → q-14 (King of the Ether) → q-16 (Cream Finance) → q-11 (Poly Network)
 - **Track F (advanced platform features)**: q-23 → q-24 → q-25 → q-26
+- **Track G (commitments and proofs)**: q-21 → q-27
 
 ## Paired progression (warm-up → applied)
 
