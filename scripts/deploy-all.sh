@@ -17,9 +17,10 @@
 #   - the faucet is DEPLOYER_MNEMONIC account index 9.
 #
 # Usage:
-#   scripts/deploy-all.sh <network>
+#   scripts/deploy-all.sh <network> [all|sto]
 #
 #   pnpm deploy:hoodi:fast              # deploy everything in one broadcast
+#   pnpm deploy:base-sepolia:sto:fast   # deploy the STO subset in one broadcast
 #   scripts/deploy-all.sh sepolia       # any alias in foundry.toml [rpc_endpoints]
 #
 # Required env (loaded from .env at the repo root if present):
@@ -36,9 +37,10 @@ ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$ROOT_DIR"
 
 NETWORK="${1:-}"
+DEPLOY_PROFILE="${2:-all}"
 
 usage() {
-  echo "usage: scripts/deploy-all.sh <network>" >&2
+  echo "usage: scripts/deploy-all.sh <network> [all|sto]" >&2
   echo "       network is any alias in foundry.toml [rpc_endpoints] (sepolia, hoodi, ...)" >&2
 }
 
@@ -47,6 +49,24 @@ if [[ -z "$NETWORK" ]]; then
   usage
   exit 1
 fi
+
+case "$DEPLOY_PROFILE" in
+  all)
+    SCRIPT_TARGET="script/DeployAll.s.sol:DeployAll"
+    ;;
+  sto)
+    if [[ "$NETWORK" != "base-sepolia" ]]; then
+      echo "[deploy-all] ERROR: the sto profile is restricted to base-sepolia" >&2
+      exit 1
+    fi
+    SCRIPT_TARGET="script/DeploySto.s.sol:DeploySto"
+    ;;
+  *)
+    echo "[deploy-all] ERROR: unknown deploy profile '${DEPLOY_PROFILE}'" >&2
+    usage
+    exit 1
+    ;;
+esac
 
 # Load .env so RPC URLs and the mnemonic reach forge/cast. .env provides
 # defaults only: variables already set in the environment win, so explicit
@@ -88,9 +108,22 @@ fi
 
 CHAIN_ID=$(cast chain-id --rpc-url "$RPC_URL")
 
+# Prevent another repository deploy command from racing this broadcast for
+# the same account's nonces. Transactions inside this script still use
+# sequential nonces and are submitted back-to-back by Forge.
+DEPLOYER_LOCK_ID=$(printf '%s' "$DEPLOYER_ADDR" | tr '[:upper:]' '[:lower:]')
+DEPLOY_LOCK="${TMPDIR:-/tmp}/solidity-tutorial-deploy-${CHAIN_ID}-${DEPLOYER_LOCK_ID}.lock"
+if ! mkdir "$DEPLOY_LOCK" 2>/dev/null; then
+  echo "[deploy-all] ERROR: another deploy is using $DEPLOYER_ADDR on chain $CHAIN_ID" >&2
+  echo "[deploy-all] lock: $DEPLOY_LOCK" >&2
+  exit 1
+fi
+trap 'rmdir "$DEPLOY_LOCK" 2>/dev/null || true' EXIT INT TERM
+
 echo "[deploy-all] network:  $NETWORK (chainId=$CHAIN_ID)"
 echo "[deploy-all] deployer: $DEPLOYER_ADDR"
-echo "[deploy-all] mode:     single broadcast (script/DeployAll.s.sol)"
+echo "[deploy-all] profile:  $DEPLOY_PROFILE"
+echo "[deploy-all] mode:     single broadcast ($SCRIPT_TARGET)"
 
 # Faucet UI mirror (docker/shared is mounted at /data in the faucet container)
 # uses the addresses.json schema from docker/build-snapshot.sh. The faucet
@@ -104,7 +137,7 @@ PUBLIC_RPC="${!PUBLIC_RPC_ENV:-}"
 # enables via_ir + the optimizer so the whole monorepo compiles together.
 outfile=$(mktemp)
 set +e
-FOUNDRY_PROFILE=deployall forge script script/DeployAll.s.sol:DeployAll \
+FOUNDRY_PROFILE=deployall forge script "$SCRIPT_TARGET" \
   --rpc-url "$RPC_URL" \
   --broadcast \
   --private-key "$DEPLOYER_KEY" \
@@ -160,6 +193,39 @@ if [[ "$packages_json" == "{}" || -z "$packages_json" ]]; then
   exit 1
 fi
 
+if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
+  if ! jq -e '
+    (keys | sort) == ([
+      "default-erc-20",
+      "simple-wallet",
+      "q-05-simple-wallet",
+      "thirty-one-game",
+      "merkle-allowlist",
+      "q-20-erc20-basic",
+      "q-27-merkle-allowlist"
+    ] | sort)
+    and ([
+      .["default-erc-20"].token,
+      .["simple-wallet"].wallet,
+      .["q-05-simple-wallet"].wallet,
+      .["q-05-simple-wallet"].token,
+      .["thirty-one-game"].token,
+      .["thirty-one-game"].game,
+      .["merkle-allowlist"].token,
+      .["merkle-allowlist"].allowlist,
+      .["merkle-allowlist"].restrictedToken,
+      .["merkle-allowlist"].distributor,
+      .["q-20-erc20-basic"].lab,
+      .["q-20-erc20-basic"].faucet,
+      .["q-20-erc20-basic"].vault,
+      .["q-27-merkle-allowlist"].lab
+    ] | all(type == "string" and test("^0x[0-9a-fA-F]{40}$")))
+  ' <<<"$packages_json" >/dev/null; then
+    echo "[deploy-all] ERROR: incomplete STO deployment output; refusing to write records" >&2
+    exit 1
+  fi
+fi
+
 # The shared token is default-erc-20's token address.
 SHARED_TOKEN=$(jq -r '."default-erc-20".token // empty' <<<"$packages_json")
 
@@ -168,6 +234,14 @@ echo "[deploy-all] parsed ${pkg_count} packages; shared token: ${SHARED_TOKEN:-n
 
 mkdir -p "$ROOT_DIR/deployments"
 OUT="$ROOT_DIR/deployments/${NETWORK}.json"
+existing="{}"
+if [[ "$DEPLOY_PROFILE" == "sto" && -f "$OUT" ]]; then
+  existing=$(cat "$OUT")
+  if ! jq -e --argjson chainId "$CHAIN_ID" '.chainId == $chainId' <<<"$existing" >/dev/null; then
+    echo "[deploy-all] ERROR: existing deployment record has a different chainId: $OUT" >&2
+    exit 1
+  fi
+fi
 
 # Same schema as deploy.sh's flush_record (deployments/<network>.json).
 jq -n \
@@ -175,13 +249,14 @@ jq -n \
   --argjson chainId "$CHAIN_ID" \
   --arg deployer "$DEPLOYER_ADDR" \
   --arg sharedToken "${SHARED_TOKEN:-}" \
+  --argjson existing "$existing" \
   --argjson packages "$packages_json" \
   '{
      network: $network,
      chainId: $chainId,
      deployer: $deployer,
      sharedToken: (if $sharedToken == "" then null else $sharedToken end),
-     packages: $packages
+     packages: (($existing.packages // {}) + $packages)
    }' \
   >"$OUT"
 

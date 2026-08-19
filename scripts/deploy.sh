@@ -17,9 +17,10 @@
 # keys in config/foundry/packages.json.
 #
 # Usage:
-#   scripts/deploy.sh <network> <package|all>
+#   scripts/deploy.sh <network> <package|all|sto>
 #
 #   pnpm deploy:sepolia default-erc-20      # one package
+#   pnpm deploy:base-sepolia:sto            # STO classroom subset
 #   pnpm deploy:hoodi   all                 # every package (costs real testnet ETH)
 #   pnpm deploy:hoodi:verify all            # deploy everything and verify on the explorer
 #   VERIFY=1 pnpm deploy:sepolia all        # verify works on any network the same way
@@ -49,8 +50,9 @@ NETWORK="${1:-}"
 TARGET="${2:-}"
 
 usage() {
-  echo "usage: scripts/deploy.sh <network> <package|all>" >&2
+  echo "usage: scripts/deploy.sh <network> <package|all|sto>" >&2
   echo "       network is any alias in foundry.toml [rpc_endpoints] (sepolia, hoodi, ...)" >&2
+  echo "       sto deploys the Base Sepolia classroom subset" >&2
   echo "       VERIFY=1 to also verify on the block explorer" >&2
 }
 
@@ -120,6 +122,18 @@ fi
 
 CHAIN_ID=$(cast chain-id --rpc-url "$RPC_URL")
 
+# Prevent two repository deploy commands from using the same account and
+# network concurrently. Parallel Forge processes can reserve overlapping
+# nonces even when each process is internally correct.
+DEPLOYER_LOCK_ID=$(printf '%s' "$DEPLOYER_ADDR" | tr '[:upper:]' '[:lower:]')
+DEPLOY_LOCK="${TMPDIR:-/tmp}/solidity-tutorial-deploy-${CHAIN_ID}-${DEPLOYER_LOCK_ID}.lock"
+if ! mkdir "$DEPLOY_LOCK" 2>/dev/null; then
+  echo "[deploy] ERROR: another deploy is using $DEPLOYER_ADDR on chain $CHAIN_ID" >&2
+  echo "[deploy] lock: $DEPLOY_LOCK" >&2
+  exit 1
+fi
+trap 'rmdir "$DEPLOY_LOCK" 2>/dev/null || true' EXIT INT TERM
+
 echo "[deploy] network:  $NETWORK (chainId=$CHAIN_ID)"
 echo "[deploy] deployer: $DEPLOYER_ADDR"
 echo "[deploy] verify:   $([[ $do_verify -eq 1 ]] && echo yes || echo no)"
@@ -172,8 +186,8 @@ deploy_one() {
   echo "{$(echo "$pairs" | paste -sd, -)}"
 }
 
-# Resolve the package list: a single named package, or every package that has a
-# script/Deploy.s.sol when TARGET == "all".
+# Resolve the package list: a single named package, every deployable package,
+# or the curated Base Sepolia subset used by the STO classroom.
 packages=()
 if [[ "$TARGET" == "all" ]]; then
   shopt -s nullglob
@@ -186,6 +200,28 @@ if [[ "$TARGET" == "all" ]]; then
     exit 1
   fi
   IFS=$'\n' read -r -d '' -a packages < <(printf '%s\n' "${packages[@]}" | sort && printf '\0')
+elif [[ "$TARGET" == "sto" ]]; then
+  if [[ "$NETWORK" != "base-sepolia" ]]; then
+    echo "[deploy] ERROR: the sto profile is restricted to base-sepolia" >&2
+    exit 1
+  fi
+
+  packages=(
+    "default-erc-20"
+    "simple-wallet"
+    "q-05-simple-wallet"
+    "thirty-one-game"
+    "merkle-allowlist"
+    "q-20-erc20-basic"
+    "q-27-merkle-allowlist"
+  )
+
+  for pkg in "${packages[@]}"; do
+    if [[ ! -f "$ROOT_DIR/$pkg/script/Deploy.s.sol" ]]; then
+      echo "[deploy] ERROR: STO package $pkg/script/Deploy.s.sol not found" >&2
+      exit 1
+    fi
+  done
 else
   if [[ ! -f "$ROOT_DIR/$TARGET/script/Deploy.s.sol" ]]; then
     echo "[deploy] ERROR: $TARGET/script/Deploy.s.sol not found" >&2

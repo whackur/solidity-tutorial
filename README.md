@@ -43,7 +43,7 @@ docker compose down                    # stop
 
 ## Deploy to a live network (Sepolia / Hoodi / …)
 
-The local docker stack covers day-to-day work; to publish initialized contracts to a real network use `scripts/deploy.sh <network> <package|all>`. It signs with `DEPLOYER_MNEMONIC` account 0 (the same convention as the docker snapshot) and runs each package's `script/Deploy.s.sol` against the live RPC.
+The local docker stack covers day-to-day work; to publish initialized contracts to a real network use `scripts/deploy.sh <network> <package|all|sto>`. It signs with `DEPLOYER_MNEMONIC` account 0 (the same convention as the docker snapshot) and runs each package's `script/Deploy.s.sol` against the live RPC. The `sto` profile is restricted to Base Sepolia and deploys only the classroom contracts.
 
 The network is just an alias from `foundry.toml` `[rpc_endpoints]`. Its RPC URL env var is derived from the name — uppercase and `-`→`_`, then `_RPC_URL` (`base-sepolia` → `BASE_SEPOLIA_RPC_URL`). Set what you need in `.env` (copy from `.env.sample`):
 
@@ -58,6 +58,9 @@ Then deploy:
 
 ```bash
 pnpm deploy:base-sepolia default-erc-20 # one package on Base Sepolia
+pnpm deploy:base-sepolia:sto            # curated STO classroom subset
+pnpm deploy:base-sepolia:sto:fast       # same subset, one nonce-safe broadcast
+pnpm deploy:base-sepolia:sto:verify     # subset plus Basescan verification
 pnpm deploy:base-sepolia:fast           # every package, one broadcast
 pnpm deploy:sepolia default-erc-20      # one package
 pnpm deploy:hoodi   all                 # every package — costs real testnet ETH
@@ -67,12 +70,15 @@ scripts/deploy.sh ethereum default-erc-20   # any configured network; mainnets h
 
 `default-erc-20` is always deployed first and exported as `SHARED_ERC20`, so token-agnostic packages reuse it. Resulting addresses are merged into `deployments/<network>.json` and mirrored to `docker/shared/<network>.json` so the faucet UI shows a tab for that network. `.env` is gitignored — never commit your mnemonic.
 
+The STO profile deploys these packages in order: `default-erc-20`, `simple-wallet`, `q-05-simple-wallet`, `thirty-one-game`, `merkle-allowlist`, `q-20-erc20-basic`, and `q-27-merkle-allowlist`. Deploying the shared token first ensures `q-05-simple-wallet`, `thirty-one-game`, and `merkle-allowlist` all receive the same ERC-20 address instead of creating package-local mock tokens. The `:fast` command runs `script/DeploySto.s.sol` under one broadcast: Forge assigns sequential nonces and submits the transactions back-to-back, avoiding nonce races between parallel deploy processes. Both deploy paths take a per-chain, per-deployer process lock; do not use the deployer account from another repository or wallet while a deployment is running. If a Base Sepolia deployment record already exists, the fast STO path updates its seven package entries and preserves unrelated package addresses.
+
 ### Fast path: one broadcast
 
 `pnpm deploy:hoodi all` runs each package's `Deploy.s.sol` as a separate broadcast, so every package pays its own on-chain confirmation (~45 sequential round-trips). To deploy every package in a **single** broadcast — one confirmation cycle, much faster — use the combined script:
 
 ```bash
 pnpm deploy:hoodi:fast      # bash scripts/deploy-all.sh hoodi
+pnpm deploy:base-sepolia:sto:fast
 ```
 
 It runs the root `script/DeployAll.s.sol` under the `deployall` Foundry profile and writes the same `deployments/<network>.json` / `docker/shared/<network>.json`. Because all lab funding happens in one tx batch, the deployer must hold the full funding up front.
