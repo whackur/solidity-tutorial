@@ -8,16 +8,19 @@ import {
 } from 'https://esm.sh/viem@2';
 import { privateKeyToAccount } from 'https://esm.sh/viem@2/accounts';
 import { orderChallengeEntries } from './challenge-order.js';
+import { getChallengeContract } from './challenge-contracts.js';
 
-// Each challenge row links back to the package that produced it. Every
-// package in this monorepo keeps its contracts under <package>/src, so the
-// directory tree is a valid target for all 48 of them (some packages have no
-// README.md, which is why the link points at src/ rather than the package
-// root).
+// Base Sepolia rows link to the exact Solidity file that produced each
+// deployed address, including shared contracts owned by another package.
+const SOURCE_REPO_BLOB = 'https://github.com/whackur/solidity-tutorial/blob/main';
 const SOURCE_REPO_TREE = 'https://github.com/whackur/solidity-tutorial/tree/main';
 
-function sourceUrl(pkg) {
-  return `${SOURCE_REPO_TREE}/${pkg}/src`;
+function sourceUrl(sourceFile) {
+  return `${SOURCE_REPO_BLOB}/${sourceFile}`;
+}
+
+function sourceDirectoryUrl(packageName) {
+  return `${SOURCE_REPO_TREE}/${packageName}/src`;
 }
 
 // The faucet UI serves one tab per network. Each entry points at a config
@@ -244,7 +247,7 @@ function selectNetwork(net, data) {
   }
 
   setStatus('');
-  renderChallenges($challenges, data.challenges || {});
+  renderChallenges($challenges, data.challenges || {}, net.id);
 }
 
 async function loadNetworks() {
@@ -279,7 +282,7 @@ async function loadNetworks() {
   selectNetwork(loaded[0].net, loaded[0].data);
 }
 
-function renderChallenges($container, challenges) {
+function renderChallenges($container, challenges, networkId) {
   $container.innerHTML = '';
   const table = document.createElement('table');
   table.className = 'ch-table';
@@ -294,23 +297,38 @@ function renderChallenges($container, challenges) {
       if (i === 0) {
         const name = document.createElement('span');
         name.textContent = pkg;
-
-        // Opens in a new tab so the student keeps the faucet page (and any
-        // address they already typed) untouched.
-        const srcLink = document.createElement('a');
-        srcLink.className = 'src-btn';
-        srcLink.href = sourceUrl(pkg);
-        srcLink.target = '_blank';
-        srcLink.rel = 'noopener noreferrer';
-        srcLink.textContent = 'Source \u2197';
-        srcLink.title = `Open ${pkg}/src on GitHub in a new tab`;
-
-        pkgCell.append(name, srcLink);
+        pkgCell.append(name);
+        if (!getChallengeContract(networkId, pkg, role)) {
+          const fallbackLink = document.createElement('a');
+          fallbackLink.className = 'package-source';
+          fallbackLink.href = sourceDirectoryUrl(pkg);
+          fallbackLink.target = '_blank';
+          fallbackLink.rel = 'noopener noreferrer';
+          fallbackLink.textContent = 'src/ \u2197';
+          fallbackLink.title = `Open ${pkg}/src on GitHub in a new tab`;
+          pkgCell.append(fallbackLink);
+        }
       }
 
       const roleCell = document.createElement('td');
       roleCell.className = 'role';
-      roleCell.textContent = role;
+      const contract = getChallengeContract(networkId, pkg, role);
+      if (contract) {
+        const contractName = document.createElement('span');
+        contractName.className = 'contract-name';
+        contractName.textContent = contract.contractName;
+
+        const srcLink = document.createElement('a');
+        srcLink.className = 'source-file';
+        srcLink.href = sourceUrl(contract.sourceFile);
+        srcLink.target = '_blank';
+        srcLink.rel = 'noopener noreferrer';
+        srcLink.textContent = `${contract.sourceFile.split('/').at(-1)} \u2197`;
+        srcLink.title = `Open ${contract.sourceFile} on GitHub in a new tab`;
+        roleCell.append(contractName, srcLink);
+      } else {
+        roleCell.textContent = role;
+      }
 
       const addrCell = document.createElement('td');
       addrCell.className = 'addr';

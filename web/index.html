@@ -123,6 +123,7 @@
       margin: 0 0 0.75rem 0;
     }
     #challenges {
+      overflow-x: auto;
       font-size: 0.8125rem;
       font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
     }
@@ -141,27 +142,16 @@
       white-space: nowrap;
       font-weight: 600;
     }
-    .src-btn {
-      display: inline-block;
-      margin-left: 0.5rem;
-      padding: 0.1rem 0.4rem;
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      font-size: 0.6875rem;
-      font-weight: 500;
-      color: var(--muted);
-      text-decoration: none;
-      vertical-align: 1px;
-    }
-    .src-btn:hover {
-      background: rgba(99,102,241,0.1);
-      border-color: #6366f1;
-      color: #6366f1;
-    }
+    .package-source { display: block; margin-top: 0.1rem; font-size: 0.6875rem; color: var(--muted); font-weight: 400; }
+    .package-source:hover { color: #6366f1; }
     .ch-table td.role {
       color: var(--muted);
       padding-right: 0.75rem;
+      white-space: nowrap;
     }
+    .contract-name { display: block; color: var(--fg); font-weight: 600; }
+    .source-file { display: block; margin-top: 0.1rem; font-size: 0.6875rem; color: var(--muted); }
+    .source-file:hover { color: #6366f1; }
     .ch-table td.addr {
       word-break: break-all;
       color: var(--fg);
