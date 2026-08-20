@@ -243,6 +243,7 @@ slither-report.json
 **/docs/internal/*
 **/docs/superpowers/*
 .playwright-mcp
+.worktress/
 
 # Echidna
 crytic-export/

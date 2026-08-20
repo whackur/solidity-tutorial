@@ -7,6 +7,7 @@ import {
   isAddress,
 } from 'https://esm.sh/viem@2';
 import { privateKeyToAccount } from 'https://esm.sh/viem@2/accounts';
+import { orderChallengeEntries } from './challenge-order.js';
 
 // The faucet UI serves one tab per network. Each entry points at a config
 // file under ./data/ (the docker/shared mount):
@@ -268,7 +269,7 @@ function renderChallenges($container, challenges) {
   const table = document.createElement('table');
   table.className = 'ch-table';
 
-  for (const [pkg, addrs] of Object.entries(challenges)) {
+  for (const [pkg, addrs] of orderChallengeEntries(challenges)) {
     const entries = Object.entries(addrs);
     entries.forEach(([role, addr], i) => {
       const tr = document.createElement('tr');
