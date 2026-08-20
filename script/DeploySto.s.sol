@@ -16,7 +16,6 @@ import {Q05SimpleWallet} from "../q-05-simple-wallet/src/Setup.sol";
 import {ThirtyOneGame} from "../thirty-one-game/src/ThirtyOneGame.sol";
 import {MerkleAllowlist} from "../merkle-allowlist/src/MerkleAllowlist.sol";
 import {AllowlistRestrictedToken} from "../merkle-allowlist/src/AllowlistRestrictedToken.sol";
-import {MerkleDistributor} from "../merkle-allowlist/src/MerkleDistributor.sol";
 import {AddressBlocklist} from "../transfer-blocklist/src/AddressBlocklist.sol";
 import {BlocklistRestrictedToken} from "../transfer-blocklist/src/BlocklistRestrictedToken.sol";
 import {Q20Erc20BasicLab} from "../q-20-erc20-basic/src/Setup.sol";
@@ -68,16 +67,15 @@ contract DeploySto is Script {
         console2.log("ADDR:faucet:", address(q20Lab.faucet()));
         console2.log("ADDR:vault:", address(q20Lab.vault()));
 
-        bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
+        // The distributor is not part of the classroom profile: its root is
+        // immutable, the labs never claim from it, and a rootless deployment
+        // would be a permanently dead address. See merkle-allowlist/script.
         MerkleAllowlist allowlist = new MerkleAllowlist();
         AllowlistRestrictedToken allowlistToken =
             new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
-        MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);
         console2.log("PKG:merkle-allowlist");
-        console2.log("ADDR:token:", shared);
         console2.log("ADDR:allowlist:", address(allowlist));
         console2.log("ADDR:restrictedToken:", address(allowlistToken));
-        console2.log("ADDR:distributor:", address(distributor));
 
         Q27MerkleAllowlistLab q27Lab = new Q27MerkleAllowlistLab();
         console2.log("PKG:q-27-merkle-allowlist");

@@ -437,7 +437,7 @@ for pkg in "${packages[@]}"; do
   fi
   if [[ "$skip_deployed" == "1" ]] && already_deployed "$pkg"; then
     dependency_matches=1
-    if [[ "$TARGET" == "sto" && "$pkg" =~ ^(q-05-simple-wallet|thirty-one-game|merkle-allowlist)$ ]]; then
+    if [[ "$TARGET" == "sto" && "$pkg" =~ ^(q-05-simple-wallet|thirty-one-game)$ ]]; then
       recorded_token=$(jq -r --arg p "$pkg" '.packages[$p].token // empty' <<<"$existing")
       recorded_token_normalized=$(printf '%s' "$recorded_token" | tr '[:upper:]' '[:lower:]')
       shared_token_normalized=$(printf '%s' "$SHARED_ERC20" | tr '[:upper:]' '[:lower:]')

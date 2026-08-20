@@ -547,15 +547,21 @@ contract DeployAll is Script {
 
         // ---- merkle-allowlist ----
         {
+            // Mirrors merkle-allowlist/script/Deploy.s.sol: the distributor
+            // root is immutable, so it is only deployed when one is supplied.
             bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
             MerkleAllowlist allowlist = new MerkleAllowlist();
             AllowlistRestrictedToken restrictedToken =
                 new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
-            MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);
             console2.log("PKG:merkle-allowlist");
             console2.log("ADDR:allowlist:", address(allowlist));
             console2.log("ADDR:restrictedToken:", address(restrictedToken));
-            console2.log("ADDR:distributor:", address(distributor));
+            if (distributionRoot != bytes32(0)) {
+                MerkleDistributor distributor =
+                    new MerkleDistributor(IERC20(shared), distributionRoot);
+                console2.log("ADDR:token:", shared);
+                console2.log("ADDR:distributor:", address(distributor));
+            }
         }
 
         // ---- q-27-merkle-allowlist ----

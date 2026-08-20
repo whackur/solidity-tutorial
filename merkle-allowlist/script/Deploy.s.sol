@@ -15,36 +15,48 @@ contract MockToken is ERC20 {
 }
 
 /**
- * @notice Deploys the allowlist gate and a distributor.
+ * @notice Deploys the allowlist gate, and the distributor only when a
+ *         distribution root is supplied.
  *
- *         The allowlist is ownerless and each learner commits their own root
- *         after deployment. The distributor root is still supplied at deploy
- *         time because it is a fixed pull-claim allocation.
+ *         The allowlist is ownerless and every account commits its own root
+ *         after deployment. The distributor root is `immutable` and cannot be
+ *         set later, so deploying without `DISTRIBUTION_MERKLE_ROOT` would
+ *         leave a distributor that can never settle a claim. This script skips
+ *         it instead of publishing that dead address; the token role is
+ *         reported for the same reason, because only the distributor uses it.
  */
 contract Deploy is Script {
     function run() external {
         bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
+        bool withDistributor = distributionRoot != bytes32(0);
 
         // SHARED_ERC20 points at the environment-wide default token. Fall back
         // to a local mock so the package stays independently deployable.
         address token = vm.envOr("SHARED_ERC20", address(0));
 
         vm.startBroadcast();
-        if (token == address(0)) {
-            token = address(new MockToken());
-        }
         MerkleAllowlist allowlist = new MerkleAllowlist();
         AllowlistRestrictedToken restrictedToken =
             new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
-        MerkleDistributor distributor = new MerkleDistributor(IERC20(token), distributionRoot);
+        address distributor;
+        if (withDistributor) {
+            if (token == address(0)) {
+                token = address(new MockToken());
+            }
+            distributor = address(new MerkleDistributor(IERC20(token), distributionRoot));
+        }
         vm.stopBroadcast();
 
         console2.log("=== merkle-allowlist deployment ===");
         console2.log("chainId:", block.chainid);
-        console2.log("ADDR:token:", token);
         console2.log("ADDR:allowlist:", address(allowlist));
         console2.log("ADDR:restrictedToken:", address(restrictedToken));
-        console2.log("ADDR:distributor:", address(distributor));
-        console2.logBytes32(distributionRoot);
+        if (withDistributor) {
+            console2.log("ADDR:token:", token);
+            console2.log("ADDR:distributor:", distributor);
+            console2.logBytes32(distributionRoot);
+        } else {
+            console2.log("distributor: skipped, DISTRIBUTION_MERKLE_ROOT is unset");
+        }
     }
 }

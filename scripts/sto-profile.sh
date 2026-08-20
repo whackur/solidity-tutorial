@@ -35,7 +35,7 @@ STO_EXPECTED_SCHEMA_JSON='{
   "q-05-simple-wallet": ["wallet", "token"],
   "thirty-one-game": ["token", "game"],
   "q-20-erc20-basic": ["lab", "faucet", "vault"],
-  "merkle-allowlist": ["token", "allowlist", "restrictedToken", "distributor"],
+  "merkle-allowlist": ["allowlist", "restrictedToken"],
   "q-27-merkle-allowlist": ["lab"]
 }'
 
@@ -83,10 +83,8 @@ sto_validate_packages_json() {
         $root["q-20-erc20-basic"].lab,
         $root["q-20-erc20-basic"].faucet,
         $root["q-20-erc20-basic"].vault,
-        $root["merkle-allowlist"].token,
         $root["merkle-allowlist"].allowlist,
         $root["merkle-allowlist"].restrictedToken,
-        $root["merkle-allowlist"].distributor,
         $root["q-27-merkle-allowlist"].lab
       ] | all(
         type == "string"
@@ -96,6 +94,5 @@ sto_validate_packages_json() {
       and ($root["transfer-blocklist"].token | ascii_downcase) == ($root["transfer-blocklist"].restrictedToken | ascii_downcase)
       and ($root["q-05-simple-wallet"].token | ascii_downcase) == ($root["transfer-blocklist"].restrictedToken | ascii_downcase)
       and ($root["thirty-one-game"].token | ascii_downcase) == ($root["transfer-blocklist"].restrictedToken | ascii_downcase)
-      and ($root["merkle-allowlist"].token | ascii_downcase) == ($root["transfer-blocklist"].restrictedToken | ascii_downcase)
     ' <<<"$1" >/dev/null
 }

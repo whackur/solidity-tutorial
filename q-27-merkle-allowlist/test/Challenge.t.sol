@@ -34,7 +34,8 @@ contract ChallengeTest is Test {
     function test_Constants() public view {
         assertEq(lab.LEAF_COUNT(), 8);
         assertEq(lab.PROOF_LENGTH(), 3);
-        assertEq(lab.REQUIRED_AMOUNT(), 1000 ether);
+        assertEq(lab.PEER_COUNT(), 7);
+        assertEq(lab.PEER_COUNT() + 1, lab.LEAF_COUNT(), "peers plus caller fill the list");
         assertEq(1 << lab.PROOF_LENGTH(), lab.LEAF_COUNT(), "depth must match leaf count");
     }
 
@@ -69,23 +70,82 @@ contract ChallengeTest is Test {
         assertTrue(sawNonZero, "indices must spread across the tree");
     }
 
+    function test_LeafIsTheDoubleHashedAddress() public view {
+        assertEq(lab.leafOf(userA), keccak256(bytes.concat(keccak256(abi.encode(userA)))));
+        assertEq(lab.leafFor(userA), lab.leafOf(userA), "own leaf is an ordinary list entry");
+    }
+
+    // --- the fixed classroom list ----------------------------------------
+
+    function test_PeersAreFixedDistinctAndNonZero() public view {
+        for (uint256 i = 0; i < lab.PEER_COUNT(); i++) {
+            address peer = lab.peerAt(i);
+            assertTrue(peer != address(0), "peer must not be the zero address");
+            assertEq(peer, lab.peerAt(i), "peer is deterministic");
+            for (uint256 j = i + 1; j < lab.PEER_COUNT(); j++) {
+                assertTrue(peer != lab.peerAt(j), "peers must be distinct");
+            }
+        }
+    }
+
+    function test_RevertWhen_PeerIndexOutOfRange() public {
+        uint256 peerCount = lab.PEER_COUNT();
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                Q27MerkleAllowlistLab.PeerOutOfRange.selector, peerCount, peerCount
+            )
+        );
+        lab.peerAt(peerCount);
+    }
+
+    function test_ListPlacesCallerAtRequiredIndexAndPeersElsewhere() public view {
+        uint256 index = lab.requiredIndex(userA);
+        address[8] memory list = lab.treeAddresses(userA);
+        bytes32[8] memory leaves = lab.treeLeaves(userA);
+
+        assertEq(list[index], userA, "caller sits at the required slot");
+        assertEq(leaves[index], lab.leafFor(userA), "caller leaf matches the slot");
+
+        uint256 peerIndex;
+        for (uint256 slot = 0; slot < 8; slot++) {
+            assertEq(leaves[slot], lab.leafOf(list[slot]), "every slot hashes its address");
+            if (slot == index) continue;
+            assertEq(list[slot], lab.peerAt(peerIndex), "peers fill remaining slots in order");
+            peerIndex++;
+        }
+        assertEq(peerIndex, lab.PEER_COUNT(), "all seven peers are used exactly once");
+    }
+
+    function test_ListDiffersPerUser() public view {
+        // Two users share the seven peers but never the same full list.
+        bytes32[8] memory a = lab.treeLeaves(userA);
+        bytes32[8] memory b = lab.treeLeaves(userB);
+
+        bool differs;
+        for (uint256 slot = 0; slot < 8; slot++) {
+            if (a[slot] != b[slot]) {
+                differs = true;
+                break;
+            }
+        }
+        assertTrue(differs, "each user rebuilds their own list");
+    }
+
     // --- claim guards -----------------------------------------------------
 
     function test_RevertWhen_ClaimingWithoutCommittedRoot() public {
         // Hoisted: any call made inside the argument list would consume the
         // expectRevert before `claim` is reached.
         uint256 index = lab.requiredIndex(userA);
-        uint256 amount = lab.REQUIRED_AMOUNT();
         bytes32[] memory proof = _proofOfLength(3);
 
         vm.prank(userA);
         vm.expectRevert(Q27MerkleAllowlistLab.NoCommittedRoot.selector);
-        lab.claim(index, amount, proof);
+        lab.claim(index, proof);
     }
 
     function test_RevertWhen_ProofLengthWrong() public {
         uint256 index = lab.requiredIndex(userA);
-        uint256 amount = lab.REQUIRED_AMOUNT();
         bytes32[] memory none = _emptyProof();
         bytes32[] memory tooLong = _proofOfLength(4);
 
@@ -93,17 +153,16 @@ contract ChallengeTest is Test {
         lab.commitRoot(bytes32(uint256(0x1234)));
 
         vm.expectRevert(abi.encodeWithSelector(Q27MerkleAllowlistLab.BadProofLength.selector, 0, 3));
-        lab.claim(index, amount, none);
+        lab.claim(index, none);
 
         vm.expectRevert(abi.encodeWithSelector(Q27MerkleAllowlistLab.BadProofLength.selector, 4, 3));
-        lab.claim(index, amount, tooLong);
+        lab.claim(index, tooLong);
         vm.stopPrank();
     }
 
     function test_RevertWhen_IndexWrong() public {
         uint256 expected = lab.requiredIndex(userA);
         uint256 wrong = (expected + 1) % lab.LEAF_COUNT();
-        uint256 amount = lab.REQUIRED_AMOUNT();
         bytes32[] memory proof = _proofOfLength(3);
 
         vm.startPrank(userA);
@@ -111,28 +170,13 @@ contract ChallengeTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(Q27MerkleAllowlistLab.WrongIndex.selector, wrong, expected)
         );
-        lab.claim(wrong, amount, proof);
-        vm.stopPrank();
-    }
-
-    function test_RevertWhen_AmountWrong() public {
-        uint256 index = lab.requiredIndex(userA);
-        uint256 required = lab.REQUIRED_AMOUNT();
-        bytes32[] memory proof = _proofOfLength(3);
-
-        vm.startPrank(userA);
-        lab.commitRoot(bytes32(uint256(0x1234)));
-        vm.expectRevert(
-            abi.encodeWithSelector(Q27MerkleAllowlistLab.WrongAmount.selector, 1 ether, required)
-        );
-        lab.claim(index, 1 ether, proof);
+        lab.claim(wrong, proof);
         vm.stopPrank();
     }
 
     function test_RevertWhen_ProofDoesNotReachCommittedRoot() public {
         bytes32 committed = bytes32(uint256(0x1234));
         uint256 index = lab.requiredIndex(userA);
-        uint256 amount = lab.REQUIRED_AMOUNT();
         bytes32[] memory bogus = _proofOfLength(3);
         bytes32 computed = lab.computeRoot(lab.leafFor(userA), index, bogus);
 
@@ -141,7 +185,7 @@ contract ChallengeTest is Test {
         vm.expectRevert(
             abi.encodeWithSelector(Q27MerkleAllowlistLab.RootMismatch.selector, computed, committed)
         );
-        lab.claim(index, amount, bogus);
+        lab.claim(index, bogus);
         vm.stopPrank();
     }
 

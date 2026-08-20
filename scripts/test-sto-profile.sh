@@ -34,7 +34,7 @@ valid=$(jq -n '
     "q-05-simple-wallet": {wallet: addr(8), token: addr(1)},
     "thirty-one-game": {token: addr(1), game: addr(9)},
     "q-20-erc20-basic": {lab: addr(10), faucet: addr(11), vault: addr(12)},
-    "merkle-allowlist": {token: addr(1), allowlist: addr(13), restrictedToken: addr(14), distributor: addr(15)},
+    "merkle-allowlist": {allowlist: addr(13), restrictedToken: addr(14)},
     "q-27-merkle-allowlist": {lab: addr(16)}
   }
 ')

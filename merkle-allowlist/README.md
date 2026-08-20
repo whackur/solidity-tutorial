@@ -14,20 +14,20 @@ The cost moves rather than disappearing. Each member now supplies a proof of abo
 
 ## `MerkleAllowlist`
 
-- `commitRoot(bytes32)` — caller commits or replaces the root for its next registration.
-- `register(uint256 index, bytes32[] proof)` — caller proves its current-counter leaf at a direction-aware index.
+- `commitRoot(bytes32)` — caller commits or replaces the root of the list it belongs to.
+- `register(uint256 index, bytes32[] proof)` — caller proves its own leaf at a direction-aware index.
 - `isAllowed(address)` — cheap check for everything downstream.
-- `counter(address)` — number of successful registrations made by an account.
-- `revoke()` — caller revokes only its own access; the counter is intentionally preserved.
+- `revoke()` — caller revokes only its own access; the committed root is left in place.
+- `leafFor(address)` — the leaf an address occupies in the list.
 - `computeRoot(bytes32 leaf, uint256 index, bytes32[] proof)` — free path calculator with the same directional order as Q-27.
 - `LEAF_COUNT()` — fixed at `8`; valid leaf indexes are `0` through `7`.
 - `PROOF_LENGTH()` — fixed at `3`; every registration supplies one sibling for each tree level.
 
-This classroom gate has no owner or administrator. Every account manages its own root and progress, which makes one deployment safe for many learners to use at the same time.
+This classroom gate has no owner or administrator. Every account commits its own root and tracks its own access, which makes one deployment safe for many learners at the same time. The list itself can still be shared: a group of eight builds one tree over their eight addresses, each member commits that same root, and each member registers with its own index and path. Commit order and registration order do not matter, because nothing in the leaf depends on anybody else's progress.
 
-The exercise uses a fixed eight-leaf tree, so a registration must provide exactly three proof elements and an index below eight. Invalid length or range is rejected before proof verification. Leaves are `keccak256(bytes.concat(keccak256(abi.encode(account, counter))))`. The double hash is the OpenZeppelin convention for leaves with attacker-influenced preimages: a leaf and an internal node must never be confusable, or someone can present a 64-byte internal node as a leaf. At each proof level, index bit `i` chooses `abi.encode(node, sibling)` for a left node or `abi.encode(sibling, node)` for a right node. This direction-aware path is the same arithmetic used by Q-27.
+The exercise uses a fixed eight-leaf tree, so a registration must provide exactly three proof elements and an index below eight. Invalid length or range is rejected before proof verification. Leaves are `keccak256(bytes.concat(keccak256(abi.encode(account))))`: the entry is the address and nothing else, which is what lets a group share one list. The double hash is the OpenZeppelin convention for leaves with attacker-influenced preimages: a leaf and an internal node must never be confusable, or someone can present a 64-byte internal node as a leaf. At each proof level, index bit `i` chooses `abi.encode(node, sibling)` for a left node or `abi.encode(sibling, node)` for a right node. This direction-aware path is the same arithmetic used by Q-27.
 
-The counter is part of the leaf. A successful registration increments only the caller's counter and marks that caller as allowed. A failed proof reverts before either value changes. After committing a new root for the next counter, an already-allowed account may register again. Revoking access does not reset the counter, so an old proof cannot be replayed.
+Registration is single-shot per account: an already-registered caller is rejected with `AlreadyRegistered`, so granting access always corresponds to exactly one successful call. `revoke()` clears only the caller's own access and leaves its committed root untouched, so the same list and the same path register again afterwards. That makes the cycle register, revoke, register available for as many rounds as a learner wants, without rebuilding the tree.
 
 ## `MerkleDistributor`
 
@@ -73,7 +73,7 @@ Available cryptography is not automatically the right fit for a regulated workfl
 - **No privacy.** A root alone reveals nothing, but holders cannot build proofs without the tree, so the tree gets published — and publishing it publishes the whole membership set. This hides nothing from anyone who reads the tree.
 - **No personal data belongs in a leaf.** Hashing a name, a birthdate, or a document does not protect it: the input space is small enough to enumerate, so the hash is reversible by guessing. Commit judgements and expiries, not identities.
 - **Each account controls its own root.** Nothing here proves that a learner's committed tree matches an approved list. This is a classroom interaction model, not an issuer control.
-- **Proofs already used cannot be retracted** by replacing a root. Use `revoke()` for the caller's current access.
+- **Replacing a root does not remove anybody.** `commitRoot` only changes what the next registration is checked against; an account that already registered keeps access until it calls `revoke()`. Removal is a per-address operation.
 - **This allowlist uses direction-aware paths.** The separate distributor still uses OpenZeppelin sorted-pair proofs and commits its index inside each leaf.
 
 ## Run
@@ -84,4 +84,4 @@ forge build
 forge test -vv
 ```
 
-Deployment creates an empty ownerless allowlist; each learner commits a personal root after deployment. `DISTRIBUTION_MERKLE_ROOT` supplies the fixed pull-claim tree, and `SHARED_ERC20` selects the distributed token, falling back to a local mock.
+Deployment creates an empty ownerless allowlist; every account commits its own root afterwards. `DISTRIBUTION_MERKLE_ROOT` supplies the distributor's fixed pull-claim tree, and `SHARED_ERC20` selects the distributed token, falling back to a local mock. The distributor root is `immutable`: deploying without `DISTRIBUTION_MERKLE_ROOT` leaves a distributor that can never settle a claim.
