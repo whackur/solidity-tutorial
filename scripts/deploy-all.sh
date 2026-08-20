@@ -36,6 +36,11 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$ROOT_DIR"
 
+# Keep the one-shot and per-package STO profiles on the same package set and
+# output schema.
+# shellcheck source=scripts/sto-profile.sh
+source "$ROOT_DIR/scripts/sto-profile.sh"
+
 NETWORK="${1:-}"
 DEPLOY_PROFILE="${2:-all}"
 
@@ -107,6 +112,22 @@ if [[ -n "${DEPLOYER_ADDRESS:-}" ]]; then
 fi
 
 CHAIN_ID=$(cast chain-id --rpc-url "$RPC_URL")
+
+if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
+  if ! sto_require_base_sepolia_chain "$CHAIN_ID"; then
+    echo "[deploy-all] ERROR: the sto profile requires Base Sepolia chainId 84532 (RPC returned ${CHAIN_ID})" >&2
+    exit 1
+  fi
+
+  if ! deployer_code=$(cast code "$DEPLOYER_ADDR" --rpc-url "$RPC_URL"); then
+    echo "[deploy-all] ERROR: unable to inspect deployer code on chain ${CHAIN_ID}" >&2
+    exit 1
+  fi
+  if ! sto_require_plain_eoa_code "$deployer_code"; then
+    echo "[deploy-all] ERROR: STO deployer ${DEPLOYER_ADDR} is delegated or a contract (code must be 0x)" >&2
+    exit 1
+  fi
+fi
 
 # Prevent another repository deploy command from racing this broadcast for
 # the same account's nonces. Transactions inside this script still use
@@ -194,33 +215,7 @@ if [[ "$packages_json" == "{}" || -z "$packages_json" ]]; then
 fi
 
 if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
-  if ! jq -e '
-    (keys | sort) == ([
-      "transfer-blocklist",
-      "simple-wallet",
-      "q-05-simple-wallet",
-      "thirty-one-game",
-      "q-20-erc20-basic",
-      "q-27-merkle-allowlist"
-    ] | sort)
-    and ([
-      .["transfer-blocklist"].token,
-      .["transfer-blocklist"].blocklist,
-      .["transfer-blocklist"].restrictedToken,
-      .["simple-wallet"].wallet,
-      .["q-05-simple-wallet"].wallet,
-      .["q-05-simple-wallet"].token,
-      .["thirty-one-game"].token,
-      .["thirty-one-game"].game,
-      .["q-20-erc20-basic"].lab,
-      .["q-20-erc20-basic"].faucet,
-      .["q-20-erc20-basic"].vault,
-      .["q-27-merkle-allowlist"].lab
-    ] | all(type == "string" and test("^0x[0-9a-fA-F]{40}$")))
-    and .["transfer-blocklist"].token == .["transfer-blocklist"].restrictedToken
-    and .["q-05-simple-wallet"].token == .["transfer-blocklist"].restrictedToken
-    and .["thirty-one-game"].token == .["transfer-blocklist"].restrictedToken
-  ' <<<"$packages_json" >/dev/null; then
+  if ! sto_validate_packages_json "$packages_json"; then
     echo "[deploy-all] ERROR: incomplete STO deployment output; refusing to write records" >&2
     exit 1
   fi
@@ -250,7 +245,7 @@ if [[ "$DEPLOY_PROFILE" == "sto" && -f "$OUT" ]]; then
     echo "[deploy-all] ERROR: existing deployment record has a different chainId: $OUT" >&2
     exit 1
   fi
-  existing=$(jq 'del(.packages["default-erc-20"], .packages["merkle-allowlist"])' <<<"$existing")
+  existing=$(sto_filter_existing "$existing")
 fi
 
 # Same schema as deploy.sh's flush_record (deployments/<network>.json).

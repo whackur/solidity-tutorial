@@ -6,9 +6,17 @@ pragma solidity ^0.8.35;
 // assigns sequential nonces and waits for confirmations as one batch.
 
 import {Script, console2} from "forge-std/Script.sol";
+import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import {Counter} from "../counter/src/Counter.sol";
+import {EventsAndErrors} from "../counter/src/EventsAndErrors.sol";
+import {SimpleStorage} from "../counter/src/SimpleStorage.sol";
 import {SimpleWallet} from "../simple-wallet/src/SimpleWallet.sol";
+import {Q01Counter} from "../q-01-counter/src/Setup.sol";
 import {Q05SimpleWallet} from "../q-05-simple-wallet/src/Setup.sol";
 import {ThirtyOneGame} from "../thirty-one-game/src/ThirtyOneGame.sol";
+import {MerkleAllowlist} from "../merkle-allowlist/src/MerkleAllowlist.sol";
+import {AllowlistRestrictedToken} from "../merkle-allowlist/src/AllowlistRestrictedToken.sol";
+import {MerkleDistributor} from "../merkle-allowlist/src/MerkleDistributor.sol";
 import {AddressBlocklist} from "../transfer-blocklist/src/AddressBlocklist.sol";
 import {BlocklistRestrictedToken} from "../transfer-blocklist/src/BlocklistRestrictedToken.sol";
 import {Q20Erc20BasicLab} from "../q-20-erc20-basic/src/Setup.sol";
@@ -28,9 +36,21 @@ contract DeploySto is Script {
         console2.log("ADDR:blocklist:", address(blocklist));
         console2.log("ADDR:restrictedToken:", shared);
 
+        Counter counter = new Counter();
+        EventsAndErrors eventsAndErrors = new EventsAndErrors();
+        SimpleStorage simpleStorage = new SimpleStorage();
+        console2.log("PKG:counter");
+        console2.log("ADDR:counter:", address(counter));
+        console2.log("ADDR:eventsAndErrors:", address(eventsAndErrors));
+        console2.log("ADDR:simpleStorage:", address(simpleStorage));
+
         SimpleWallet wallet = new SimpleWallet();
         console2.log("PKG:simple-wallet");
         console2.log("ADDR:wallet:", address(wallet));
+
+        Q01Counter q01Counter = new Q01Counter();
+        console2.log("PKG:q-01-counter");
+        console2.log("ADDR:counter:", address(q01Counter));
 
         Q05SimpleWallet q05Wallet = new Q05SimpleWallet();
         console2.log("PKG:q-05-simple-wallet");
@@ -47,6 +67,18 @@ contract DeploySto is Script {
         console2.log("ADDR:lab:", address(q20Lab));
         console2.log("ADDR:faucet:", address(q20Lab.faucet()));
         console2.log("ADDR:vault:", address(q20Lab.vault()));
+
+        bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
+        bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
+        MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
+        AllowlistRestrictedToken allowlistToken =
+            new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
+        MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);
+        console2.log("PKG:merkle-allowlist");
+        console2.log("ADDR:token:", shared);
+        console2.log("ADDR:allowlist:", address(allowlist));
+        console2.log("ADDR:restrictedToken:", address(allowlistToken));
+        console2.log("ADDR:distributor:", address(distributor));
 
         Q27MerkleAllowlistLab q27Lab = new Q27MerkleAllowlistLab();
         console2.log("PKG:q-27-merkle-allowlist");

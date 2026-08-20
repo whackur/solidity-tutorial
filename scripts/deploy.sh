@@ -46,6 +46,12 @@ set -euo pipefail
 ROOT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$ROOT_DIR"
 
+# Keep the per-package and one-shot STO profiles on the same package set and
+# output schema. This file is sourced after ROOT_DIR is resolved so the script
+# can also be invoked from another working directory.
+# shellcheck source=scripts/sto-profile.sh
+source "$ROOT_DIR/scripts/sto-profile.sh"
+
 NETWORK="${1:-}"
 TARGET="${2:-}"
 
@@ -121,6 +127,22 @@ if [[ -n "${DEPLOYER_ADDRESS:-}" ]]; then
 fi
 
 CHAIN_ID=$(cast chain-id --rpc-url "$RPC_URL")
+
+if [[ "$TARGET" == "sto" ]]; then
+  if ! sto_require_base_sepolia_chain "$CHAIN_ID"; then
+    echo "[deploy] ERROR: the sto profile requires Base Sepolia chainId 84532 (RPC returned ${CHAIN_ID})" >&2
+    exit 1
+  fi
+
+  if ! deployer_code=$(cast code "$DEPLOYER_ADDR" --rpc-url "$RPC_URL"); then
+    echo "[deploy] ERROR: unable to inspect deployer code on chain ${CHAIN_ID}" >&2
+    exit 1
+  fi
+  if ! sto_require_plain_eoa_code "$deployer_code"; then
+    echo "[deploy] ERROR: STO deployer ${DEPLOYER_ADDR} is delegated or a contract (code must be 0x)" >&2
+    exit 1
+  fi
+fi
 
 # Prevent two repository deploy commands from using the same account and
 # network concurrently. Parallel Forge processes can reserve overlapping
@@ -206,14 +228,7 @@ elif [[ "$TARGET" == "sto" ]]; then
     exit 1
   fi
 
-  packages=(
-    "transfer-blocklist"
-    "simple-wallet"
-    "q-05-simple-wallet"
-    "thirty-one-game"
-    "q-20-erc20-basic"
-    "q-27-merkle-allowlist"
-  )
+  packages=("${STO_PACKAGES[@]}")
 
   for pkg in "${packages[@]}"; do
     if [[ ! -f "$ROOT_DIR/$pkg/script/Deploy.s.sol" ]]; then
@@ -251,7 +266,7 @@ OUT="$ROOT_DIR/deployments/${NETWORK}.json"
 existing="{}"
 [[ -f "$OUT" ]] && existing=$(cat "$OUT")
 if [[ "$TARGET" == "sto" ]]; then
-  existing=$(jq 'del(.packages["default-erc-20"], .packages["merkle-allowlist"])' <<<"$existing")
+  existing=$(sto_filter_existing "$existing")
 fi
 
 # SKIP_DEPLOYED=1 resumes a partial run: packages already present in the
@@ -422,7 +437,7 @@ for pkg in "${packages[@]}"; do
   fi
   if [[ "$skip_deployed" == "1" ]] && already_deployed "$pkg"; then
     dependency_matches=1
-    if [[ "$TARGET" == "sto" && "$pkg" =~ ^(q-05-simple-wallet|thirty-one-game)$ ]]; then
+    if [[ "$TARGET" == "sto" && "$pkg" =~ ^(q-05-simple-wallet|thirty-one-game|merkle-allowlist)$ ]]; then
       recorded_token=$(jq -r --arg p "$pkg" '.packages[$p].token // empty' <<<"$existing")
       recorded_token_normalized=$(printf '%s' "$recorded_token" | tr '[:upper:]' '[:lower:]')
       shared_token_normalized=$(printf '%s' "$SHARED_ERC20" | tr '[:upper:]' '[:lower:]')
@@ -442,6 +457,14 @@ for pkg in "${packages[@]}"; do
 done
 
 flush_record
+
+if [[ "$TARGET" == "sto" ]]; then
+  if ! sto_validate_packages_json "$(jq -c '.packages' "$OUT")"; then
+    echo "[deploy] ERROR: final STO deployment record does not match the profile schema; refusing success" >&2
+    exit 1
+  fi
+fi
+
 echo "[deploy] wrote ${OUT}"
 echo "[deploy] wrote ${WEB_OUT} (faucet ${FAUCET_ADDR} — fund it for live ETH drops)"
 echo "[deploy] done"
