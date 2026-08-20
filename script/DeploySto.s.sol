@@ -23,6 +23,7 @@ contract DeploySto is Script {
         uint256 winnerPercentage = vm.envOr("THIRTYONE_WINNER_PERCENTAGE", uint256(80));
         bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
         bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
+        require(allowlistRoot != bytes32(0), "ALLOWLIST_MERKLE_ROOT is required");
 
         vm.startBroadcast();
 
@@ -40,11 +41,6 @@ contract DeploySto is Script {
         console2.log("ADDR:wallet:", address(q05Wallet));
         console2.log("ADDR:token:", shared);
 
-        ThirtyOneGame game = new ThirtyOneGame(shared, winnerPercentage);
-        console2.log("PKG:thirty-one-game");
-        console2.log("ADDR:token:", shared);
-        console2.log("ADDR:game:", address(game));
-
         MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
         AllowlistRestrictedToken restrictedToken =
             new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
@@ -54,6 +50,12 @@ contract DeploySto is Script {
         console2.log("ADDR:allowlist:", address(allowlist));
         console2.log("ADDR:restrictedToken:", address(restrictedToken));
         console2.log("ADDR:distributor:", address(distributor));
+
+        ThirtyOneGame game = new ThirtyOneGame(shared, address(allowlist), winnerPercentage);
+        console2.log("PKG:thirty-one-game");
+        console2.log("ADDR:token:", shared);
+        console2.log("ADDR:allowlist:", address(allowlist));
+        console2.log("ADDR:game:", address(game));
 
         Q20Erc20BasicLab q20Lab = new Q20Erc20BasicLab();
         console2.log("PKG:q-20-erc20-basic");

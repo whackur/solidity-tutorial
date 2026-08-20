@@ -91,6 +91,14 @@ if [[ -z "$RPC_URL" ]]; then
   exit 1
 fi
 
+if [[ "$TARGET" == "sto" ]]; then
+  zero_root="0x$(printf '0%.0s' {1..64})"
+  if [[ -z "${ALLOWLIST_MERKLE_ROOT:-}" || "${ALLOWLIST_MERKLE_ROOT}" == "$zero_root" ]]; then
+    echo "[deploy] ERROR: sto requires a non-zero ALLOWLIST_MERKLE_ROOT" >&2
+    exit 1
+  fi
+fi
+
 do_verify=0
 verify_flags=()
 if [[ "${VERIFY:-0}" == "1" ]]; then
@@ -210,8 +218,8 @@ elif [[ "$TARGET" == "sto" ]]; then
     "default-erc-20"
     "simple-wallet"
     "q-05-simple-wallet"
-    "thirty-one-game"
     "merkle-allowlist"
+    "thirty-one-game"
     "q-20-erc20-basic"
     "q-27-merkle-allowlist"
   )
@@ -241,6 +249,24 @@ mkdir -p "$ROOT_DIR/deployments"
 OUT="$ROOT_DIR/deployments/${NETWORK}.json"
 existing="{}"
 [[ -f "$OUT" ]] && existing=$(cat "$OUT")
+
+# ThirtyOneGame uses the merkle package's allowlist as its participation gate.
+# Reuse an explicit environment value first, then a previously recorded live
+# deployment when resuming or deploying the game by itself.
+requested_thirtyone_allowlist="${THIRTYONE_ALLOWLIST:-}"
+recorded_thirtyone_allowlist=$(
+  jq -r '.packages["merkle-allowlist"].allowlist // empty' <<<"$existing"
+)
+if [[ -n "$requested_thirtyone_allowlist" && -n "$recorded_thirtyone_allowlist" ]]; then
+  requested_normalized=$(printf '%s' "$requested_thirtyone_allowlist" | tr '[:upper:]' '[:lower:]')
+  recorded_normalized=$(printf '%s' "$recorded_thirtyone_allowlist" | tr '[:upper:]' '[:lower:]')
+  if [[ "$requested_normalized" != "$recorded_normalized" ]]; then
+    echo "[deploy] ERROR: THIRTYONE_ALLOWLIST differs from the recorded merkle allowlist" >&2
+    exit 1
+  fi
+fi
+THIRTYONE_ALLOWLIST="${requested_thirtyone_allowlist:-$recorded_thirtyone_allowlist}"
+[[ -n "$THIRTYONE_ALLOWLIST" ]] && export THIRTYONE_ALLOWLIST
 
 # SKIP_DEPLOYED=1 resumes a partial run: packages already present in the
 # record are skipped instead of redeployed (and re-paid for).
@@ -344,12 +370,35 @@ for pkg in "${packages[@]}"; do
     continue
   fi
   if [[ "$skip_deployed" == "1" ]] && already_deployed "$pkg"; then
-    echo "[deploy] skipping ${pkg} (already in record)"
-    continue
+    if [[ "$pkg" == "thirty-one-game" ]]; then
+      recorded_game_allowlist=$(
+        jq -r '.packages["thirty-one-game"].allowlist // empty' <<<"$existing"
+      )
+      game_normalized=$(printf '%s' "$recorded_game_allowlist" | tr '[:upper:]' '[:lower:]')
+      current_normalized=$(printf '%s' "${THIRTYONE_ALLOWLIST:-}" | tr '[:upper:]' '[:lower:]')
+      if [[ -z "$game_normalized" || "$game_normalized" != "$current_normalized" ]]; then
+        echo "[deploy] redeploying ${pkg} (recorded allowlist does not match)"
+      else
+        echo "[deploy] skipping ${pkg} (already in record, allowlist matches)"
+        continue
+      fi
+    else
+      echo "[deploy] skipping ${pkg} (already in record)"
+      continue
+    fi
   fi
   pairs_json=$(deploy_one "$pkg")
   deployments_json=$(echo "$deployments_json" \
     | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
+  if [[ "$pkg" == "merkle-allowlist" ]]; then
+    THIRTYONE_ALLOWLIST=$(jq -r '.allowlist // empty' <<<"$pairs_json")
+    if [[ -z "$THIRTYONE_ALLOWLIST" ]]; then
+      echo "[deploy] ERROR: merkle-allowlist did not emit ADDR:allowlist:" >&2
+      exit 1
+    fi
+    export THIRTYONE_ALLOWLIST
+    echo "[deploy] ThirtyOneGame allowlist: ${THIRTYONE_ALLOWLIST}"
+  fi
   flush_record
 done
 

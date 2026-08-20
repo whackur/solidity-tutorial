@@ -528,24 +528,12 @@ contract DeployAll is Script {
             console2.log("ADDR:smartAccount:", address(smartAccount));
         }
 
-        // ---- thirty-one-game (uses the shared token instead of a local mock) ----
-        {
-            uint256 winnerPercentage = vm.envOr("THIRTYONE_WINNER_PERCENTAGE", uint256(80));
-            // Original: address token = vm.envOr("SHARED_ERC20", address(0));
-            // then deploys MockToken only when unset. SHARED_ERC20 is always set
-            // here, so reuse the default-erc-20 token directly.
-            address token = shared;
-            ThirtyOneGame game = new ThirtyOneGame(token, winnerPercentage);
-            console2.log("PKG:thirty-one-game");
-            console2.log("ADDR:token:", token);
-            console2.log("ADDR:game:", address(game));
-        }
-
         // ---- merkle-allowlist ----
+        MerkleAllowlist allowlist;
         {
             bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
             bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
-            MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
+            allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
             AllowlistRestrictedToken restrictedToken =
                 new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
             MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);
@@ -553,6 +541,16 @@ contract DeployAll is Script {
             console2.log("ADDR:allowlist:", address(allowlist));
             console2.log("ADDR:restrictedToken:", address(restrictedToken));
             console2.log("ADDR:distributor:", address(distributor));
+        }
+
+        // ---- thirty-one-game (shared token + merkle participation gate) ----
+        {
+            uint256 winnerPercentage = vm.envOr("THIRTYONE_WINNER_PERCENTAGE", uint256(80));
+            ThirtyOneGame game = new ThirtyOneGame(shared, address(allowlist), winnerPercentage);
+            console2.log("PKG:thirty-one-game");
+            console2.log("ADDR:token:", shared);
+            console2.log("ADDR:allowlist:", address(allowlist));
+            console2.log("ADDR:game:", address(game));
         }
 
         // ---- q-27-merkle-allowlist ----

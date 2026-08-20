@@ -12,9 +12,24 @@ contract MockToken is ERC20 {
     }
 }
 
+contract MockAllowlist {
+    mapping(address account => bool) internal allowed;
+
+    function setAllowed(address account, bool value) external {
+        allowed[account] = value;
+    }
+
+    function isAllowed(address account) external view returns (bool) {
+        return allowed[account];
+    }
+}
+
+contract InvalidAllowlist {}
+
 contract ThirtyOneGameTest is Test {
     ThirtyOneGame internal game;
     MockToken internal token;
+    MockAllowlist internal allowlist;
     address internal alice = address(0xA11CE);
     address internal bob = address(0xB0B);
 
@@ -22,7 +37,11 @@ contract ThirtyOneGameTest is Test {
 
     function setUp() public {
         token = new MockToken();
-        game = new ThirtyOneGame(address(token), WINNER_PERCENTAGE);
+        allowlist = new MockAllowlist();
+        game = new ThirtyOneGame(address(token), address(allowlist), WINNER_PERCENTAGE);
+
+        allowlist.setAllowed(alice, true);
+        allowlist.setAllowed(bob, true);
 
         token.transfer(alice, 10_000 ether);
         token.transfer(bob, 10_000 ether);
@@ -35,16 +54,53 @@ contract ThirtyOneGameTest is Test {
 
     function test_InitialState() public view {
         assertEq(address(game.token()), address(token));
+        assertEq(address(game.allowlist()), address(allowlist));
         assertEq(game.currentRound(), 1);
         assertEq(game.winnerPercentage(), WINNER_PERCENTAGE);
     }
 
     function test_RevertWhen_InvalidWinnerPercentageOnConstruct() public {
         vm.expectRevert(bytes("Percentage must be between 1 and 100."));
-        new ThirtyOneGame(address(token), 0);
+        new ThirtyOneGame(address(token), address(allowlist), 0);
 
         vm.expectRevert(bytes("Percentage must be between 1 and 100."));
-        new ThirtyOneGame(address(token), 101);
+        new ThirtyOneGame(address(token), address(allowlist), 101);
+    }
+
+    function test_RevertWhen_AllowlistAddressIsZero() public {
+        vm.expectRevert(bytes("Allowlist address cannot be zero."));
+        new ThirtyOneGame(address(token), address(0), WINNER_PERCENTAGE);
+    }
+
+    function test_RevertWhen_AllowlistIsNotAContract() public {
+        vm.expectRevert(bytes("Allowlist must be a contract."));
+        new ThirtyOneGame(address(token), alice, WINNER_PERCENTAGE);
+    }
+
+    function test_RevertWhen_AllowlistContractHasNoInterface() public {
+        InvalidAllowlist invalidAllowlist = new InvalidAllowlist();
+
+        vm.expectRevert(bytes("Invalid allowlist contract."));
+        new ThirtyOneGame(address(token), address(invalidAllowlist), WINNER_PERCENTAGE);
+    }
+
+    function test_RevertWhen_PlayerIsNotAllowlisted() public {
+        allowlist.setAllowed(alice, false);
+
+        vm.prank(alice);
+        vm.expectRevert(bytes("Player is not allowlisted."));
+        game.submit(1, 2, 20 ether);
+    }
+
+    function test_RevertAfter_PlayerIsRevoked() public {
+        vm.prank(alice);
+        game.submit(1, 2, 20 ether);
+
+        allowlist.setAllowed(alice, false);
+
+        vm.prank(alice);
+        vm.expectRevert(bytes("Player is not allowlisted."));
+        game.submit(1, 1, 10 ether);
     }
 
     function test_SubmitAdvancesIndexAndPool() public {

@@ -138,6 +138,7 @@ echo "[snapshot] discovered ${#packages[@]} packages"
 SHARED_TOKEN_PKG="default-erc-20"
 challenges_json="{}"
 SHARED_ERC20=""
+THIRTYONE_ALLOWLIST=""
 
 if printf '%s\n' "${packages[@]}" | grep -qx "$SHARED_TOKEN_PKG"; then
   pairs_json=$(deploy_one "$SHARED_TOKEN_PKG")
@@ -157,6 +158,15 @@ for pkg in "${packages[@]}"; do
   pairs_json=$(deploy_one "$pkg")
   challenges_json=$(echo "$challenges_json" \
     | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
+  if [[ "$pkg" == "merkle-allowlist" ]]; then
+    THIRTYONE_ALLOWLIST=$(jq -r '.allowlist // empty' <<<"$pairs_json")
+    if [[ -z "$THIRTYONE_ALLOWLIST" ]]; then
+      echo "[snapshot] ERROR: merkle-allowlist did not emit ADDR:allowlist:" >&2
+      exit 1
+    fi
+    export THIRTYONE_ALLOWLIST
+    echo "[snapshot] ThirtyOneGame allowlist: ${THIRTYONE_ALLOWLIST}"
+  fi
 done
 
 # addresses.json — rpcPort/rpcUrl are runtime concerns, left null here so the

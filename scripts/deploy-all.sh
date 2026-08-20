@@ -210,6 +210,7 @@ if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
       .["q-05-simple-wallet"].wallet,
       .["q-05-simple-wallet"].token,
       .["thirty-one-game"].token,
+      .["thirty-one-game"].allowlist,
       .["thirty-one-game"].game,
       .["merkle-allowlist"].token,
       .["merkle-allowlist"].allowlist,
@@ -220,6 +221,7 @@ if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
       .["q-20-erc20-basic"].vault,
       .["q-27-merkle-allowlist"].lab
     ] | all(type == "string" and test("^0x[0-9a-fA-F]{40}$")))
+    and .["thirty-one-game"].allowlist == .["merkle-allowlist"].allowlist
   ' <<<"$packages_json" >/dev/null; then
     echo "[deploy-all] ERROR: incomplete STO deployment output; refusing to write records" >&2
     exit 1

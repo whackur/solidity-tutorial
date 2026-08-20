@@ -18,15 +18,17 @@ contract Deploy is Script {
         // (set by docker/build-snapshot.sh). Fall back to a local mock so the
         // package stays independently deployable.
         address token = vm.envOr("SHARED_ERC20", address(0));
+        address allowlist = vm.envAddress("THIRTYONE_ALLOWLIST");
 
         vm.startBroadcast();
         if (token == address(0)) {
             token = address(new MockToken());
         }
-        ThirtyOneGame game = new ThirtyOneGame(token, winnerPercentage);
+        ThirtyOneGame game = new ThirtyOneGame(token, allowlist, winnerPercentage);
         vm.stopBroadcast();
 
         console2.log("ADDR:token:", token);
+        console2.log("ADDR:allowlist:", allowlist);
         console2.log("ADDR:game:", address(game));
     }
 }
