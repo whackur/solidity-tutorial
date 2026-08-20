@@ -2,7 +2,6 @@
 pragma solidity ^0.8.35;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IAddressAllowlist} from "./IAddressAllowlist.sol";
 
 interface IThirtyOneGame {
     struct Player {
@@ -28,8 +27,6 @@ interface IThirtyOneGame {
     event WinnerPercentageUpdated(uint256 newPercentage);
 
     function token() external view returns (IERC20);
-
-    function allowlist() external view returns (IAddressAllowlist);
 
     function rounds(uint256 _round)
         external

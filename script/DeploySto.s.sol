@@ -8,7 +8,6 @@ pragma solidity ^0.8.35;
 import {Script, console2} from "forge-std/Script.sol";
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-import {MyERC20} from "../default-erc-20/src/MyERC20.sol";
 import {SimpleWallet} from "../simple-wallet/src/SimpleWallet.sol";
 import {Q05SimpleWallet} from "../q-05-simple-wallet/src/Setup.sol";
 import {ThirtyOneGame} from "../thirty-one-game/src/ThirtyOneGame.sol";
@@ -23,39 +22,54 @@ contract DeploySto is Script {
         uint256 winnerPercentage = vm.envOr("THIRTYONE_WINNER_PERCENTAGE", uint256(80));
         bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
         bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
+        uint256 distributionFunding = vm.envOr("DISTRIBUTION_FUNDING", uint256(0));
         require(allowlistRoot != bytes32(0), "ALLOWLIST_MERKLE_ROOT is required");
+        if (distributionFunding > 0) {
+            require(distributionRoot != bytes32(0), "distribution root required for funding");
+        }
 
         vm.startBroadcast();
 
-        MyERC20 sharedToken = new MyERC20("MyERC20", "ME2", 100_000_000 ether);
-        address shared = address(sharedToken);
-        console2.log("PKG:default-erc-20");
-        console2.log("ADDR:token:", shared);
-
         SimpleWallet wallet = new SimpleWallet();
-        console2.log("PKG:simple-wallet");
-        console2.log("ADDR:wallet:", address(wallet));
-
         Q05SimpleWallet q05Wallet = new Q05SimpleWallet();
-        console2.log("PKG:q-05-simple-wallet");
-        console2.log("ADDR:wallet:", address(q05Wallet));
-        console2.log("ADDR:token:", shared);
-
         MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
         AllowlistRestrictedToken restrictedToken =
             new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
+        address shared = address(restrictedToken);
         MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);
+        ThirtyOneGame game = new ThirtyOneGame(shared, winnerPercentage);
+
+        allowlist.setSystemAddress(msg.sender, true);
+        allowlist.setSystemAddress(address(wallet), true);
+        allowlist.setSystemAddress(address(q05Wallet), true);
+        allowlist.setSystemAddress(address(distributor), true);
+        allowlist.setSystemAddress(address(game), true);
+        if (distributionFunding > 0) {
+            require(
+                restrictedToken.transfer(address(distributor), distributionFunding),
+                "distributor funding failed"
+            );
+        }
+
         console2.log("PKG:merkle-allowlist");
         console2.log("ADDR:token:", shared);
         console2.log("ADDR:allowlist:", address(allowlist));
         console2.log("ADDR:restrictedToken:", address(restrictedToken));
         console2.log("ADDR:distributor:", address(distributor));
 
-        ThirtyOneGame game = new ThirtyOneGame(shared, address(allowlist), winnerPercentage);
-        console2.log("PKG:thirty-one-game");
+        console2.log("PKG:simple-wallet");
+        console2.log("ADDR:wallet:", address(wallet));
+        console2.log("ADDR:allowlist:", address(allowlist));
+
+        console2.log("PKG:q-05-simple-wallet");
+        console2.log("ADDR:wallet:", address(q05Wallet));
         console2.log("ADDR:token:", shared);
         console2.log("ADDR:allowlist:", address(allowlist));
+
+        console2.log("PKG:thirty-one-game");
+        console2.log("ADDR:token:", shared);
         console2.log("ADDR:game:", address(game));
+        console2.log("ADDR:allowlist:", address(allowlist));
 
         Q20Erc20BasicLab q20Lab = new Q20Erc20BasicLab();
         console2.log("PKG:q-20-erc20-basic");

@@ -68,11 +68,11 @@ VERIFY=1 pnpm deploy:sepolia all        # also verify on the block explorer
 scripts/deploy.sh ethereum default-erc-20   # any configured network; mainnets have no pnpm shortcut on purpose
 ```
 
-`default-erc-20` is always deployed first and exported as `SHARED_ERC20`, so token-agnostic packages reuse it. Resulting addresses are merged into `deployments/<network>.json` and mirrored to `docker/shared/<network>.json` so the faucet UI shows a tab for that network. `.env` is gitignored — never commit your mnemonic.
+The generic `all` profile deploys `default-erc-20` first and exports it as `SHARED_ERC20`. The STO profile deliberately excludes that token: it deploys `merkle-allowlist` first and exports its `AllowlistRestrictedToken` instead. Resulting addresses are merged into `deployments/<network>.json` and mirrored to `docker/shared/<network>.json` so the faucet UI shows a tab for that network. `.env` is gitignored — never commit your mnemonic.
 
-The STO profile deploys these packages in dependency order: `default-erc-20`, `simple-wallet`, `q-05-simple-wallet`, `merkle-allowlist`, `thirty-one-game`, `q-20-erc20-basic`, and `q-27-merkle-allowlist`. Deploying the shared token first ensures `q-05-simple-wallet`, `thirty-one-game`, and `merkle-allowlist` all receive the same ERC-20 address instead of creating package-local mock tokens. Deploying `merkle-allowlist` before `thirty-one-game` lets the game use that same allowlist as its participation gate. The `:fast` command runs `script/DeploySto.s.sol` under one broadcast: Forge assigns sequential nonces and submits the transactions back-to-back, avoiding nonce races between parallel deploy processes. Both deploy paths take a per-chain, per-deployer process lock; do not use the deployer account from another repository or wallet while a deployment is running. If a Base Sepolia deployment record already exists, the fast STO path updates its seven package entries and preserves unrelated package addresses.
+The STO profile deploys these packages in dependency order: `merkle-allowlist`, `simple-wallet`, `q-05-simple-wallet`, `thirty-one-game`, `q-20-erc20-basic`, and `q-27-merkle-allowlist`. `AllowlistRestrictedToken` is the only shared classroom token: the distributor, `q-05-simple-wallet`, and `thirty-one-game` all receive that exact address. `q-20-erc20-basic` intentionally retains its self-contained hand-written token because implementing that token is the exercise itself. The `:fast` command runs `script/DeploySto.s.sol` under one broadcast: Forge assigns sequential nonces and submits the transactions back-to-back, avoiding nonce races between parallel deploy processes. Both deploy paths take a per-chain, per-deployer process lock; do not use the deployer account from another repository or wallet while a deployment is running. If a Base Sepolia deployment record already exists, the STO path removes the old `default-erc-20` entry and replaces shared-token dependencies with the restricted token.
 
-Set `ALLOWLIST_MERKLE_ROOT` to a non-zero root before running either STO deploy command. The deploy scripts refuse to publish an STO game with the safe-but-unusable zero root. Players must still register with valid proofs before `ThirtyOneGame.submit` accepts them.
+Set `ALLOWLIST_MERKLE_ROOT` to a non-zero root before either STO deploy command. Learners may receive classroom tokens through the faucet mint before registration, but holder-to-holder and holder-to-application transfers remain blocked until the learner registers with a valid proof. Infrastructure contracts are explicitly marked as system addresses in the same allowlist; the game itself contains no participant allowlist rule.
 
 ### Fast path: one broadcast
 
@@ -96,7 +96,7 @@ SKIP_DEPLOYED=1 pnpm deploy:hoodi all                    # skip packages already
 SKIP_PACKAGES="q-16-oracle-spot" pnpm deploy:hoodi all   # skip specific expensive labs
 ```
 
-`SKIP_DEPLOYED=1` reuses the recorded `sharedToken`, so token-agnostic packages still wire up to the existing `default-erc-20`.
+`SKIP_DEPLOYED=1` reuses the recorded profile-specific `sharedToken`: `default-erc-20` for generic deployments and `AllowlistRestrictedToken` for STO.
 
 ## Collect ABIs
 

@@ -2,7 +2,6 @@
 pragma solidity ^0.8.35;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import {IAddressAllowlist} from "./interfaces/IAddressAllowlist.sol";
 import {IThirtyOneGame} from "./interfaces/IThirtyOneGame.sol";
 
 /**
@@ -11,7 +10,6 @@ import {IThirtyOneGame} from "./interfaces/IThirtyOneGame.sol";
  */
 contract ThirtyOneGame is IThirtyOneGame {
     IERC20 public immutable override token;
-    IAddressAllowlist public immutable override allowlist;
 
     mapping(uint256 => Round) public override rounds;
     uint256 public override currentRound;
@@ -26,19 +24,12 @@ contract ThirtyOneGame is IThirtyOneGame {
         _;
     }
 
-    constructor(address _token, address _allowlist, uint256 _initialWinnerPercentage) {
-        require(_allowlist != address(0), "Allowlist address cannot be zero.");
-        require(_allowlist.code.length > 0, "Allowlist must be a contract.");
-        (bool allowlistOk, bytes memory allowlistResult) =
-            _allowlist.staticcall(abi.encodeCall(IAddressAllowlist.isAllowed, (msg.sender)));
-        require(allowlistOk && allowlistResult.length == 32, "Invalid allowlist contract.");
-        abi.decode(allowlistResult, (bool));
+    constructor(address _token, uint256 _initialWinnerPercentage) {
         require(
             _initialWinnerPercentage > 0 && _initialWinnerPercentage <= 100,
             "Percentage must be between 1 and 100."
         );
         token = IERC20(_token);
-        allowlist = IAddressAllowlist(_allowlist);
         owner = msg.sender;
         currentRound = 1;
         winnerPercentage = _initialWinnerPercentage;
@@ -47,7 +38,6 @@ contract ThirtyOneGame is IThirtyOneGame {
     }
 
     function submit(uint256 _round, uint256 _number, uint256 _amount) public override {
-        require(allowlist.isAllowed(msg.sender), "Player is not allowlisted.");
         require(_round == currentRound, "This round is not active.");
         Round storage round = rounds[_round];
         require(!round.gameOver, "Game is already over.");

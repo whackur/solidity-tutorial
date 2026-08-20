@@ -6,8 +6,8 @@
 #   - signs with DEPLOYER_MNEMONIC account index 0 — the same deployer key
 #     convention as simple-uups/script/Upgrade.s.sol and the docker snapshot,
 #   - runs each package's script/Deploy.s.sol:Deploy with --broadcast,
-#   - deploys default-erc-20 first and exports its address as SHARED_ERC20 so
-#     token-agnostic packages reuse it (vm.envOr) instead of deploying a mock,
+#   - generic all deploys default-erc-20 first; STO deploys merkle-allowlist
+#     first and exports its restricted token as SHARED_ERC20,
 #   - assembles deployments/<network>.json from the ADDR:<key>: emissions.
 #
 # The network is just a name — anything wired in foundry.toml [rpc_endpoints]
@@ -215,10 +215,9 @@ elif [[ "$TARGET" == "sto" ]]; then
   fi
 
   packages=(
-    "default-erc-20"
+    "merkle-allowlist"
     "simple-wallet"
     "q-05-simple-wallet"
-    "merkle-allowlist"
     "thirty-one-game"
     "q-20-erc20-basic"
     "q-27-merkle-allowlist"
@@ -240,7 +239,19 @@ fi
 
 echo "[deploy] packages: ${packages[*]}"
 
-SHARED_TOKEN_PKG="default-erc-20"
+if [[ "$TARGET" == "sto" ]]; then
+  SHARED_TOKEN_PKG="merkle-allowlist"
+  SHARED_TOKEN_NAME="Allowlist Restricted Token"
+  SHARED_TOKEN_SYMBOL="ALRT"
+  SHARED_TOKEN_CLASSROOM_MINT=true
+  export STO_SHARED_ALLOWLIST=1
+else
+  SHARED_TOKEN_PKG="default-erc-20"
+  SHARED_TOKEN_NAME="MyERC20"
+  SHARED_TOKEN_SYMBOL="ME2"
+  SHARED_TOKEN_CLASSROOM_MINT=false
+  unset SHARED_ALLOWLIST STO_SHARED_ALLOWLIST
+fi
 deployments_json="{}"
 
 # The record file is rewritten after every package so a mid-run failure (one
@@ -249,24 +260,9 @@ mkdir -p "$ROOT_DIR/deployments"
 OUT="$ROOT_DIR/deployments/${NETWORK}.json"
 existing="{}"
 [[ -f "$OUT" ]] && existing=$(cat "$OUT")
-
-# ThirtyOneGame uses the merkle package's allowlist as its participation gate.
-# Reuse an explicit environment value first, then a previously recorded live
-# deployment when resuming or deploying the game by itself.
-requested_thirtyone_allowlist="${THIRTYONE_ALLOWLIST:-}"
-recorded_thirtyone_allowlist=$(
-  jq -r '.packages["merkle-allowlist"].allowlist // empty' <<<"$existing"
-)
-if [[ -n "$requested_thirtyone_allowlist" && -n "$recorded_thirtyone_allowlist" ]]; then
-  requested_normalized=$(printf '%s' "$requested_thirtyone_allowlist" | tr '[:upper:]' '[:lower:]')
-  recorded_normalized=$(printf '%s' "$recorded_thirtyone_allowlist" | tr '[:upper:]' '[:lower:]')
-  if [[ "$requested_normalized" != "$recorded_normalized" ]]; then
-    echo "[deploy] ERROR: THIRTYONE_ALLOWLIST differs from the recorded merkle allowlist" >&2
-    exit 1
-  fi
+if [[ "$TARGET" == "sto" ]]; then
+  existing=$(jq 'del(.packages["default-erc-20"])' <<<"$existing")
 fi
-THIRTYONE_ALLOWLIST="${requested_thirtyone_allowlist:-$recorded_thirtyone_allowlist}"
-[[ -n "$THIRTYONE_ALLOWLIST" ]] && export THIRTYONE_ALLOWLIST
 
 # SKIP_DEPLOYED=1 resumes a partial run: packages already present in the
 # record are skipped instead of redeployed (and re-paid for).
@@ -328,6 +324,9 @@ flush_record() {
     --arg rpcUrl "$PUBLIC_RPC" \
     --arg faucetAddr "$FAUCET_ADDR" \
     --arg faucetKey "$FAUCET_KEY" \
+    --arg tokenName "$SHARED_TOKEN_NAME" \
+    --arg tokenSymbol "$SHARED_TOKEN_SYMBOL" \
+    --argjson classroomMint "$SHARED_TOKEN_CLASSROOM_MINT" \
     '{
        network: .network,
        chainId: .chainId,
@@ -337,24 +336,84 @@ flush_record() {
        deployer: .deployer,
        faucet: {address: $faucetAddr, privateKey: $faucetKey},
        sharedToken: (if .sharedToken == null then null else
-         {address: .sharedToken, name: "MyERC20", symbol: "ME2", decimals: 18} end),
+         {address: .sharedToken, name: $tokenName, symbol: $tokenSymbol, decimals: 18,
+          classroomMint: $classroomMint} end),
        challenges: .packages
      }' \
     "$OUT" >"$WEB_OUT"
 }
 
-# Deploy the shared ERC-20 first (if requested) and export SHARED_ERC20 so the
-# token-agnostic packages pick it up via vm.envOr.
+prepare_recorded_sto_shared() {
+  tok=$(jq -r '.packages["merkle-allowlist"].restrictedToken // empty' <<<"$existing")
+  recorded_token_alias=$(jq -r '.packages["merkle-allowlist"].token // empty' <<<"$existing")
+  SHARED_ALLOWLIST=$(jq -r '.packages["merkle-allowlist"].allowlist // empty' <<<"$existing")
+
+  [[ "$tok" =~ ^0x[0-9a-fA-F]{40}$ ]] || return 1
+  [[ "$SHARED_ALLOWLIST" =~ ^0x[0-9a-fA-F]{40}$ ]] || return 1
+
+  tok_normalized=$(printf '%s' "$tok" | tr '[:upper:]' '[:lower:]')
+  alias_normalized=$(printf '%s' "$recorded_token_alias" | tr '[:upper:]' '[:lower:]')
+  [[ "$tok_normalized" == "$alias_normalized" ]] || return 1
+
+  token_allowlist=$(cast call "$tok" 'allowlist()(address)' --rpc-url "$RPC_URL" 2>/dev/null) \
+    || return 1
+  token_allowlist_normalized=$(printf '%s' "$token_allowlist" | tr '[:upper:]' '[:lower:]')
+  shared_allowlist_normalized=$(
+    printf '%s' "$SHARED_ALLOWLIST" | tr '[:upper:]' '[:lower:]'
+  )
+  [[ "$token_allowlist_normalized" == "$shared_allowlist_normalized" ]] || return 1
+
+  cast call "$SHARED_ALLOWLIST" 'setSystemAddress(address,bool)' "$DEPLOYER_ADDR" true \
+    --from "$DEPLOYER_ADDR" --rpc-url "$RPC_URL" >/dev/null 2>&1 || return 1
+  cast call "$tok" 'mint(address,uint256)' "$DEPLOYER_ADDR" 0 \
+    --from "$DEPLOYER_ADDR" --rpc-url "$RPC_URL" >/dev/null 2>&1 || return 1
+}
+
+# Deploy the profile's shared token package first and export its token and
+# optional allowlist so downstream packages use one classroom asset.
 if printf '%s\n' "${packages[@]}" | grep -qx "$SHARED_TOKEN_PKG"; then
+  reuse_shared=0
   if [[ "$skip_deployed" == "1" ]] && already_deployed "$SHARED_TOKEN_PKG"; then
-    tok=$(jq -r '.sharedToken // empty' <<<"$existing")
+    if [[ "$TARGET" == "sto" ]]; then
+      if prepare_recorded_sto_shared; then
+        export SHARED_ALLOWLIST
+        pairs_json=$(jq -c '.packages["merkle-allowlist"]' <<<"$existing")
+        deployments_json=$(echo "$deployments_json" \
+          | jq --argjson p "$pairs_json" --arg name "$SHARED_TOKEN_PKG" '. + {($name): $p}')
+        reuse_shared=1
+      else
+        echo "[deploy] redeploying ${SHARED_TOKEN_PKG} (legacy or inconsistent STO record)"
+      fi
+    else
+      tok=$(jq -r '.sharedToken // empty' <<<"$existing")
+      reuse_shared=1
+    fi
+  fi
+
+  if [[ "$reuse_shared" == "1" ]]; then
     [[ -n "$tok" ]] && export SHARED_ERC20="$tok"
     echo "[deploy] skipping ${SHARED_TOKEN_PKG} (already in record); shared token: ${SHARED_ERC20:-none}"
+    [[ "$TARGET" == "sto" ]] && flush_record
   else
     pairs_json=$(deploy_one "$SHARED_TOKEN_PKG")
     deployments_json=$(echo "$deployments_json" \
       | jq --argjson p "$pairs_json" --arg name "$SHARED_TOKEN_PKG" '. + {($name): $p}')
-    tok=$(echo "$pairs_json" | jq -r '.token // empty')
+    if [[ "$TARGET" == "sto" ]]; then
+      tok=$(jq -r '.restrictedToken // empty' <<<"$pairs_json")
+      token_alias=$(jq -r '.token // empty' <<<"$pairs_json")
+      SHARED_ALLOWLIST=$(jq -r '.allowlist // empty' <<<"$pairs_json")
+      tok_normalized=$(printf '%s' "$tok" | tr '[:upper:]' '[:lower:]')
+      alias_normalized=$(printf '%s' "$token_alias" | tr '[:upper:]' '[:lower:]')
+      if [[ ! "$tok" =~ ^0x[0-9a-fA-F]{40}$ \
+        || ! "$SHARED_ALLOWLIST" =~ ^0x[0-9a-fA-F]{40}$ \
+        || "$tok_normalized" != "$alias_normalized" ]]; then
+        echo "[deploy] ERROR: merkle-allowlist emitted an invalid shared token or allowlist" >&2
+        exit 1
+      fi
+      export SHARED_ALLOWLIST
+    else
+      tok=$(jq -r '.token // empty' <<<"$pairs_json")
+    fi
     if [[ -n "$tok" ]]; then
       export SHARED_ERC20="$tok"
       echo "[deploy] shared ERC-20 token: ${SHARED_ERC20}"
@@ -370,35 +429,40 @@ for pkg in "${packages[@]}"; do
     continue
   fi
   if [[ "$skip_deployed" == "1" ]] && already_deployed "$pkg"; then
-    if [[ "$pkg" == "thirty-one-game" ]]; then
-      recorded_game_allowlist=$(
-        jq -r '.packages["thirty-one-game"].allowlist // empty' <<<"$existing"
+    dependency_matches=1
+    if [[ "$TARGET" == "sto" ]]; then
+      recorded_token=$(jq -r --arg p "$pkg" '.packages[$p].token // empty' <<<"$existing")
+      recorded_allowlist=$(jq -r --arg p "$pkg" '.packages[$p].allowlist // empty' <<<"$existing")
+      recorded_token_normalized=$(printf '%s' "$recorded_token" | tr '[:upper:]' '[:lower:]')
+      recorded_allowlist_normalized=$(
+        printf '%s' "$recorded_allowlist" | tr '[:upper:]' '[:lower:]'
       )
-      game_normalized=$(printf '%s' "$recorded_game_allowlist" | tr '[:upper:]' '[:lower:]')
-      current_normalized=$(printf '%s' "${THIRTYONE_ALLOWLIST:-}" | tr '[:upper:]' '[:lower:]')
-      if [[ -z "$game_normalized" || "$game_normalized" != "$current_normalized" ]]; then
-        echo "[deploy] redeploying ${pkg} (recorded allowlist does not match)"
-      else
-        echo "[deploy] skipping ${pkg} (already in record, allowlist matches)"
-        continue
-      fi
-    else
+      shared_token_normalized=$(printf '%s' "$SHARED_ERC20" | tr '[:upper:]' '[:lower:]')
+      shared_allowlist_normalized=$(
+        printf '%s' "$SHARED_ALLOWLIST" | tr '[:upper:]' '[:lower:]'
+      )
+      case "$pkg" in
+        simple-wallet)
+          [[ "$recorded_allowlist_normalized" == "$shared_allowlist_normalized" ]] \
+            || dependency_matches=0
+          ;;
+        q-05-simple-wallet|thirty-one-game)
+          [[ "$recorded_token_normalized" == "$shared_token_normalized" ]] \
+            || dependency_matches=0
+          [[ "$recorded_allowlist_normalized" == "$shared_allowlist_normalized" ]] \
+            || dependency_matches=0
+          ;;
+      esac
+    fi
+    if [[ "$dependency_matches" == "1" ]]; then
       echo "[deploy] skipping ${pkg} (already in record)"
       continue
     fi
+    echo "[deploy] redeploying ${pkg} (shared STO dependency changed)"
   fi
   pairs_json=$(deploy_one "$pkg")
   deployments_json=$(echo "$deployments_json" \
     | jq --argjson p "$pairs_json" --arg name "$pkg" '. + {($name): $p}')
-  if [[ "$pkg" == "merkle-allowlist" ]]; then
-    THIRTYONE_ALLOWLIST=$(jq -r '.allowlist // empty' <<<"$pairs_json")
-    if [[ -z "$THIRTYONE_ALLOWLIST" ]]; then
-      echo "[deploy] ERROR: merkle-allowlist did not emit ADDR:allowlist:" >&2
-      exit 1
-    fi
-    export THIRTYONE_ALLOWLIST
-    echo "[deploy] ThirtyOneGame allowlist: ${THIRTYONE_ALLOWLIST}"
-  fi
   flush_record
 done
 

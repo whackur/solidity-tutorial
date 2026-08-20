@@ -212,8 +212,12 @@ function selectNetwork(net, data) {
   $infoFaucet.textContent = current.faucet?.address || data.faucet?.address || '—';
   $btn.textContent = `Send ${current.dropEth} ETH`;
   if (current.sharedToken) {
-    $infoToken.textContent = `${current.sharedToken.address} (${current.sharedToken.symbol})`;
-    $btnToken.textContent = `Send 100 ${current.sharedToken.symbol}`;
+    const classroomLabel = current.sharedToken.classroomMint ? ' · classroom test mint' : '';
+    $infoToken.textContent =
+      `${current.sharedToken.address} (${current.sharedToken.symbol})${classroomLabel}`;
+    $btnToken.textContent = current.sharedToken.classroomMint
+      ? `Mint 100 ${current.sharedToken.symbol} (test only)`
+      : `Send 100 ${current.sharedToken.symbol}`;
     $btnToken.hidden = false;
   } else {
     $infoToken.textContent = '—';

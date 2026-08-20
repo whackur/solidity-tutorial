@@ -196,7 +196,6 @@ fi
 if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
   if ! jq -e '
     (keys | sort) == ([
-      "default-erc-20",
       "simple-wallet",
       "q-05-simple-wallet",
       "thirty-one-game",
@@ -205,10 +204,11 @@ if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
       "q-27-merkle-allowlist"
     ] | sort)
     and ([
-      .["default-erc-20"].token,
       .["simple-wallet"].wallet,
+      .["simple-wallet"].allowlist,
       .["q-05-simple-wallet"].wallet,
       .["q-05-simple-wallet"].token,
+      .["q-05-simple-wallet"].allowlist,
       .["thirty-one-game"].token,
       .["thirty-one-game"].allowlist,
       .["thirty-one-game"].game,
@@ -221,6 +221,11 @@ if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
       .["q-20-erc20-basic"].vault,
       .["q-27-merkle-allowlist"].lab
     ] | all(type == "string" and test("^0x[0-9a-fA-F]{40}$")))
+    and .["merkle-allowlist"].token == .["merkle-allowlist"].restrictedToken
+    and .["q-05-simple-wallet"].token == .["merkle-allowlist"].restrictedToken
+    and .["thirty-one-game"].token == .["merkle-allowlist"].restrictedToken
+    and .["simple-wallet"].allowlist == .["merkle-allowlist"].allowlist
+    and .["q-05-simple-wallet"].allowlist == .["merkle-allowlist"].allowlist
     and .["thirty-one-game"].allowlist == .["merkle-allowlist"].allowlist
   ' <<<"$packages_json" >/dev/null; then
     echo "[deploy-all] ERROR: incomplete STO deployment output; refusing to write records" >&2
@@ -228,8 +233,17 @@ if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
   fi
 fi
 
-# The shared token is default-erc-20's token address.
-SHARED_TOKEN=$(jq -r '."default-erc-20".token // empty' <<<"$packages_json")
+if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
+  SHARED_TOKEN=$(jq -r '."merkle-allowlist".restrictedToken // empty' <<<"$packages_json")
+  SHARED_TOKEN_NAME="Allowlist Restricted Token"
+  SHARED_TOKEN_SYMBOL="ALRT"
+  SHARED_TOKEN_CLASSROOM_MINT=true
+else
+  SHARED_TOKEN=$(jq -r '."default-erc-20".token // empty' <<<"$packages_json")
+  SHARED_TOKEN_NAME="MyERC20"
+  SHARED_TOKEN_SYMBOL="ME2"
+  SHARED_TOKEN_CLASSROOM_MINT=false
+fi
 
 pkg_count=$(jq 'keys | length' <<<"$packages_json")
 echo "[deploy-all] parsed ${pkg_count} packages; shared token: ${SHARED_TOKEN:-none}"
@@ -243,6 +257,7 @@ if [[ "$DEPLOY_PROFILE" == "sto" && -f "$OUT" ]]; then
     echo "[deploy-all] ERROR: existing deployment record has a different chainId: $OUT" >&2
     exit 1
   fi
+  existing=$(jq 'del(.packages["default-erc-20"])' <<<"$existing")
 fi
 
 # Same schema as deploy.sh's flush_record (deployments/<network>.json).
@@ -269,6 +284,9 @@ jq \
   --arg rpcUrl "$PUBLIC_RPC" \
   --arg faucetAddr "$FAUCET_ADDR" \
   --arg faucetKey "$FAUCET_KEY" \
+  --arg tokenName "$SHARED_TOKEN_NAME" \
+  --arg tokenSymbol "$SHARED_TOKEN_SYMBOL" \
+  --argjson classroomMint "$SHARED_TOKEN_CLASSROOM_MINT" \
   '{
      network: .network,
      chainId: .chainId,
@@ -278,7 +296,8 @@ jq \
      deployer: .deployer,
      faucet: {address: $faucetAddr, privateKey: $faucetKey},
      sharedToken: (if .sharedToken == null then null else
-       {address: .sharedToken, name: "MyERC20", symbol: "ME2", decimals: 18} end),
+       {address: .sharedToken, name: $tokenName, symbol: $tokenSymbol, decimals: 18,
+        classroomMint: $classroomMint} end),
      challenges: .packages
    }' \
   "$OUT" >"$WEB_OUT"

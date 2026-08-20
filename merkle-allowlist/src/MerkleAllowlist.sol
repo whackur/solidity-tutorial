@@ -32,10 +32,12 @@ contract MerkleAllowlist is Ownable {
     bytes32 public allowlistRoot;
 
     mapping(address account => bool) private _registered;
+    mapping(address account => bool) private _systemAddress;
 
     event AllowlistRootUpdated(bytes32 indexed previousRoot, bytes32 indexed newRoot);
     event Registered(address indexed account);
     event Revoked(address indexed account);
+    event SystemAddressUpdated(address indexed account, bool allowed);
 
     error RootNotSet();
     error InvalidProof();
@@ -83,8 +85,14 @@ contract MerkleAllowlist is Ownable {
         emit Revoked(account);
     }
 
+    /// @notice Allow or block an infrastructure contract that cannot self-register.
+    function setSystemAddress(address account, bool allowed) external onlyOwner {
+        _systemAddress[account] = allowed;
+        emit SystemAddressUpdated(account, allowed);
+    }
+
     function isAllowed(address account) public view returns (bool) {
-        return _registered[account];
+        return _registered[account] || _systemAddress[account];
     }
 
     /// @notice Leaf hash for an account. Exposed so off-chain tooling and the

@@ -1,9 +1,8 @@
 const STO_CHALLENGE_ORDER = [
-  'default-erc-20',
+  'merkle-allowlist',
   'simple-wallet',
   'q-05-simple-wallet',
   'thirty-one-game',
-  'merkle-allowlist',
   'q-20-erc20-basic',
   'q-27-merkle-allowlist',
 ];
