@@ -127,6 +127,13 @@ Lab seeding is **opt-in** via `SEED_LABS=true`. By default both deploy paths shi
 
 `.env` gotchas: `DEPLOYER_MNEMONIC` must be **quoted** (`"word1 word2 ..."`) — an unquoted multi-word value silently breaks `source .env` and the deploy aborts. `scripts/deploy.sh` requires `jq` on `PATH`.
 
+### Classroom profile synchronization
+
+- Treat the package list, required address roles, per-package deploy scripts, `DeploySto.s.sol`, `deploy.sh`, and `deploy-all.sh` as one deployment interface. A package or constructor change must update every applicable path and the offline profile tests together.
+- Before an STO broadcast, require the RPC-reported chain ID to be Base Sepolia `84532` and require the deployer runtime code to be exactly `0x`. Never broadcast the classroom batch from a delegated or contract account.
+- A full classroom redeploy invalidates every previous address. Verify non-empty runtime code for every unique recorded address, intentional shared-token aliases, constructor relationships, and representative initial-state getters before publishing the record.
+- After any address or ABI change, rebuild the affected packages and refresh the STO artifact/address registry in `/Users/lt-185/coding/whackur/dsrv-blockchain-toolkit/src/lib/sto-abis/` from the fresh Foundry `out` files. Validate ABI equality and the toolkit typecheck, static build, and CI lint before declaring the deployment complete.
+
 ## Footguns
 
 - Each subtree carries its own generated `foundry.toml`. Do not hand-edit; modify `config/foundry/packages.json` and regenerate.

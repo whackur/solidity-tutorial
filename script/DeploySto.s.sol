@@ -68,9 +68,8 @@ contract DeploySto is Script {
         console2.log("ADDR:faucet:", address(q20Lab.faucet()));
         console2.log("ADDR:vault:", address(q20Lab.vault()));
 
-        bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
         bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
-        MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
+        MerkleAllowlist allowlist = new MerkleAllowlist();
         AllowlistRestrictedToken allowlistToken =
             new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
         MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);

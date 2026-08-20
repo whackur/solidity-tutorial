@@ -17,14 +17,12 @@ contract MockToken is ERC20 {
 /**
  * @notice Deploys the allowlist gate and a distributor.
  *
- *         Roots are supplied by the operator, because a real tree is built
- *         off-chain from the actual member and allocation lists. Both default
- *         to zero: the allowlist then rejects registration until a root is
- *         set, which is the safe default.
+ *         The allowlist is ownerless and each learner commits their own root
+ *         after deployment. The distributor root is still supplied at deploy
+ *         time because it is a fixed pull-claim allocation.
  */
 contract Deploy is Script {
     function run() external {
-        bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
         bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
 
         // SHARED_ERC20 points at the environment-wide default token. Fall back
@@ -35,7 +33,7 @@ contract Deploy is Script {
         if (token == address(0)) {
             token = address(new MockToken());
         }
-        MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
+        MerkleAllowlist allowlist = new MerkleAllowlist();
         AllowlistRestrictedToken restrictedToken =
             new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
         MerkleDistributor distributor = new MerkleDistributor(IERC20(token), distributionRoot);
@@ -47,7 +45,6 @@ contract Deploy is Script {
         console2.log("ADDR:allowlist:", address(allowlist));
         console2.log("ADDR:restrictedToken:", address(restrictedToken));
         console2.log("ADDR:distributor:", address(distributor));
-        console2.logBytes32(allowlistRoot);
         console2.logBytes32(distributionRoot);
     }
 }

@@ -1,95 +1,107 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.35;
 
-import {MerkleProof} from "@openzeppelin/contracts/utils/cryptography/MerkleProof.sol";
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-
 /**
  * @title MerkleAllowlist
- * @notice An allowlist gate that stores a single 32-byte root instead of one
- *         storage slot per allowed address.
+ * @notice A per-user Merkle proof gate with self-managed roots.
  *
- *         The operator builds a merkle tree over the allowed addresses
- *         off-chain, publishes the tree, and commits only the root here.
- *         An address proves membership once with `register`, after which
- *         access is a plain mapping read.
+ *         Each learner commits their own root. The leaf includes the learner
+ *         address and that learner's registration counter, so a new root can
+ *         be used for another successful registration without sharing state
+ *         with any other learner.
  *
- *         Leaf format: keccak256(bytes.concat(keccak256(abi.encode(account)))).
- *         The double hash is the OpenZeppelin convention for leaves whose
- *         preimage is attacker-controlled — it makes it impossible to pass a
- *         64-byte internal node off as a leaf (second-preimage attack).
- *
- *         Proofs use sorted-pair hashing: at each level the two children are
- *         hashed in ascending byte order, so a proof carries no direction
- *         bits. That halves the calldata a caller must supply and is what
- *         `MerkleProof.verify` implements. The tradeoff is that a sorted tree
- *         cannot express leaf position, so it cannot be used where the index
- *         itself is meaningful — see MerkleDistributor, which commits the
- *         index inside the leaf for exactly that reason.
+ *         Leaves are double-hashed with `abi.encode(account, counter)`. Proofs
+ *         are direction-aware: bit `i` of the supplied index decides whether
+ *         the running node is the left or right child at level `i`. This is
+ *         the same path arithmetic used by the q-27 Merkle lab.
  */
-contract MerkleAllowlist is Ownable {
-    /// @notice Root of the current allowlist tree. Zero disables registration.
-    bytes32 public allowlistRoot;
+contract MerkleAllowlist {
+    /// @notice The fixed classroom tree shape used by the Q-27 exercise.
+    uint256 public constant LEAF_COUNT = 8;
+    uint256 public constant PROOF_LENGTH = 3;
+
+    /// @notice The root committed by each account for its next registration.
+    mapping(address account => bytes32) public committedRoot;
+
+    /// @notice Number of successful registrations made by each account.
+    mapping(address account => uint256) public counter;
 
     mapping(address account => bool) private _registered;
 
-    event AllowlistRootUpdated(bytes32 indexed previousRoot, bytes32 indexed newRoot);
-    event Registered(address indexed account);
-    event Revoked(address indexed account);
+    event RootCommitted(address indexed account, bytes32 indexed root, uint256 counter);
+    event Registered(address indexed account, uint256 indexed index, uint256 counter);
+    event Revoked(address indexed account, uint256 counter);
 
     error RootNotSet();
     error InvalidProof();
-    error AlreadyRegistered();
+    error BadProofLength(uint256 given, uint256 expected);
+    error IndexOutOfRange(uint256 given, uint256 leafCount);
     error NotRegistered();
 
-    constructor(bytes32 initialRoot, address initialOwner) Ownable(initialOwner) {
-        allowlistRoot = initialRoot;
-        emit AllowlistRootUpdated(bytes32(0), initialRoot);
+    /// @notice Commit or replace the root for the caller's next registration.
+    /// @dev A zero root is retained as an explicit unset state and cannot be
+    ///      used to register.
+    function commitRoot(bytes32 root) external {
+        committedRoot[msg.sender] = root;
+        emit RootCommitted(msg.sender, root, counter[msg.sender]);
     }
 
     /**
-     * @notice Replace the allowlist root.
-     * @dev Rotating the root only changes who can register *from now on*. It
-     *      does NOT revoke anyone who already registered under the old root —
-     *      their `_registered` slot is untouched. That asymmetry is the main
-     *      trap of this pattern: operators assume "new root = new allowlist"
-     *      and are surprised that removed addresses still transfer.
-     *
-     *      Removal is therefore an explicit, per-address operation. See
-     *      `revoke`. If you need removal to be cheap and bulk, this pattern is
-     *      the wrong one — store the list.
+     * @notice Prove the caller's current-counter leaf is at `index`.
+     * @dev The caller's counter is read before any state update. Reverted
+     *      proofs therefore leave both the counter and registration unchanged.
      */
-    function setAllowlistRoot(bytes32 newRoot) external onlyOwner {
-        bytes32 previous = allowlistRoot;
-        allowlistRoot = newRoot;
-        emit AllowlistRootUpdated(previous, newRoot);
-    }
+    function register(uint256 index, bytes32[] calldata proof) external {
+        bytes32 root = committedRoot[msg.sender];
+        if (root == bytes32(0)) revert RootNotSet();
+        if (proof.length != PROOF_LENGTH) revert BadProofLength(proof.length, PROOF_LENGTH);
+        if (index >= LEAF_COUNT) revert IndexOutOfRange(index, LEAF_COUNT);
 
-    /// @notice Prove that `msg.sender` is in the committed tree.
-    function register(bytes32[] calldata proof) external {
-        if (allowlistRoot == bytes32(0)) revert RootNotSet();
-        if (_registered[msg.sender]) revert AlreadyRegistered();
-        if (!MerkleProof.verify(proof, allowlistRoot, leafOf(msg.sender))) {
-            revert InvalidProof();
-        }
+        bytes32 computed = computeRoot(leafFor(msg.sender, counter[msg.sender]), index, proof);
+        if (computed != root) revert InvalidProof();
+
+        uint256 nextCounter = counter[msg.sender] + 1;
+        counter[msg.sender] = nextCounter;
         _registered[msg.sender] = true;
-        emit Registered(msg.sender);
+        emit Registered(msg.sender, index, nextCounter);
     }
 
-    /// @notice Remove an address that was registered under this or an older root.
-    function revoke(address account) external onlyOwner {
-        if (!_registered[account]) revert NotRegistered();
-        _registered[account] = false;
-        emit Revoked(account);
+    /// @notice Revoke only the caller's own access. The registration counter
+    ///         intentionally remains unchanged so it cannot be replayed.
+    function revoke() external {
+        if (!_registered[msg.sender]) revert NotRegistered();
+        _registered[msg.sender] = false;
+        emit Revoked(msg.sender, counter[msg.sender]);
     }
 
+    /// @notice Whether an account currently has access to the restricted token.
     function isAllowed(address account) public view returns (bool) {
         return _registered[account];
     }
 
-    /// @notice Leaf hash for an account. Exposed so off-chain tooling and the
-    ///         tests build the tree exactly the way the contract reads it.
-    function leafOf(address account) public pure returns (bytes32) {
-        return keccak256(bytes.concat(keccak256(abi.encode(account))));
+    /// @notice Double-hashed leaf used by `register`.
+    function leafFor(address account, uint256 registrationCounter) public pure returns (bytes32) {
+        return keccak256(bytes.concat(keccak256(abi.encode(account, registrationCounter))));
+    }
+
+    /**
+     * @notice Walk a leaf up to a root using index bits for direction.
+     * @dev Bit `i` of `index` says where the running node sits at level `i`:
+     *      zero means left, one means right. Pair encoding matches q-27.
+     */
+    function computeRoot(bytes32 leaf, uint256 index, bytes32[] calldata proof)
+        public
+        pure
+        returns (bytes32)
+    {
+        bytes32 node = leaf;
+        uint256 position = index;
+        for (uint256 i = 0; i < proof.length; i++) {
+            node = position & 1 == 0
+                ? keccak256(abi.encode(node, proof[i]))
+                : keccak256(abi.encode(proof[i], node));
+            position >>= 1;
+        }
+        return node;
     }
 }
