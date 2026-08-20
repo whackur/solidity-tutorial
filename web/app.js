@@ -9,6 +9,17 @@ import {
 import { privateKeyToAccount } from 'https://esm.sh/viem@2/accounts';
 import { orderChallengeEntries } from './challenge-order.js';
 
+// Each challenge row links back to the package that produced it. Every
+// package in this monorepo keeps its contracts under <package>/src, so the
+// directory tree is a valid target for all 48 of them (some packages have no
+// README.md, which is why the link points at src/ rather than the package
+// root).
+const SOURCE_REPO_TREE = 'https://github.com/whackur/solidity-tutorial/tree/main';
+
+function sourceUrl(pkg) {
+  return `${SOURCE_REPO_TREE}/${pkg}/src`;
+}
+
 // The faucet UI serves one tab per network. Each entry points at a config
 // file under ./data/ (the docker/shared mount):
 //   - hoodi.json     — written by scripts/deploy.sh after a live deploy,
@@ -280,7 +291,22 @@ function renderChallenges($container, challenges) {
 
       const pkgCell = document.createElement('td');
       pkgCell.className = 'pkg';
-      pkgCell.textContent = i === 0 ? pkg : '';
+      if (i === 0) {
+        const name = document.createElement('span');
+        name.textContent = pkg;
+
+        // Opens in a new tab so the student keeps the faucet page (and any
+        // address they already typed) untouched.
+        const srcLink = document.createElement('a');
+        srcLink.className = 'src-btn';
+        srcLink.href = sourceUrl(pkg);
+        srcLink.target = '_blank';
+        srcLink.rel = 'noopener noreferrer';
+        srcLink.textContent = 'Source \u2197';
+        srcLink.title = `Open ${pkg}/src on GitHub in a new tab`;
+
+        pkgCell.append(name, srcLink);
+      }
 
       const roleCell = document.createElement('td');
       roleCell.className = 'role';
