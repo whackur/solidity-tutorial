@@ -55,6 +55,9 @@ services:
       # Expose the auto-generated addresses.json so the page can link to it
       # at /data/addresses.json.
       - ./docker/shared:/usr/share/nginx/html/data:ro
+      # Serve everything with Cache-Control: no-store so a mid-class edit to
+      # ./web is picked up on a plain reload instead of a hard refresh.
+      - ./docker/faucet.nginx.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on:
       anvil:
         condition: service_healthy
