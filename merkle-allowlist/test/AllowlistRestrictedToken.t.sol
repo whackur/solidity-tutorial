@@ -77,26 +77,4 @@ contract AllowlistRestrictedTokenTest is Test {
         );
         token.transfer(alice, 1 ether);
     }
-
-    function test_MintCanIssueToUnregisteredAddressButTransferStillChecksGate() public {
-        token.mint(mallory, 10 ether);
-        assertEq(token.balanceOf(mallory), 10 ether);
-
-        vm.prank(mallory);
-        vm.expectRevert(
-            abi.encodeWithSelector(AllowlistRestrictedToken.AddressNotAllowed.selector, mallory)
-        );
-        token.transfer(alice, 1 ether);
-    }
-
-    function test_SystemAddressCanTransferWithoutMerkleRegistration() public {
-        vm.prank(owner);
-        allowlist.setSystemAddress(mallory, true);
-        token.mint(mallory, 10 ether);
-
-        vm.prank(mallory);
-        token.transfer(alice, 1 ether);
-
-        assertEq(token.balanceOf(alice), 1001 ether);
-    }
 }

@@ -68,11 +68,11 @@ VERIFY=1 pnpm deploy:sepolia all        # also verify on the block explorer
 scripts/deploy.sh ethereum default-erc-20   # any configured network; mainnets have no pnpm shortcut on purpose
 ```
 
-The generic `all` profile deploys `default-erc-20` first and exports it as `SHARED_ERC20`. The STO profile deliberately excludes that token: it deploys `merkle-allowlist` first and exports its `AllowlistRestrictedToken` instead. Resulting addresses are merged into `deployments/<network>.json` and mirrored to `docker/shared/<network>.json` so the faucet UI shows a tab for that network. `.env` is gitignored — never commit your mnemonic.
+The generic `all` profile deploys `default-erc-20` first and exports it as `SHARED_ERC20`. The STO profile excludes that token and exports `BlocklistRestrictedToken` from `transfer-blocklist` instead. Resulting addresses are merged into `deployments/<network>.json` and mirrored to `docker/shared/<network>.json` so the faucet UI shows a tab for that network. `.env` is gitignored — never commit your mnemonic.
 
-The STO profile deploys these packages in dependency order: `merkle-allowlist`, `simple-wallet`, `q-05-simple-wallet`, `thirty-one-game`, `q-20-erc20-basic`, and `q-27-merkle-allowlist`. `AllowlistRestrictedToken` is the only shared classroom token: the distributor, `q-05-simple-wallet`, and `thirty-one-game` all receive that exact address. `q-20-erc20-basic` intentionally retains its self-contained hand-written token because implementing that token is the exercise itself. The `:fast` command runs `script/DeploySto.s.sol` under one broadcast: Forge assigns sequential nonces and submits the transactions back-to-back, avoiding nonce races between parallel deploy processes. Both deploy paths take a per-chain, per-deployer process lock; do not use the deployer account from another repository or wallet while a deployment is running. If a Base Sepolia deployment record already exists, the STO path removes the old `default-erc-20` entry and replaces shared-token dependencies with the restricted token.
+The STO profile deploys these packages in dependency order: `transfer-blocklist`, `simple-wallet`, `q-05-simple-wallet`, `thirty-one-game`, `q-20-erc20-basic`, and `q-27-merkle-allowlist`. `BlocklistRestrictedToken` is the only shared classroom token used by q-05 and the game. Transfers are allowed by default; the blocklist owner can stop the next incoming or outgoing transfer for a selected address. `q-20-erc20-basic` intentionally retains its self-contained hand-written token because implementing that token is the exercise itself. The `:fast` command runs `script/DeploySto.s.sol` under one broadcast: Forge assigns sequential nonces and submits the transactions back-to-back, avoiding nonce races between parallel deploy processes. Both deploy paths take a per-chain, per-deployer process lock; do not use the deployer account from another repository or wallet while a deployment is running. STO migration removes old `default-erc-20` and `merkle-allowlist` deployment entries from the UI record.
 
-Set `ALLOWLIST_MERKLE_ROOT` to a non-zero root before either STO deploy command. Learners may receive classroom tokens through the faucet mint before registration, but holder-to-holder and holder-to-application transfers remain blocked until the learner registers with a valid proof. Infrastructure contracts are explicitly marked as system addresses in the same allowlist; the game itself contains no participant allowlist rule.
+The blocklist is deliberately a simplified operational control, not complete STO compliance. Production designs commonly combine identity or eligibility checks with freezes, sanctions screening, limits, recovery, forced transfers, and off-chain review procedures.
 
 ### Fast path: one broadcast
 
@@ -96,7 +96,7 @@ SKIP_DEPLOYED=1 pnpm deploy:hoodi all                    # skip packages already
 SKIP_PACKAGES="q-16-oracle-spot" pnpm deploy:hoodi all   # skip specific expensive labs
 ```
 
-`SKIP_DEPLOYED=1` reuses the recorded profile-specific `sharedToken`: `default-erc-20` for generic deployments and `AllowlistRestrictedToken` for STO.
+`SKIP_DEPLOYED=1` reuses the profile-specific `sharedToken`: `default-erc-20` for generic deployments and `BlocklistRestrictedToken` for STO.
 
 ## Collect ABIs
 
@@ -117,6 +117,7 @@ skipped. The output directory is gitignored.
 - **tx-basics**: ETH transfer and execution: transfer/send/call, delegatecall, receive/fallback.
 - **simple-wallet**: Simple wallet implementation.
 - **thirty-one-game**: A simple game contract.
+- **transfer-blocklist**: Default-allow transfer policy with explicit address blocks.
 - **default-erc-20**: Basic ERC20.
 - **default-erc-721**: Basic ERC721 (ERC721 + ERC721URIStorage).
 - **erc20-extended**: ERC-20 with Permit + Votes + Burnable + Capped + Pausable + Ownable combined.

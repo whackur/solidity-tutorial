@@ -18,7 +18,6 @@ The cost moves rather than disappearing. Each member now supplies a proof of abo
 - `register(bytes32[] proof)` — caller proves membership once; access then becomes a mapping read.
 - `isAllowed(address)` — cheap check for everything downstream.
 - `revoke(address)` — owner removes one address.
-- `setSystemAddress(address,bool)` — owner marks infrastructure contracts that cannot self-register.
 
 Leaves are `keccak256(bytes.concat(keccak256(abi.encode(account))))`. The double hash is the OpenZeppelin convention for leaves with attacker-influenced preimages: a leaf and an internal node must never be confusable, or someone can present a 64-byte internal node as if it were a leaf. Proofs use sorted-pair hashing, so they carry no direction bits.
 
@@ -47,8 +46,6 @@ With pull, the blocked recipient fails their own claim and nobody else notices. 
 ## `AllowlistRestrictedToken`
 
 The token checks `isAllowed(from)` and `isAllowed(to)` before a normal transfer. A learner can therefore compare three observable cases: an unregistered recipient is rejected, two registered addresses can transfer, and an explicit revocation blocks the next movement.
-
-The classroom-only `mint` function treats issuance separately from a holder-to-holder transfer, so the faucet can issue test tokens before registration. Moving those tokens still passes through `_update` and remains blocked until both endpoints are allowed. The package distributor uses this restricted token rather than deploying a second mock token.
 
 This is a teaching bridge from an address list to a transfer gate. Real regulated-token systems also need identity claims, expiry, jurisdiction rules, roles, recovery, forced transfer, evidence, and off-chain operating procedures. A Merkle root does not provide those controls by itself.
 
@@ -85,4 +82,4 @@ forge build
 forge test -vv
 ```
 
-Deployment reads `ALLOWLIST_MERKLE_ROOT` and `DISTRIBUTION_MERKLE_ROOT` from the environment, because a real tree is built off-chain from real lists. Both default to zero, and a zero allowlist root rejects every registration — the safe default. The distributor always uses `AllowlistRestrictedToken`. It is funded only when `DISTRIBUTION_FUNDING` is non-zero; funding without a non-zero distribution root is rejected so tokens cannot be locked behind an unusable immutable root. `DISTRIBUTION_FUNDING` uses 18-decimal base units (`10000000000000000000` means 10 ALRT), not whole-token notation.
+Deployment reads `ALLOWLIST_MERKLE_ROOT` and `DISTRIBUTION_MERKLE_ROOT` from the environment, because a real tree is built off-chain from real lists. Both default to zero, and a zero allowlist root rejects every registration — the safe default. `SHARED_ERC20` selects the distributed token, falling back to a local mock.

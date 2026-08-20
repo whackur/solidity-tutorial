@@ -196,37 +196,30 @@ fi
 if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
   if ! jq -e '
     (keys | sort) == ([
+      "transfer-blocklist",
       "simple-wallet",
       "q-05-simple-wallet",
       "thirty-one-game",
-      "merkle-allowlist",
       "q-20-erc20-basic",
       "q-27-merkle-allowlist"
     ] | sort)
     and ([
+      .["transfer-blocklist"].token,
+      .["transfer-blocklist"].blocklist,
+      .["transfer-blocklist"].restrictedToken,
       .["simple-wallet"].wallet,
-      .["simple-wallet"].allowlist,
       .["q-05-simple-wallet"].wallet,
       .["q-05-simple-wallet"].token,
-      .["q-05-simple-wallet"].allowlist,
       .["thirty-one-game"].token,
-      .["thirty-one-game"].allowlist,
       .["thirty-one-game"].game,
-      .["merkle-allowlist"].token,
-      .["merkle-allowlist"].allowlist,
-      .["merkle-allowlist"].restrictedToken,
-      .["merkle-allowlist"].distributor,
       .["q-20-erc20-basic"].lab,
       .["q-20-erc20-basic"].faucet,
       .["q-20-erc20-basic"].vault,
       .["q-27-merkle-allowlist"].lab
     ] | all(type == "string" and test("^0x[0-9a-fA-F]{40}$")))
-    and .["merkle-allowlist"].token == .["merkle-allowlist"].restrictedToken
-    and .["q-05-simple-wallet"].token == .["merkle-allowlist"].restrictedToken
-    and .["thirty-one-game"].token == .["merkle-allowlist"].restrictedToken
-    and .["simple-wallet"].allowlist == .["merkle-allowlist"].allowlist
-    and .["q-05-simple-wallet"].allowlist == .["merkle-allowlist"].allowlist
-    and .["thirty-one-game"].allowlist == .["merkle-allowlist"].allowlist
+    and .["transfer-blocklist"].token == .["transfer-blocklist"].restrictedToken
+    and .["q-05-simple-wallet"].token == .["transfer-blocklist"].restrictedToken
+    and .["thirty-one-game"].token == .["transfer-blocklist"].restrictedToken
   ' <<<"$packages_json" >/dev/null; then
     echo "[deploy-all] ERROR: incomplete STO deployment output; refusing to write records" >&2
     exit 1
@@ -234,9 +227,9 @@ if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
 fi
 
 if [[ "$DEPLOY_PROFILE" == "sto" ]]; then
-  SHARED_TOKEN=$(jq -r '."merkle-allowlist".restrictedToken // empty' <<<"$packages_json")
-  SHARED_TOKEN_NAME="Allowlist Restricted Token"
-  SHARED_TOKEN_SYMBOL="ALRT"
+  SHARED_TOKEN=$(jq -r '."transfer-blocklist".restrictedToken // empty' <<<"$packages_json")
+  SHARED_TOKEN_NAME="Blocklist Restricted Token"
+  SHARED_TOKEN_SYMBOL="BLRT"
   SHARED_TOKEN_CLASSROOM_MINT=true
 else
   SHARED_TOKEN=$(jq -r '."default-erc-20".token // empty' <<<"$packages_json")
@@ -257,7 +250,7 @@ if [[ "$DEPLOY_PROFILE" == "sto" && -f "$OUT" ]]; then
     echo "[deploy-all] ERROR: existing deployment record has a different chainId: $OUT" >&2
     exit 1
   fi
-  existing=$(jq 'del(.packages["default-erc-20"])' <<<"$existing")
+  existing=$(jq 'del(.packages["default-erc-20"], .packages["merkle-allowlist"])' <<<"$existing")
 fi
 
 # Same schema as deploy.sh's flush_record (deployments/<network>.json).

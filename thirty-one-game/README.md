@@ -27,4 +27,4 @@ forge test -vv
 
 `script/Deploy.s.sol` reuses `SHARED_ERC20` when supplied and otherwise deploys a local mock token. `THIRTYONE_WINNER_PERCENTAGE` defaults to 80.
 
-The game contains no allowlist rule. In the STO deployment, `SHARED_ERC20` is `AllowlistRestrictedToken`, so deposits and prize transfers are accepted or rejected by the token contract itself.
+The game contains no address policy. In the STO profile, `SHARED_ERC20` is `BlocklistRestrictedToken`, so the token contract — not the game — rejects transfers involving an explicitly blocked sender or recipient.

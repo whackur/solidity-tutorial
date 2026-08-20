@@ -24,11 +24,6 @@ contract AllowlistRestrictedToken is ERC20 {
         _mint(initialHolder, initialSupply);
     }
 
-    /// @notice Classroom faucet mint. Issuance is visible but not a holder-to-holder transfer.
-    function mint(address account, uint256 amount) external {
-        _mint(account, amount);
-    }
-
     function _update(address from, address to, uint256 value) internal override {
         if (from != address(0) && to != address(0)) {
             if (!allowlist.isAllowed(from)) revert AddressNotAllowed(from);

@@ -189,6 +189,17 @@
         ]
       },
       "generator": {"networks": ["base-sepolia"]}
+    },
+    "transfer-blocklist": {
+      "profile_default": {
+        "optimizer": true,
+        "optimizer_runs": 200,
+        "remappings": [
+          "@openzeppelin/contracts/=../dependencies/@openzeppelin-contracts-5.6.1/",
+          "forge-std/=../dependencies/forge-std-1.16.1/src/"
+        ]
+      },
+      "generator": {"networks": ["base-sepolia"]}
     }
   }
 }

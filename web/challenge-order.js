@@ -1,5 +1,5 @@
 const STO_CHALLENGE_ORDER = [
-  'merkle-allowlist',
+  'transfer-blocklist',
   'simple-wallet',
   'q-05-simple-wallet',
   'thirty-one-game',

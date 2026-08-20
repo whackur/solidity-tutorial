@@ -14,6 +14,7 @@ Foundry-based monorepo of self-contained Solidity tutorials, managed with pnpm w
 ├── simple-uups/          — UUPS upgradeable proxy
 ├── simple-wallet/        — Minimal ETH/ERC20 deposit wallet
 ├── thirty-one-game/      — Baskin-Robbins 31 game with stake-based prizes
+├── transfer-blocklist/   — Default-allow ERC-20 transfer blocklist
 ├── merkle-allowlist/     — Merkle-root allowlist gate and pull-based merkle distributor
 ├── q-01-counter/ ... q-27-merkle-allowlist/ — CTF-style challenge set (see q-INDEX.md)
 ├── common/               — Shared challenge base (SolvableBase / ISolvable), via @common remapping
@@ -120,7 +121,7 @@ The docker stack (`docker compose up`) is a local anvil snapshot. To publish to 
 - **Per-package** — `scripts/deploy.sh <network> <package|all>` (e.g. `pnpm deploy:hoodi all`). Runs each package's `script/Deploy.s.sol` as its own broadcast. Honors `VERIFY=1`, `SKIP_DEPLOYED=1` (resume — skip packages already in the record and reuse the recorded `sharedToken`), and `SKIP_PACKAGES="..."` (skip named packages).
 - **Combined, one broadcast** — `scripts/deploy-all.sh <network>` (`pnpm deploy:hoodi:fast`). Runs the root `script/DeployAll.s.sol` under `[profile.deployall]` (adds `via_ir`, needed by `smart-account`), deploying every package inside a single `vm.startBroadcast()` so forge waits for confirmations once instead of ~45 times. It hand-mirrors each package's `Deploy.s.sol` — keep it in sync when a package's deploy logic changes.
 
-Conventions shared by both: sign with `DEPLOYER_MNEMONIC` account 0 (gas payer); the classroom faucet is account 9. Generic `all` deploys `default-erc-20` first. The STO profile excludes it and exports `AllowlistRestrictedToken` as `SHARED_ERC20` for token-agnostic packages.
+Conventions shared by both: sign with `DEPLOYER_MNEMONIC` account 0 (gas payer); the classroom faucet is account 9. Generic `all` uses `default-erc-20` as `SHARED_ERC20`; STO excludes it and uses `BlocklistRestrictedToken` instead.
 
 Lab seeding is **opt-in** via `SEED_LABS=true`. By default both deploy paths ship **contract-only** — no ETH leaves the deployer. The value-funded challenge labs (`q-09 / q-16 / q-17 / q-18 / q-19`) still deploy, but stay **unfunded**: their `createInstance(...)` reverts (`lab underfunded`) until the recorded `lab` address is topped up. Set `SEED_LABS=true` to fund at deploy time (`q-16` 1 ETH; `q-09 / q-18 / q-19` 0.1; `q-17` 0.05 — a full seeded `all` run is then **~1.5 ETH**). The local docker/anvil snapshot (`docker/build-snapshot.sh`) sets `SEED_LABS=true` automatically since anvil ETH is free. To fund a lab after a contract-only live deploy, just send ETH to its recorded `lab` address. The combined fast path needs the seeding amount up front (single batch); the per-package path can be resumed with `SKIP_DEPLOYED=1` if it runs out mid-way.
 

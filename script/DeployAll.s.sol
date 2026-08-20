@@ -119,6 +119,10 @@ import {MerkleAllowlist} from "../merkle-allowlist/src/MerkleAllowlist.sol";
 import {AllowlistRestrictedToken} from "../merkle-allowlist/src/AllowlistRestrictedToken.sol";
 import {MerkleDistributor} from "../merkle-allowlist/src/MerkleDistributor.sol";
 
+// ---- transfer-blocklist ----
+import {AddressBlocklist} from "../transfer-blocklist/src/AddressBlocklist.sol";
+import {BlocklistRestrictedToken} from "../transfer-blocklist/src/BlocklistRestrictedToken.sol";
+
 // ---- tx-basics ----
 import {DelegateCaller, DelegateLogic} from "../tx-basics/src/DelegatecallDemo.sol";
 import {EthSender} from "../tx-basics/src/EthSender.sol";
@@ -545,25 +549,11 @@ contract DeployAll is Script {
         {
             bytes32 allowlistRoot = vm.envOr("ALLOWLIST_MERKLE_ROOT", bytes32(0));
             bytes32 distributionRoot = vm.envOr("DISTRIBUTION_MERKLE_ROOT", bytes32(0));
-            uint256 distributionFunding = vm.envOr("DISTRIBUTION_FUNDING", uint256(0));
-            if (distributionFunding > 0) {
-                require(distributionRoot != bytes32(0), "distribution root required for funding");
-            }
             MerkleAllowlist allowlist = new MerkleAllowlist(allowlistRoot, msg.sender);
             AllowlistRestrictedToken restrictedToken =
                 new AllowlistRestrictedToken(allowlist, msg.sender, 1_000_000 ether);
-            MerkleDistributor distributor =
-                new MerkleDistributor(IERC20(address(restrictedToken)), distributionRoot);
-            allowlist.setSystemAddress(msg.sender, true);
-            allowlist.setSystemAddress(address(distributor), true);
-            if (distributionFunding > 0) {
-                require(
-                    restrictedToken.transfer(address(distributor), distributionFunding),
-                    "merkle distributor funding failed"
-                );
-            }
+            MerkleDistributor distributor = new MerkleDistributor(IERC20(shared), distributionRoot);
             console2.log("PKG:merkle-allowlist");
-            console2.log("ADDR:token:", address(restrictedToken));
             console2.log("ADDR:allowlist:", address(allowlist));
             console2.log("ADDR:restrictedToken:", address(restrictedToken));
             console2.log("ADDR:distributor:", address(distributor));
@@ -574,6 +564,17 @@ contract DeployAll is Script {
             Q27MerkleAllowlistLab lab = new Q27MerkleAllowlistLab();
             console2.log("PKG:q-27-merkle-allowlist");
             console2.log("ADDR:lab:", address(lab));
+        }
+
+        // ---- transfer-blocklist ----
+        {
+            AddressBlocklist blocklist = new AddressBlocklist(msg.sender);
+            BlocklistRestrictedToken restrictedToken =
+                new BlocklistRestrictedToken(blocklist, msg.sender, 1_000_000 ether);
+            console2.log("PKG:transfer-blocklist");
+            console2.log("ADDR:token:", address(restrictedToken));
+            console2.log("ADDR:blocklist:", address(blocklist));
+            console2.log("ADDR:restrictedToken:", address(restrictedToken));
         }
 
         // ---- tx-basics ----

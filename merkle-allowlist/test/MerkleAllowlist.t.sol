@@ -143,26 +143,6 @@ contract MerkleAllowlistTest is Test {
         allowlist.revoke(alice);
     }
 
-    function test_OwnerCanAllowAndBlockSystemAddress() public {
-        address systemContract = makeAddr("systemContract");
-
-        vm.prank(owner);
-        allowlist.setSystemAddress(systemContract, true);
-        assertTrue(allowlist.isAllowed(systemContract));
-
-        vm.prank(owner);
-        allowlist.setSystemAddress(systemContract, false);
-        assertFalse(allowlist.isAllowed(systemContract));
-    }
-
-    function test_RevertWhen_NonOwnerSetsSystemAddress() public {
-        vm.prank(mallory);
-        vm.expectRevert(
-            abi.encodeWithSelector(Ownable.OwnableUnauthorizedAccount.selector, mallory)
-        );
-        allowlist.setSystemAddress(makeAddr("systemContract"), true);
-    }
-
     // --- every member can register ----------------------------------------
 
     function test_EveryLeafCanRegister() public {

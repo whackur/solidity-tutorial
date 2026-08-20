@@ -6,7 +6,7 @@
 #   - signs with DEPLOYER_MNEMONIC account index 0 — the same deployer key
 #     convention as simple-uups/script/Upgrade.s.sol and the docker snapshot,
 #   - runs each package's script/Deploy.s.sol:Deploy with --broadcast,
-#   - generic all deploys default-erc-20 first; STO deploys merkle-allowlist
+#   - generic all deploys default-erc-20 first; STO deploys transfer-blocklist
 #     first and exports its restricted token as SHARED_ERC20,
 #   - assembles deployments/<network>.json from the ADDR:<key>: emissions.
 #
@@ -89,14 +89,6 @@ RPC_URL="${!RPC_ENV:-}"
 if [[ -z "$RPC_URL" ]]; then
   echo "[deploy] ERROR: set ${RPC_ENV} in .env for network '${NETWORK}'" >&2
   exit 1
-fi
-
-if [[ "$TARGET" == "sto" ]]; then
-  zero_root="0x$(printf '0%.0s' {1..64})"
-  if [[ -z "${ALLOWLIST_MERKLE_ROOT:-}" || "${ALLOWLIST_MERKLE_ROOT}" == "$zero_root" ]]; then
-    echo "[deploy] ERROR: sto requires a non-zero ALLOWLIST_MERKLE_ROOT" >&2
-    exit 1
-  fi
 fi
 
 do_verify=0
@@ -215,7 +207,7 @@ elif [[ "$TARGET" == "sto" ]]; then
   fi
 
   packages=(
-    "merkle-allowlist"
+    "transfer-blocklist"
     "simple-wallet"
     "q-05-simple-wallet"
     "thirty-one-game"
@@ -240,17 +232,15 @@ fi
 echo "[deploy] packages: ${packages[*]}"
 
 if [[ "$TARGET" == "sto" ]]; then
-  SHARED_TOKEN_PKG="merkle-allowlist"
-  SHARED_TOKEN_NAME="Allowlist Restricted Token"
-  SHARED_TOKEN_SYMBOL="ALRT"
+  SHARED_TOKEN_PKG="transfer-blocklist"
+  SHARED_TOKEN_NAME="Blocklist Restricted Token"
+  SHARED_TOKEN_SYMBOL="BLRT"
   SHARED_TOKEN_CLASSROOM_MINT=true
-  export STO_SHARED_ALLOWLIST=1
 else
   SHARED_TOKEN_PKG="default-erc-20"
   SHARED_TOKEN_NAME="MyERC20"
   SHARED_TOKEN_SYMBOL="ME2"
   SHARED_TOKEN_CLASSROOM_MINT=false
-  unset SHARED_ALLOWLIST STO_SHARED_ALLOWLIST
 fi
 deployments_json="{}"
 
@@ -261,7 +251,7 @@ OUT="$ROOT_DIR/deployments/${NETWORK}.json"
 existing="{}"
 [[ -f "$OUT" ]] && existing=$(cat "$OUT")
 if [[ "$TARGET" == "sto" ]]; then
-  existing=$(jq 'del(.packages["default-erc-20"])' <<<"$existing")
+  existing=$(jq 'del(.packages["default-erc-20"], .packages["merkle-allowlist"])' <<<"$existing")
 fi
 
 # SKIP_DEPLOYED=1 resumes a partial run: packages already present in the
@@ -344,40 +334,43 @@ flush_record() {
 }
 
 prepare_recorded_sto_shared() {
-  tok=$(jq -r '.packages["merkle-allowlist"].restrictedToken // empty' <<<"$existing")
-  recorded_token_alias=$(jq -r '.packages["merkle-allowlist"].token // empty' <<<"$existing")
-  SHARED_ALLOWLIST=$(jq -r '.packages["merkle-allowlist"].allowlist // empty' <<<"$existing")
+  tok=$(jq -r '.packages["transfer-blocklist"].restrictedToken // empty' <<<"$existing")
+  recorded_token_alias=$(jq -r '.packages["transfer-blocklist"].token // empty' <<<"$existing")
+  recorded_blocklist=$(jq -r '.packages["transfer-blocklist"].blocklist // empty' <<<"$existing")
 
   [[ "$tok" =~ ^0x[0-9a-fA-F]{40}$ ]] || return 1
-  [[ "$SHARED_ALLOWLIST" =~ ^0x[0-9a-fA-F]{40}$ ]] || return 1
+  [[ "$recorded_blocklist" =~ ^0x[0-9a-fA-F]{40}$ ]] || return 1
 
   tok_normalized=$(printf '%s' "$tok" | tr '[:upper:]' '[:lower:]')
   alias_normalized=$(printf '%s' "$recorded_token_alias" | tr '[:upper:]' '[:lower:]')
   [[ "$tok_normalized" == "$alias_normalized" ]] || return 1
 
-  token_allowlist=$(cast call "$tok" 'allowlist()(address)' --rpc-url "$RPC_URL" 2>/dev/null) \
+  token_blocklist=$(cast call "$tok" 'blocklist()(address)' --rpc-url "$RPC_URL" 2>/dev/null) \
     || return 1
-  token_allowlist_normalized=$(printf '%s' "$token_allowlist" | tr '[:upper:]' '[:lower:]')
-  shared_allowlist_normalized=$(
-    printf '%s' "$SHARED_ALLOWLIST" | tr '[:upper:]' '[:lower:]'
-  )
-  [[ "$token_allowlist_normalized" == "$shared_allowlist_normalized" ]] || return 1
+  blocklist_normalized=$(printf '%s' "$recorded_blocklist" | tr '[:upper:]' '[:lower:]')
+  token_blocklist_normalized=$(printf '%s' "$token_blocklist" | tr '[:upper:]' '[:lower:]')
+  [[ "$blocklist_normalized" == "$token_blocklist_normalized" ]] || return 1
 
-  cast call "$SHARED_ALLOWLIST" 'setSystemAddress(address,bool)' "$DEPLOYER_ADDR" true \
-    --from "$DEPLOYER_ADDR" --rpc-url "$RPC_URL" >/dev/null 2>&1 || return 1
+  blocklist_owner=$(cast call "$recorded_blocklist" 'owner()(address)' --rpc-url "$RPC_URL" 2>/dev/null) \
+    || return 1
+  owner_normalized=$(printf '%s' "$blocklist_owner" | tr '[:upper:]' '[:lower:]')
+  deployer_normalized=$(printf '%s' "$DEPLOYER_ADDR" | tr '[:upper:]' '[:lower:]')
+  [[ "$owner_normalized" == "$deployer_normalized" ]] || return 1
+
+  cast call "$recorded_blocklist" 'isBlocked(address)(bool)' "$DEPLOYER_ADDR" \
+    --rpc-url "$RPC_URL" >/dev/null 2>&1 || return 1
   cast call "$tok" 'mint(address,uint256)' "$DEPLOYER_ADDR" 0 \
     --from "$DEPLOYER_ADDR" --rpc-url "$RPC_URL" >/dev/null 2>&1 || return 1
 }
 
-# Deploy the profile's shared token package first and export its token and
-# optional allowlist so downstream packages use one classroom asset.
+# Deploy the profile's shared token package first and export SHARED_ERC20 so
+# token-agnostic packages pick it up via vm.envOr.
 if printf '%s\n' "${packages[@]}" | grep -qx "$SHARED_TOKEN_PKG"; then
   reuse_shared=0
   if [[ "$skip_deployed" == "1" ]] && already_deployed "$SHARED_TOKEN_PKG"; then
     if [[ "$TARGET" == "sto" ]]; then
       if prepare_recorded_sto_shared; then
-        export SHARED_ALLOWLIST
-        pairs_json=$(jq -c '.packages["merkle-allowlist"]' <<<"$existing")
+        pairs_json=$(jq -c '.packages["transfer-blocklist"]' <<<"$existing")
         deployments_json=$(echo "$deployments_json" \
           | jq --argjson p "$pairs_json" --arg name "$SHARED_TOKEN_PKG" '. + {($name): $p}')
         reuse_shared=1
@@ -401,16 +394,15 @@ if printf '%s\n' "${packages[@]}" | grep -qx "$SHARED_TOKEN_PKG"; then
     if [[ "$TARGET" == "sto" ]]; then
       tok=$(jq -r '.restrictedToken // empty' <<<"$pairs_json")
       token_alias=$(jq -r '.token // empty' <<<"$pairs_json")
-      SHARED_ALLOWLIST=$(jq -r '.allowlist // empty' <<<"$pairs_json")
+      blocklist=$(jq -r '.blocklist // empty' <<<"$pairs_json")
       tok_normalized=$(printf '%s' "$tok" | tr '[:upper:]' '[:lower:]')
       alias_normalized=$(printf '%s' "$token_alias" | tr '[:upper:]' '[:lower:]')
       if [[ ! "$tok" =~ ^0x[0-9a-fA-F]{40}$ \
-        || ! "$SHARED_ALLOWLIST" =~ ^0x[0-9a-fA-F]{40}$ \
+        || ! "$blocklist" =~ ^0x[0-9a-fA-F]{40}$ \
         || "$tok_normalized" != "$alias_normalized" ]]; then
-        echo "[deploy] ERROR: merkle-allowlist emitted an invalid shared token or allowlist" >&2
+        echo "[deploy] ERROR: transfer-blocklist emitted invalid deployment addresses" >&2
         exit 1
       fi
-      export SHARED_ALLOWLIST
     else
       tok=$(jq -r '.token // empty' <<<"$pairs_json")
     fi
@@ -430,35 +422,18 @@ for pkg in "${packages[@]}"; do
   fi
   if [[ "$skip_deployed" == "1" ]] && already_deployed "$pkg"; then
     dependency_matches=1
-    if [[ "$TARGET" == "sto" ]]; then
+    if [[ "$TARGET" == "sto" && "$pkg" =~ ^(q-05-simple-wallet|thirty-one-game)$ ]]; then
       recorded_token=$(jq -r --arg p "$pkg" '.packages[$p].token // empty' <<<"$existing")
-      recorded_allowlist=$(jq -r --arg p "$pkg" '.packages[$p].allowlist // empty' <<<"$existing")
       recorded_token_normalized=$(printf '%s' "$recorded_token" | tr '[:upper:]' '[:lower:]')
-      recorded_allowlist_normalized=$(
-        printf '%s' "$recorded_allowlist" | tr '[:upper:]' '[:lower:]'
-      )
       shared_token_normalized=$(printf '%s' "$SHARED_ERC20" | tr '[:upper:]' '[:lower:]')
-      shared_allowlist_normalized=$(
-        printf '%s' "$SHARED_ALLOWLIST" | tr '[:upper:]' '[:lower:]'
-      )
-      case "$pkg" in
-        simple-wallet)
-          [[ "$recorded_allowlist_normalized" == "$shared_allowlist_normalized" ]] \
-            || dependency_matches=0
-          ;;
-        q-05-simple-wallet|thirty-one-game)
-          [[ "$recorded_token_normalized" == "$shared_token_normalized" ]] \
-            || dependency_matches=0
-          [[ "$recorded_allowlist_normalized" == "$shared_allowlist_normalized" ]] \
-            || dependency_matches=0
-          ;;
-      esac
+      [[ "$recorded_token_normalized" == "$shared_token_normalized" ]] \
+        || dependency_matches=0
     fi
     if [[ "$dependency_matches" == "1" ]]; then
       echo "[deploy] skipping ${pkg} (already in record)"
       continue
     fi
-    echo "[deploy] redeploying ${pkg} (shared STO dependency changed)"
+    echo "[deploy] redeploying ${pkg} (shared STO token changed)"
   fi
   pairs_json=$(deploy_one "$pkg")
   deployments_json=$(echo "$deployments_json" \
